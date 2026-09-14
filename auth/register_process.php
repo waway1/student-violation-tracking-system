@@ -3,7 +3,11 @@
    Passwordless system: students never log in with a password, so registration
    collects identity + contact only. A username + random password are generated
    automatically to satisfy the shared `users` table (staff still use those). */
-session_start();
+// Use the same hardened session bootstrap as the registration form and every
+// protected page. Calling session_start() directly would write the new
+// student's login to PHP's default save path, while the dashboard reads the
+// app-private sessions directory configured by session.php.
+require_once __DIR__ . "/session.php";
 
 require_once "../config/database.php";
 require_once "../includes/functions.php";

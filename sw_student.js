@@ -1,13 +1,10 @@
 /* VTS Student service worker — makes the student portal installable and fast.
-   App shell is cached (network-first, cache fallback) so it opens offline; the
-   violation data itself always comes from the network when available. */
-/* v3: the typefaces moved from fonts.googleapis.com into this server, so they
-   are part of the offline shell now and are precached with the stylesheets.
-   Bumping the name is what evicts the v2 cache, which still holds pages whose
-   HTML points at the CDN. */
-const CACHE = 'vts-student-v3';
+   Only public static files are cached. A dashboard is personalized HTML and
+   must always be fetched from PHP for the current authenticated student. */
+/* v4 removes the old cache, which could contain a previous student's
+   dashboard and display it after logout or to the next user of a device. */
+const CACHE = 'vts-student-v4';
 const SHELL = [
-  'student/dashboard.php',
   'assets/css/vts-theme.css',
   'assets/css/vts-admin.css',
   'assets/css/vts-polish.css',
@@ -35,8 +32,12 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  // Never cache API/notification polling — always fresh.
-  if (e.request.url.includes('/api/') || e.request.url.includes('action=')) return;
+  const url = new URL(e.request.url);
+  // PHP pages and API responses can contain a user's account data. Let the
+  // browser request them normally; only static same-origin assets can use the
+  // offline cache.
+  if (url.origin !== self.location.origin || url.pathname.endsWith('.php') ||
+      url.pathname.includes('/api/') || url.searchParams.has('action')) return;
   e.respondWith(
     fetch(e.request).then(res => {
       const copy = res.clone();
