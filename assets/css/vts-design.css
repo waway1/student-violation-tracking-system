@@ -116,6 +116,13 @@ h1,h2,h3,h4,.auth-heading,.page-title,.admin-welcome-row h1,.page-head h1{
   position:static !important; transform:none !important; left:auto !important;
 }
 
+/* On a phone in landscape, two password columns leave one field clipped off
+   screen. Keep the student profile's password form in one column so every
+   eye control belongs visibly to its own input. */
+@media (max-width:900px){
+  #password .form-grid{ grid-template-columns:minmax(0, 1fr) !important; }
+}
+
 /* ─────────────────────────────────────────────────────────────────────
    HEADER — one flat slate bar. It was a navy-to-gold gradient, which put a
    second focal point in the corner of every page.

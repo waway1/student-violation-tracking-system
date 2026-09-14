@@ -37,7 +37,7 @@
 .slp-back-link:hover { color: #1a3a6b; }
 
 /* Mobile: single-column, comfortable spacing */
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   .form-grid { grid-template-columns: 1fr !important; }
   .field.full, .vts-form-group.full { grid-column: 1 / -1; }
 }
