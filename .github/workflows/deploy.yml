@@ -8,7 +8,6 @@
 #  ONE-TIME SETUP — GitHub repo > Settings > Secrets and variables
 #  > Actions > New repository secret:
 #
-#     FTP_SERVER    ftpupload.net
 #     FTP_USERNAME  if0_42480644
 #     FTP_PASSWORD  <your InfinityFree ACCOUNT password>
 #
@@ -39,9 +38,10 @@ jobs:
       - name: Sync htdocs over FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server:    secrets.ftpupload.net 
-          username:  secrets.if0_42480644
-          password:  secrets.Jasper12342006 
+          # The hostname is public; only credentials belong in GitHub Secrets.
+          server: ftpupload.net
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftp          # InfinityFree free tier has no FTPS
           port: 21
           server-dir: /htdocs/
