@@ -39,9 +39,9 @@ jobs:
       - name: Sync htdocs over FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server:   ${{ secrets.ftpupload.net }}
-          username: ${{ secrets.if0_42480644}}
-          password: ${{ secrets.Jasper12342006 }}
+          server:    secrets.ftpupload.net 
+          username:  secrets.if0_42480644
+          password:  secrets.Jasper12342006 
           protocol: ftp          # InfinityFree free tier has no FTPS
           port: 21
           server-dir: /htdocs/
