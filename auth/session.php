@@ -16,6 +16,66 @@ if (session_status() == PHP_SESSION_NONE) {
     ini_set('session.cookie_samesite', 'Lax');
     if ($https) ini_set('session.cookie_secure', '1');
 
+    /* -----------------------------------------------------------------
+       A PRIVATE SESSION DIRECTORY, AND A GC CLOCK THAT MATCHES OUR OWN.
+
+       THE BUG THIS FIXES. On shared hosting (InfinityFree) every account
+       can share ONE session directory, and PHP's garbage collector is
+       fired by whichever site happens to get a request. Two things follow,
+       and both were happening live while localhost stayed perfect:
+
+         1. Another site's GC sweep deletes OUR session files. Nothing in
+            this app runs, so nothing logs it - a student is simply not
+            logged in any more on the next click.
+         2. gc_maxlifetime defaulted to 1440s (24 min) while this app
+            considers a session good for VTS_IDLE_TIMEOUT (2 hours). So
+            even our OWN cleanup was throwing away sessions the app still
+            regarded as live, an hour and a half early.
+
+       The visible symptom is what gets reported as "two students signed in
+       at the same time and landed on each other's dashboard": one of them
+       loses their session mid-flow, the next request arrives with no
+       user_id (or a recycled one), and the role-based redirect sends them
+       somewhere they should not be.
+
+       THE FIX. Keep sessions in a directory belonging to this app only, so
+       no other account's sweep can reach them, and tell the collector to
+       use the same lifetime the app enforces. Both are done BEFORE
+       session_start(), which is the only point either can be set.
+
+       Deliberately defensive: if the directory cannot be made or written
+       to, we leave PHP's default alone. A wrong save_path breaks every
+       session on the site, and that is far worse than the bug above. */
+    $sessDir = __DIR__ . '/../sessions';
+    if (!is_dir($sessDir)) @mkdir($sessDir, 0700, true);
+    /* The guard is written HERE, not just shipped in the repo, because the
+       directory is created on demand. A session file is named sess_<id>,
+       with no extension and no leading dot, so none of the root .htaccess
+       rules cover it: if this folder ever existed without its own deny
+       rule, GET /sessions/sess_<id> would hand a visitor a live session -
+       user_id, role and all. Creating the directory and leaving it open is
+       therefore worse than not moving sessions at all, so the two steps
+       are never allowed to come apart. */
+    if (is_dir($sessDir) && !is_file($sessDir . '/.htaccess')) {
+        @file_put_contents($sessDir . '/.htaccess',
+            "<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+"
+          . "<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>
+");
+    }
+    if (is_dir($sessDir) && is_writable($sessDir)) {
+        session_save_path($sessDir);
+        // Ours to collect now, so the clock must match what we enforce.
+        ini_set('session.gc_maxlifetime', (string)VTS_ABSOLUTE_TIMEOUT);
+        ini_set('session.gc_probability', '1');
+        ini_set('session.gc_divisor', '100');
+    }
+
     // NOTE: we deliberately keep PHP's DEFAULT session name.
     // Renaming it broke every file that calls a plain session_start()
     // (register.php, verify.php, index.php, forgot_password.php,

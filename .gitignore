@@ -25,3 +25,10 @@ INFINITYFREE-env.txt
 
 # temporary server diagnostic - never commit or deploy
 dbtest.php
+sesscheck.php
+
+# live session files - never commit
+sessions/*
+!sessions/.htaccess
+!sessions/.gitkeep
+sesstest.php
