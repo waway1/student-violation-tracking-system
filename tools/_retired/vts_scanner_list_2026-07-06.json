@@ -1,0 +1,73 @@
+{
+    "app": "VTS-SCANNER",
+    "type": "lists",
+    "exported_at": "2026-07-06T11:30:27+02:00",
+    "students": [
+        {
+            "student_id": "1242500299",
+            "fullname": "Jasper F. Garce Jr.",
+            "section": "D",
+            "year_level": "3rd Year",
+            "course": "BS Information Technology"
+        },
+        {
+            "student_id": "2024-00109",
+            "fullname": "Veronica C. Cerdan",
+            "section": "Set D",
+            "year_level": "3rd Year",
+            "course": "BS Information Technology"
+        }
+    ],
+    "types": [
+        {
+            "id": "3",
+            "violation_name": "Improper Haircut",
+            "severity": "Minor"
+        },
+        {
+            "id": "2",
+            "violation_name": "Improper Uniform",
+            "severity": "Minor"
+        },
+        {
+            "id": "7",
+            "violation_name": "Late to Class",
+            "severity": "Minor"
+        },
+        {
+            "id": "1",
+            "violation_name": "No School ID",
+            "severity": "Minor"
+        },
+        {
+            "id": "5",
+            "violation_name": "Non-Neutral Nail Color",
+            "severity": "Minor"
+        },
+        {
+            "id": "10",
+            "violation_name": "Others",
+            "severity": "Minor"
+        },
+        {
+            "id": "6",
+            "violation_name": "Untrimmed Nails",
+            "severity": "Minor"
+        },
+        {
+            "id": "8",
+            "violation_name": "Disrespect",
+            "severity": "Major"
+        },
+        {
+            "id": "4",
+            "violation_name": "Multiple Earrings",
+            "severity": "Major"
+        },
+        {
+            "id": "9",
+            "violation_name": "Vandalism",
+            "severity": "Grave"
+        }
+    ]
+}

@@ -1,0 +1,167 @@
+/* =====================================================================
+   NOTIFICATION PANEL  —  the bell's modal.
+
+   Everything here is built from the tokens in vts-theme.css rather than
+   fresh hex values: the palette had already drifted to hundreds of
+   near-identical greys and navies by hand-typing them, and a new panel is
+   exactly how that happens again.
+
+   The panel is anchored under the bell on a desktop and becomes a normal
+   centred sheet on a phone, where there is no room to hang anything off a
+   24px icon.
+   ===================================================================== */
+
+.vts-notif-overlay {
+  /* .modal-overlay (vts-admin.css) supplies the backdrop, the fixed inset
+     and the z-index. Only the placement differs: this one hangs from the
+     navbar rather than sitting in the middle of the screen. */
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: calc(var(--navbar-h) + 8px) 16px 16px;
+}
+
+.vts-notif-panel {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 400px;
+  max-height: min(70vh, 560px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;                 /* so the header/footer clip the list */
+  animation: vtsNotifIn .16s ease;
+}
+
+@keyframes vtsNotifIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Header ──────────────────────────────────────── */
+.vts-notif-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 14px 13px 16px;
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+.vts-notif-head h2 {
+  flex: 1; min-width: 0;
+  font-size: .95rem; font-weight: 800; color: var(--navy);
+  display: flex; align-items: center; gap: 8px;
+}
+.vts-notif-head h2 i { color: var(--gold); font-size: .9rem; }
+
+.vts-notif-x {
+  flex: 0 0 auto;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 8px;
+  background: transparent; color: var(--text-muted);
+  font-size: .95rem; cursor: pointer;
+}
+.vts-notif-x:hover { background: var(--surface-alt); color: var(--text); }
+
+/* ── List ────────────────────────────────────────── */
+.vts-notif-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.vts-notif-item {
+  display: flex; gap: 10px;
+  padding: 12px 14px 12px 16px;
+  border-bottom: 1px solid var(--border-soft);
+  position: relative;
+}
+.vts-notif-item:last-child { border-bottom: 0; }
+.vts-notif-item:hover { background: var(--surface-alt); }
+
+/* Unread gets a left rule and a heavier title — colour alone would be the
+   only signal otherwise, which is no signal at all for some readers. */
+.vts-notif-item.is-unread { background: var(--surface-tint); }
+.vts-notif-item.is-unread::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--navy);
+}
+.vts-notif-item.is-unread .vts-notif-title { font-weight: 800; }
+
+.vts-notif-main { flex: 1; min-width: 0; }
+.vts-notif-title {
+  font-size: .84rem; font-weight: 700; color: var(--text);
+  margin-bottom: 2px; line-height: 1.35;
+}
+.vts-notif-msg {
+  font-size: .8rem; color: var(--text-soft); line-height: 1.45;
+  overflow-wrap: anywhere;          /* a long unbroken string can't widen the panel */
+}
+.vts-notif-meta {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  margin-top: 5px;
+  font-size: .72rem; color: var(--text-faint); font-weight: 600;
+}
+.vts-notif-who { color: var(--text-muted); }
+.vts-notif-who::before { content: '·'; margin-right: 6px; color: var(--text-faint); }
+
+.vts-notif-del {
+  flex: 0 0 auto; align-self: flex-start;
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 7px;
+  background: transparent; color: var(--text-faint);
+  font-size: .75rem; cursor: pointer;
+}
+.vts-notif-del:hover { background: #fdeaee; color: var(--danger); }
+.vts-notif-del:disabled { opacity: .5; cursor: default; }
+
+/* ── Empty / loading / error ─────────────────────── */
+.vts-notif-state {
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 34px 18px;
+  font-size: .83rem; color: var(--text-muted); font-weight: 600;
+  text-align: center;
+}
+.vts-notif-state.is-empty { flex-direction: column; gap: 10px; color: var(--text-faint); }
+.vts-notif-state.is-empty i { font-size: 1.6rem; }
+.vts-notif-state.is-error { color: var(--danger); }
+
+/* ── Footer ──────────────────────────────────────── */
+.vts-notif-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 11px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-alt);
+  flex: 0 0 auto;
+}
+.vts-notif-all { font-size: .78rem; font-weight: 700; color: var(--navy); }
+.vts-notif-all:hover { text-decoration: underline; }
+.vts-notif-foot button:disabled { opacity: .55; cursor: default; }
+
+/* The badge is hidden via the [hidden] attribute when the count is zero, so
+   it can be toggled without the script knowing what display value it had. */
+.nav-bell-badge[hidden] { display: none; }
+
+/* ── Phone ───────────────────────────────────────── */
+@media (max-width: 560px) {
+  .vts-notif-overlay {
+    align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .vts-notif-panel { max-width: 100%; max-height: 80vh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vts-notif-panel { animation: none; }
+}
+
+/* Footer actions: mark-all-read and the bulk clear sit together on the left,
+   "View all" stays on the right. */
+.vts-notif-acts{ display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.vts-notif-clear:hover:not(:disabled){ border-color: var(--danger, #e03535); color: var(--danger, #e03535); }
+@media (max-width: 420px){
+  .vts-notif-foot{ flex-direction: column; align-items: stretch; gap: 10px; }
+  .vts-notif-acts{ justify-content: space-between; }
+  .vts-notif-all{ text-align: center; }
+}

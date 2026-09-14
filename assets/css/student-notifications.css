@@ -1,0 +1,34 @@
+/* Student notifications — extracted from notifications.php so all CSS lives in stylesheets. */
+
+.student-notifications-head{ align-items:flex-start; }
+.student-notifications-head h1{ display:flex; align-items:center; gap:8px; }
+.student-notifications-head h1 .fas{ font-size:.9em; }
+.student-notifications-head p{ margin-top:2px; }
+.student-notification-actions{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.student-notification-actions form{ margin:0; }
+/* Was an inline style on the card; the page is a fixed-width column. */
+.student-notifications-card{ width:100%; max-width:700px; margin:0 auto; }
+.student-notifications-flash{ max-width:700px; margin:0 auto 14px; }
+
+/* Empty state — "no notifications yet". */
+.notif-empty{ text-align:center; color:var(--text-muted,#5a6a8a); padding:48px 20px; }
+.notif-empty .fas{ font-size:2.5rem; opacity:.4; margin-bottom:12px; display:block; }
+.notif-item .notif-actions{ display:flex; gap:6px; }
+
+/* Tighter, phone-friendly notification cards (inline to dodge host CSS caching) */
+.notif-item{ align-items:flex-start; gap:12px; }
+.notif-item .notif-main{ flex:1; min-width:0; }
+.notif-item .notif-title{ word-break:break-word; }
+.notif-item .notif-desc{ word-break:break-word; }
+.notif-item .notif-side{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; }
+@media (max-width:560px){
+  .student-notification-actions{ width:100%; }
+  .student-notification-actions form{ flex:1; }
+  .student-notification-actions button{ width:100%; }
+  .notif-item{ flex-direction:column; gap:8px; padding:13px 14px; margin-bottom:10px; }
+  .notif-item .notif-side{ flex-direction:row; align-items:center; justify-content:space-between;
+                           width:100%; gap:8px; border-top:1px solid #edf0f6; padding-top:8px; }
+  .notif-item .notif-time{ white-space:normal; font-size:.72rem; }
+  .notif-item .notif-title{ font-size:.9rem; }
+  .notif-item .notif-desc{ font-size:.83rem; }
+}

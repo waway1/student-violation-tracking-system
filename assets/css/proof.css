@@ -1,0 +1,428 @@
+/* =====================================================================
+   VIOLATION PROOF  (admin/proof.php)
+   ---------------------------------------------------------------------
+   A photo that has to be JUDGED cannot be a 34px thumbnail in a table
+   column — that size tells you a file exists and nothing else. Each
+   record is a card here, with the picture big enough to read and the
+   reason it was recorded for sitting next to it, because the whole job
+   of this page is deciding whether those two agree.
+
+   The grid is `auto-fill, minmax(340px, 1fr)`: two or three across on a
+   desktop, one on a phone, without a media query deciding where. 340px is
+   the narrowest a photo and a paragraph can share and still be worth
+   looking at.
+   ===================================================================== */
+
+.proof-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.proof-card{
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--border, #dde4f0);
+  border-radius: 14px;
+  overflow: hidden;
+}
+/* ── The photo ──────────────────────────────────────────────────────
+   A fixed 16/10 box, so a portrait phone photo and a landscape one make
+   the same shape and the cards line up. `contain`, not `cover`: cropping
+   evidence to fit a box can cut the very thing being looked for. */
+.proof-shot{
+  aspect-ratio: 16 / 10;
+  background: #0f1b2e;
+  display: flex; align-items: center; justify-content: center;
+}
+.proof-shot > a{ display: block; width: 100%; height: 100%; }
+.proof-shot img{
+  width: 100%; height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.proof-file{
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  color: #cfe0ff; text-decoration: none; font-weight: 700; font-size: .84rem;
+  justify-content: center; width: 100%; height: 100%;
+}
+.proof-file i{ font-size: 1.8rem; }
+.proof-file:hover{ color: #fff; }
+
+.proof-none{
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  color: #7d8ba4; font-size: .8rem; font-weight: 600;
+}
+.proof-none i{ font-size: 1.7rem; opacity: .65; }
+
+/* ── The record ─────────────────────────────────────────────────────── */
+.proof-body{ padding: 13px 15px 15px; display: flex; flex-direction: column; gap: 9px; }
+
+.proof-head{ display: flex; flex-direction: column; gap: 2px; }
+.proof-name{ font-weight: 800; font-size: .95rem; color: var(--text, #1a2340); }
+.proof-meta{ font-size: .75rem; color: var(--text-muted, #5a6a8a); overflow-wrap: anywhere; }
+
+.proof-violation{ display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: .86rem; }
+.proof-offense{ font-size: .74rem; font-weight: 700; color: var(--text-muted, #5a6a8a); }
+
+.proof-details{ margin: 0; display: flex; flex-direction: column; gap: 7px; }
+.proof-details > div{ display: flex; gap: 10px; align-items: flex-start; }
+.proof-details dt{
+  flex: 0 0 92px;
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--text-muted, #5a6a8a);
+  padding-top: 2px;
+}
+.proof-details dd{
+  margin: 0; flex: 1 1 auto; min-width: 0;
+  font-size: .82rem; color: var(--text-soft, #475569); line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.proof-blank{ color: var(--text-faint, #94a3b8); font-style: italic; }
+
+.proof-actions{
+  display: flex; gap: 7px; flex-wrap: wrap;
+  margin-top: 2px; padding-top: 11px;
+  border-top: 1px solid var(--border, #dde4f0);
+}
+
+/* ── Nothing to show ────────────────────────────────────────────────── */
+.proof-empty{
+  text-align: center; padding: 40px 20px; color: var(--text-muted, #5a6a8a);
+}
+.proof-empty i{ font-size: 2rem; opacity: .4; display: block; margin-bottom: 10px; }
+.proof-empty p{ margin: 0; font-size: .88rem; }
+
+@media (max-width: 480px){
+  /* One column is already forced by the 340px minimum; this is about the
+     label gutter, which eats too much of a narrow card. */
+  .proof-details > div{ flex-direction: column; gap: 1px; }
+  .proof-details dt{ flex-basis: auto; }
+}
+
+/* =====================================================================
+   THE DECISION
+   ---------------------------------------------------------------------
+   Sits at the foot of the card, below the reason, because it is read
+   last: look at the photo, read what it was recorded for, then decide.
+   The block is tinted by outcome so a page of cards can be skimmed for
+   what still needs a decision without reading a word.
+   ===================================================================== */
+.proof-decision{
+  margin-top: 2px; padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border, #dde4f0);
+  background: #f8fafc;
+}
+.proof-decision.is-approved{ background: #f0fdf6; border-color: #bbead3; }
+.proof-decision.is-rejected{ background: #fff5f7; border-color: #f6c2ce; }
+
+.proof-decision-state{ font-size: .8rem; font-weight: 800; color: var(--text, #1a2340); }
+.proof-decision.is-pending  .proof-decision-state i{ color: #b0762a; }
+.proof-decision.is-approved .proof-decision-state i{ color: #067a51; }
+.proof-decision.is-rejected .proof-decision-state i{ color: #c81e4a; }
+.proof-decision-when{ font-weight: 500; color: var(--text-muted, #5a6a8a); }
+
+.proof-decision-note{
+  margin-top: 5px; font-size: .78rem; line-height: 1.5;
+  color: var(--text-soft, #475569); overflow-wrap: anywhere;
+}
+.proof-decision-note span{ font-weight: 700; color: var(--text-muted, #5a6a8a); }
+
+/* The note is a <details> so the common case — approve, nothing to say —
+   is one click, and the field is there when a rejection needs explaining. */
+.proof-note-wrap{ margin-top: 8px; }
+.proof-note-wrap > summary{
+  cursor: pointer; list-style: none;
+  font-size: .74rem; font-weight: 700; color: var(--t-600, #3323cc);
+}
+.proof-note-wrap > summary::-webkit-details-marker{ display: none; }
+.proof-note-wrap > summary:hover{ text-decoration: underline; }
+.proof-note-wrap textarea{
+  width: 100%; box-sizing: border-box; margin-top: 6px;
+  padding: 8px 10px; font: inherit; font-size: .8rem; resize: vertical;
+  border: 1px solid var(--border, #dde4f0); border-radius: 8px;
+  background: #fff; color: var(--text, #1a2340);
+}
+.proof-note-wrap textarea:focus{
+  outline: none; border-color: var(--t-500, #5446d4);
+  box-shadow: 0 0 0 3px var(--t-100, #e4e2f8);
+}
+
+.proof-decide-buttons{ display: flex; gap: 7px; flex-wrap: wrap; margin-top: 9px; }
+
+/* ── The review filter row ──────────────────────────────────────────── */
+.proof-review-tabs{ display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.proof-tabs-label{
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--text-muted, #5a6a8a); margin-right: 2px;
+}
+
+/* =====================================================================
+   THE CONFERENCE  (Major / Grave only)
+   ---------------------------------------------------------------------
+   A Major cannot be rejected or deleted until the office has
+   talked it through with the student and recorded that here. This block
+   sits under the decision it unlocks, so a greyed-out Reject button is
+   explained by the very next thing on the card rather than leaving
+   someone hunting for why the page will not let them act.
+   ===================================================================== */
+.proof-talk{
+  margin-top: 9px; padding: 10px 12px;
+  border-radius: 10px; border: 1px solid var(--border, #dde4f0);
+}
+/* Amber, not red: nothing has gone wrong — a step is outstanding. */
+.proof-talk.is-todo{ background: #fffaf0; border-color: #f0dcae; }
+.proof-talk.is-done{ background: #f4f7fc; }
+
+.proof-talk-state{ font-size: .8rem; font-weight: 800; color: var(--text, #1a2340); }
+.proof-talk.is-todo .proof-talk-state i{ color: #b0762a; }
+.proof-talk.is-done .proof-talk-state i{ color: #4a5a78; }
+.proof-talk-when{ font-weight: 500; color: var(--text-muted, #5a6a8a); }
+
+.proof-talk-why{
+  margin: 6px 0 0; font-size: .77rem; line-height: 1.5;
+  color: var(--text-soft, #475569);
+}
+.proof-talk-note{
+  margin-top: 5px; font-size: .78rem; line-height: 1.5;
+  color: var(--text-soft, #475569); overflow-wrap: anywhere;
+}
+
+.proof-talk-form{ margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+.proof-talk-form textarea{
+  width: 100%; box-sizing: border-box;
+  padding: 8px 10px; font: inherit; font-size: .8rem; resize: vertical;
+  border: 1px solid var(--border, #dde4f0); border-radius: 8px;
+  background: #fff; color: var(--text, #1a2340);
+}
+.proof-talk-form textarea:focus{
+  outline: none; border-color: var(--t-500, #5446d4);
+  box-shadow: 0 0 0 3px var(--t-100, #e4e2f8);
+}
+.proof-talk-form .btn-outline{ align-self: flex-start; }
+
+/* A blocked action stays visible so the page does not look incomplete,
+   but must not look pressable. */
+.proof-decide-buttons button[disabled]{
+  opacity: .45; cursor: not-allowed; filter: grayscale(.5);
+}
+
+/* =====================================================================
+   PROOF AS A TABLE  (replaces the card grid)
+   ---------------------------------------------------------------------
+   The page is a queue of decisions, so it is shaped like one: status,
+   who, what, when, decision — one line per record. Everything that is
+   reading rather than deciding lives in the viewer the thumbnail opens.
+   ===================================================================== */
+.proof-table{ width:100%; }
+.proof-table td{ vertical-align: top; }
+
+/* Waiting rows carry a gold edge, so the queue is visible as a block at
+   the top of the table rather than something you work out per row. */
+.pt-row.is-pending > td:first-child{ box-shadow: inset 3px 0 0 var(--gold, #e2b83a); }
+.pt-row.is-approved{ opacity:.82; }          /* done, and it reads as done */
+
+.pt-shot{ width:94px; }
+.pt-thumb{
+  position:relative; display:block; width:62px; height:62px; padding:0;
+  border:1px solid var(--c-line,#e2e8f0); border-radius:9px; overflow:hidden;
+  background:#0f172a; cursor:pointer;
+}
+.pt-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+.pt-thumb-zoom{
+  position:absolute; inset:auto 3px 3px auto; width:20px; height:20px;
+  border-radius:5px; background:rgba(9,18,38,.72); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:.62rem;
+}
+.pt-thumb:hover .pt-thumb-zoom{ background:rgba(9,18,38,.9); }
+.pt-file, .pt-none{
+  display:flex; align-items:center; justify-content:center;
+  width:62px; height:62px; border-radius:9px; font-size:1.1rem;
+  border:1px dashed var(--c-line,#cbd5e1); color:#64748b;
+}
+.pt-none{ opacity:.55; }
+
+.pt-name{ font-weight:700; color:var(--c-ink,#0f172a); }
+.pt-viol{ font-weight:600; }
+.pt-sub{ font-size:.78rem; color:var(--text-muted,#64748b); line-height:1.45; }
+.pt-lock{ font-size:.72rem; color:#9a6b00; margin-top:3px; }
+.pt-talked{ margin-top:6px; }
+
+.pt-status{
+  display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+  font-size:.74rem; font-weight:800; letter-spacing:.02em;
+  padding:5px 10px; border-radius:999px; border:1px solid transparent;
+}
+.pt-status.is-pending { background:rgba(255,170,0,.12); border-color:rgba(255,170,0,.4);  color:#9a6b00; }
+.pt-status.is-approved{ background:rgba(70,200,120,.12); border-color:rgba(70,200,120,.4); color:#2e9b5e; }
+.pt-status.is-rejected{ background:rgba(220,38,38,.10);  border-color:rgba(220,38,38,.35); color:#b91c1c; }
+
+.pt-act{ width:230px; }
+.pt-buttons{ display:flex; flex-wrap:wrap; gap:6px; }
+.pt-conf{ margin-top:7px; font-size:.76rem; }
+.pt-conf summary{ cursor:pointer; color:var(--text-muted,#64748b); }
+.pt-conf textarea{
+  width:100%; margin-top:5px; padding:7px 9px; font:inherit; font-size:.8rem;
+  border:1px solid var(--c-line,#cbd5e1); border-radius:8px; resize:vertical;
+}
+.pt-conf-why{ font-size:.74rem; color:#9a6b00; margin:5px 0; }
+.pt-edit{ display:inline-block; font-size:.76rem; }
+
+/* ---- The row's own actions: Edit, and Delete ----
+   One line under the decision buttons. Delete is pushed to the far end
+   with margin-left:auto rather than sitting next to Edit: it is the one
+   control in this cell that cannot be undone, and a destructive button
+   an accidental thumb-width away from an ordinary one is how records get
+   erased by mistake. */
+.pt-row-actions{
+  display:flex; align-items:center; gap:10px;
+  margin-top:8px; padding-top:8px;
+  border-top:1px solid var(--c-line,#e2e8f0);
+}
+.pt-del-form{ margin:0; margin-left:auto; }
+
+/* Quieter than Approve/Reject on purpose. Those two are the work of this
+   page and should carry weight; this one should be findable and never
+   inviting. It fills in on hover, so it still reads as a live control. */
+.pt-del{
+  background:transparent !important;
+  color:#b4232f !important;
+  border:1px solid #f0c4c9 !important;
+}
+.pt-del:hover:not(:disabled){
+  background:#b4232f !important;
+  color:#fff !important;
+  border-color:#b4232f !important;
+}
+/* Locked for OSA on an undiscussed Major — the title says why, and the
+   cursor says it is not going to move. */
+.pt-del:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+/* ---- The viewer ---- */
+.pv-overlay{
+  position:fixed; inset:0; z-index:4000; display:none;
+  align-items:center; justify-content:center; padding:22px;
+  background:rgba(9,18,38,.74);
+}
+.pv-overlay.open{ display:flex; }
+.pv-box{
+  background:#fff; border-radius:14px; overflow:hidden;
+  width:100%; max-width:min(940px,100%); max-height:100%;
+  display:flex; flex-direction:column; box-shadow:0 24px 70px rgba(8,18,40,.45);
+}
+.pv-head{ display:flex; gap:12px; padding:14px 16px; border-bottom:1px solid #e8edf5; }
+.pv-head .t{ flex:1 1 auto; min-width:0; }
+.pv-who{ font-weight:800; color:#0f172a; font-size:.98rem; }
+.pv-what{ color:#64748b; font-size:.8rem; margin-top:2px; }
+.pv-x{ flex:0 0 auto; border:0; background:#f1f5f9; color:#334155;
+  width:36px; height:36px; border-radius:9px; cursor:pointer; font-size:1rem; }
+.pv-x:hover{ background:#e2e8f0; }
+
+/* Photo and reason side by side: those two are what is being compared,
+   and a new tab put them on separate screens. */
+.pv-body{ display:flex; gap:0; overflow:auto; }
+.pv-shot{ flex:1 1 60%; background:#0f172a; display:flex; align-items:center;
+  justify-content:center; padding:12px; min-width:0; }
+.pv-shot img{ max-width:100%; max-height:64vh; border-radius:8px; display:block; }
+.pv-side{ flex:1 1 40%; padding:14px 16px; min-width:0; overflow:auto; }
+.pv-block + .pv-block{ margin-top:14px; }
+.pv-block h4{ margin:0 0 4px; font-size:.7rem; font-weight:800; letter-spacing:.06em;
+  text-transform:uppercase; color:#94a3b8; }
+.pv-block p{ margin:0; font-size:.88rem; line-height:1.5; color:#334155; white-space:pre-wrap; }
+
+.pv-foot{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:12px 16px; border-top:1px solid #e8edf5; }
+.pv-hint{ font-size:.82rem; color:#64748b; }
+
+@media (max-width: 860px){
+  .pv-body{ flex-direction:column; }
+  .pv-shot img{ max-height:44vh; }
+  .pt-act{ width:auto; }
+}
+@media (max-width: 560px){
+  .pv-overlay{ padding:10px; }
+}
+
+/* ---- Fingertips ----
+   The decision buttons are the whole point of this page, and on a phone
+   they were the things too small to hit: Approve, Reject, Clear, the Edit
+   link and the pager all came in under 36px. .btn-sm is small by design
+   everywhere else, so this is scoped to this page's controls rather than
+   changed globally. */
+@media (hover: none), (max-width: 900px){
+  /* vts-clean.css pins .btn-sm to `min-height:32px !important`, so this
+     has to answer in kind or a 32px button stays a 32px button. */
+  .proof-table .btn-sm,
+  .pt-edit,
+  .pt-del,
+  .pt-conf > summary{
+    min-height: 44px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .pt-conf > summary{ justify-content: flex-start; }
+  .pt-buttons{ gap: 8px; }
+  .pt-buttons .btn-sm{ flex: 1 1 auto; }     /* full-width thumbs on a card row */
+  .vts-pager-btn{ min-height: 44px; min-width: 44px; }
+}
+
+/* In card mode the Decision cell is narrow, and the Edit link was being
+   squeezed until it wrapped one letter per line ("E d i t"). Nothing in
+   this cell should ever be narrower than its own text. */
+@media (hover: none), (max-width: 900px){
+  .proof-table.is-stacked .pt-act{ display:flex; flex-wrap:wrap; gap:8px; }
+  .proof-table.is-stacked .pt-decide{ flex:1 1 100%; }
+  .pt-edit{ white-space:nowrap; flex:0 0 auto; }
+  .pt-conf{ flex:1 1 100%; }
+  .proof-table.is-stacked .pt-row-actions{ flex:1 1 100%; }
+  .pt-del{ white-space:nowrap; }
+}
+
+/* vts-tables.css lets card-mode cells break anywhere so a long unbroken
+   value cannot overflow. That is right for a School ID and wrong for
+   prose: it was splitting "Violation" into "Violati / on". Words wrap at
+   spaces here; only genuinely unbreakable strings fall back. */
+.proof-table.is-stacked .pt-sub,
+.proof-table.is-stacked .pt-viol,
+.proof-table.is-stacked .pt-name,
+.proof-table.is-stacked .pt-lock,
+.proof-table.is-stacked .pt-status{ overflow-wrap: break-word; word-break: normal; }
+
+/* The lock line is a sentence, not a table value, so it gets the width of
+   the cell rather than whatever is left beside the value column. */
+.proof-table.is-stacked .pt-lock{ display:block; width:100%; margin-top:4px; }
+
+/* ---- "View proof" ----
+   A 62px thumbnail is a picture, and people do not reliably read pictures
+   as buttons. The labelled eye under it is the same control with the
+   affordance spelled out, so the column always answers "how do I see it?"
+   in words as well as in a picture. Every state gets a line in the same
+   place -- an image opens the viewer, a file opens in a tab, and nothing
+   attached says so plainly -- so the column reads consistently down the
+   page instead of sometimes having something there and sometimes not. */
+.pt-view{
+  display:inline-flex; align-items:center; justify-content:center; gap:5px;
+  width:100%; margin-top:5px; padding:5px 6px;
+  font-size:.66rem; font-weight:700; letter-spacing:.01em; line-height:1.1;
+  text-align:center; white-space:nowrap;
+  border:1px solid var(--c-line,#dbe3ee); border-radius:7px;
+  background:#fff; color:var(--c-ink,#1e3a8a); cursor:pointer;
+  text-decoration:none;
+}
+.pt-view i{ font-size:.72rem; }
+.pt-view:hover{ background:#eef3fb; border-color:#c3d2e8; }
+.pt-view.is-none{
+  border-style:dashed; color:#94a3b8; background:transparent; cursor:default;
+}
+@media (hover: none), (max-width: 900px){
+  .pt-view{ min-height:44px; width:auto; padding:0 12px; font-size:.76rem; }
+}

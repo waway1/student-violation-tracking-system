@@ -1,0 +1,207 @@
+/* Student registration page (register.php) — page-specific styles, extracted
+   from the old inline <style> block so all CSS lives in a stylesheet. Shared
+   form/card styles stay in vts-theme.css / vts-admin.css. */
+
+/* =====================================================================
+   The page was a photograph behind a 55% navy wash — two layers to render
+   a colour, and a photo nobody could identify through it. It is the same
+   single opaque gradient the login uses, so the two pages read as one
+   system rather than two takes on the same idea.
+   ===================================================================== */
+.register-page{
+  /* Same one-image-one-overlay recipe as .auth-page in vts-theme.css. */
+  background:
+    linear-gradient(165deg, rgba(8,22,46,.78) 0%, rgba(11,31,63,.70) 45%, rgba(6,17,38,.82) 100%),
+    url('../images/school.jpg') center / cover no-repeat fixed;
+}
+.register-page::before{ content: none; }   /* the overlay is in the background */
+
+/* Field error lines sit directly UNDER their input */
+.field .field-error { display: none; color: var(--danger, #d33); font-size: .78rem; margin-top: 5px; line-height: 1.4; }
+.field .field-error.show { display: block; }
+.field .vts-input.is-invalid, .field .vts-select.is-invalid { border-color: var(--danger, #d33); }
+.field-hint { display: block; color: #6b7896; font-size: .74rem; margin-top: 5px; }
+
+/* Data-entry fields encode in UPPERCASE as the student types */
+.js-upper { text-transform: uppercase; }
+.js-upper::placeholder { text-transform: none; }
+
+/* Card header: Back pinned to the LEFT, logo/title stay centred.
+   (The header is text-align:center, so the link has to be taken out of the
+   flow — otherwise it centres itself right under the logo.) */
+.slp-back-link {
+  position: absolute; left: 0; top: 0; margin: 0;
+  display: inline-flex; align-items: center; gap: 6px;
+  color: #2a5298; font-weight: 600; font-size: .85rem; text-decoration: none;
+}
+.slp-back-link:hover { color: #1a3a6b; }
+
+/* Mobile: single-column, comfortable spacing */
+@media (max-width: 640px) {
+  .form-grid { grid-template-columns: 1fr !important; }
+  .field.full, .vts-form-group.full { grid-column: 1 / -1; }
+}
+
+/* ── Theme pass: same gold + blue language as the rest of the app ──────
+   A gold-tipped header bar on the card (mirrors the navbar gradient),
+   blue controls, and larger high-contrast labels. */
+.register-card{ position: relative; overflow: hidden; }
+.register-card::before{
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+  background: linear-gradient(90deg, #1a3a6b 0%, #2a5298 55%, #c9a227 100%);
+}
+
+/* Fields: bigger, darker, easier to read */
+.field label{ font-size: .82rem !important; font-weight: 700; color: #33415c !important; }
+.register-card .vts-input, .register-card .vts-select{
+  min-height: 46px; font-size: .95rem; color: #1a2340;
+  border: 1.5px solid #d7e0ee; border-radius: 10px;
+}
+.register-card .vts-input:focus, .register-card .vts-select:focus{
+  border-color: #2a5298; box-shadow: 0 0 0 3px rgba(42,82,152,.18); outline: none;
+}
+.field-hint{ color: #4c5a75; font-size: .78rem; }
+
+/* Primary action: navy with a gold underline on hover */
+.register-submit{
+  min-height: 50px; font-size: 1rem; border-radius: 12px;
+  background: linear-gradient(135deg, #1a3a6b 0%, #2a5298 100%);
+  border: none; box-shadow: 0 8px 20px rgba(26,58,107,.25);
+  transition: transform .16s ease, box-shadow .16s ease;
+}
+.register-submit:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(26,58,107,.32), inset 0 -3px 0 #c9a227;
+}
+.slp-back-link{ font-size: .88rem; }
+
+/* "Already have an account? Log in" — under the Register button, which is
+   where someone works out they are on the wrong page. The Back link at the
+   top of the card is a full form's scroll away by then. */
+.auth-alt{
+  margin-top: 16px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border, #dde4f0);
+  text-align: center;
+  font-size: .86rem;
+  color: var(--text-muted, #5a6a8a);
+}
+.auth-alt a{
+  color: var(--navy, #1a3a6b);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.auth-alt a:hover{ color: #2a5298; }
+
+/* =====================================================================
+   HEAD + DENSITY
+
+   The seal now sits above the title, the same order as the login page, and
+   the system name is a short badge rather than the full formal title. The
+   page was also carrying a paragraph of guidance above every section and a
+   hint under most fields; the labels and placeholders already said those
+   things, so what is left is one short line per section.
+   ===================================================================== */
+
+/* Section preamble: present, but clearly secondary to the legend. */
+.register-card .vts-fieldset-hint{
+  font-size: .78rem; color: #6b7896; margin-bottom: 12px;
+}
+
+/* The password rules read as a compact two-column list rather than five
+   full-width lines stacked under the field. */
+.register-card .pw-rules{
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 12px;
+}
+@media (max-width: 640px){
+  .register-card .pw-rules{ grid-template-columns: 1fr; }
+}
+
+/* =====================================================================
+   ARRANGEMENT
+
+   The form is four sections and twelve fields. What it needed was not
+   decoration but rhythm: a clear gap between sections, a consistent gap
+   inside them, and one column width the eye can follow down the page.
+   ===================================================================== */
+.register-card{
+  max-width: 680px;
+  padding: 34px 38px 30px;
+}
+
+/* Section separation does the grouping — a rule and real space above each
+   legend, so the four groups are obvious without boxing anything in. */
+.register-card .vts-fieldset{
+  border-top: 1px solid var(--border, #dde4f0);
+  margin: 0;
+  padding: 24px 0 4px;
+}
+.register-card .vts-fieldset:first-of-type{ border-top: 0; padding-top: 4px; }
+.register-card .vts-fieldset > legend{
+  font-size: .72rem;
+  letter-spacing: .13em;
+  color: var(--navy, #1a3a6b);
+}
+.register-card .vts-fieldset-hint{ margin: 4px 0 16px; }
+
+/* One gap value inside a section, one column rhythm. */
+.register-card .form-grid{ gap: 16px 20px; }
+.register-card .field label{ margin-bottom: 6px; }
+
+/* The submit sits apart from the last field, not tacked onto it. */
+.register-submit{
+  width: 100%;
+  margin-top: 22px;
+  padding: 14px;
+  font-size: .9rem; font-weight: 800;
+  letter-spacing: .06em; text-transform: uppercase;
+  border-radius: 10px;
+}
+
+@media (max-width: 640px){
+  .register-card{ padding: 26px 20px 24px; }
+  .register-card .vts-fieldset{ padding-top: 20px; }
+}
+
+/* =====================================================================
+   The header now sits ABOVE the card, on the campus photo, so it takes the
+   same light treatment the login page uses. Shape still comes from
+   .auth-logo-ring / .auth-wordmark in vts-forms.css — only colour is set
+   here, and only because the surface behind it differs.
+   ===================================================================== */
+.register-page .auth-header{
+  width: 100%; max-width: 680px;
+  margin: 0 auto 18px;
+  text-align: center;
+  padding: 0 8px;
+}
+.register-page .auth-header .auth-wordmark{
+  color: rgba(255,255,255,.92);
+  text-shadow: 0 2px 8px rgba(6,16,38,.55);
+}
+.register-page .auth-header .auth-heading{
+  font-size: clamp(1.45rem, 3vw, 1.8rem);
+  font-weight: 800; letter-spacing: -.02em;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(6,16,38,.5);
+  margin-bottom: 4px;
+}
+.register-page .auth-header .auth-sub{
+  font-size: .85rem; line-height: 1.5;
+  color: rgba(255,255,255,.78);
+  margin: 0;
+}
+/* The page stacks header + card now, so it can no longer be a centring flex. */
+.register-page{
+  display: block;
+  padding: 40px 20px;
+}
+.register-card{ margin: 0 auto; }
+.register-card .slp-back-link{ position: static; display: inline-flex; margin-bottom: 14px; }
+
+@media (max-width: 640px){
+  .register-page{ padding: 26px 14px; }
+  .register-page .auth-header{ margin-bottom: 14px; }
+}

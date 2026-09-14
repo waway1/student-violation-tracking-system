@@ -1,0 +1,27 @@
+# Runtime data — never commit these
+# (auto DB dumps + archived imported scan files)
+backups/
+
+# student-uploaded evidence images
+uploads/evidence/*
+!uploads/evidence/.gitkeep
+
+# secret credentials, if ever added
+config/google-service-account.json
+config/google-oauth.json
+config/db_credentials.php
+
+# Editor / OS noise
+*.bak
+*.tmp
+.DS_Store
+Thumbs.db
+__preview_*.php
+_probe*.php
+
+.env
+# holds the live DB password - must never be committed or deployed
+INFINITYFREE-env.txt
+
+# temporary server diagnostic - never commit or deploy
+dbtest.php

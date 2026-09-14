@@ -1,0 +1,34 @@
+# Serve uploaded images, but NEVER run code from this folder (stops webshells).
+#
+# `php_admin_flag` is ONLY valid in httpd.conf / <VirtualHost>. Apache treats
+# it as a fatal configuration error inside a .htaccess -- "php_admin_flag not
+# allowed here" -- and answers 500 to EVERY request in this folder. That did
+# not harden anything: it silently took out every profile picture and every
+# evidence file on the site, while the protection below is what was actually
+# doing the work. It is gone, and `php_flag` is guarded so it cannot do the
+# same if PHP is ever served through FastCGI/FPM instead of mod_php.
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+
+# The portable protection -- valid no matter how PHP is wired up.
+RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phar
+RemoveType .php .phtml .php3 .php4 .php5 .php7 .php8 .phar
+AddType text/plain .php .phtml .phar
+Options -Indexes -ExecCGI
+
+# Last line of defence: refuse to serve a script from here at all.
+<FilesMatch "\.(php|phtml|phar|cgi|pl|py|sh)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Deny from all
+    </IfModule>
+</FilesMatch>

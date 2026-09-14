@@ -1,0 +1,75 @@
+# ============================================================
+#  Deploy to InfinityFree over FTP
+#
+#  InfinityFree's free plan has no git and no SSH, so the server
+#  cannot pull from GitHub. FTP is the only way in, and this does
+#  it on every push to master.
+#
+#  ONE-TIME SETUP — GitHub repo > Settings > Secrets and variables
+#  > Actions > New repository secret:
+#
+#     FTP_SERVER    ftpupload.net
+#     FTP_USERNAME  if0_42480644
+#     FTP_PASSWORD  <your InfinityFree ACCOUNT password>
+#
+#  NOTE: FTP_PASSWORD is the hosting-account password from the
+#  control panel's FTP Accounts page. It is NOT the MySQL password
+#  — those are two different credentials that happen to share the
+#  if0_42480644 username.
+# ============================================================
+name: Deploy to InfinityFree
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:        # lets you run it by hand from the Actions tab
+
+concurrency:
+  # Two overlapping FTP syncs to the same directory interleave their
+  # uploads and can leave half-written files live. Queue them instead.
+  group: infinityfree-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync htdocs over FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server:   ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp          # InfinityFree free tier has no FTPS
+          port: 21
+          server-dir: /htdocs/
+          # Keeps a manifest on the server so later runs upload only what
+          # actually changed — the first run is slow (vendor/ is ~800 files),
+          # every run after it is seconds.
+          state-name: .ftp-deploy-sync-state.json
+          dangerous-clean-slate: false
+
+          # ----------------------------------------------------------
+          # EXCLUDES — these are not just "don't upload", they are
+          # "don't touch". The action deletes server files that are
+          # absent from the repo, so anything listed here is protected
+          # from deletion as well. Everything below exists ONLY on the
+          # server and would otherwise be wiped on the first deploy.
+          # ----------------------------------------------------------
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            .env
+            .ftp-deploy-sync-state.json
+            config/db_credentials.php
+            uploads/evidence/**
+            uploads/profile/**
+            backups/**
+            .vscode/**
+            Claude outputs/**
+            *.code-workspace
+            desktop.ini
+            **/desktop.ini

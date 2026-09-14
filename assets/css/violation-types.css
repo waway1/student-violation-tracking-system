@@ -1,0 +1,53 @@
+/* =====================================================================
+   VIOLATION TYPES  (admin/violation_rules.php)
+   ---------------------------------------------------------------------
+   The page is a list with two controls per row and one add form above it,
+   so it needs very little: a row that wraps on a phone, a severity select
+   narrow enough not to dominate its column, and a save bar that stays
+   with the table it saves.
+   ===================================================================== */
+
+/* ── Add a type ─────────────────────────────────────────────────────── */
+.vt-add{
+  display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap;
+  margin-top: 10px;
+}
+.vt-add label{
+  display: block; margin-bottom: 5px;
+  font-size: .7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--text-muted, #5a6a8a);
+}
+.vt-add-name{ flex: 1 1 260px; min-width: 0; }
+.vt-add-sev { flex: 0 0 140px; }
+.vt-add .vts-input{ width: 100%; }
+
+/* The checkbox sits on the button's line, not the fields' — it is a
+   qualifier on what is being added, not a field of its own. */
+.vt-crit{
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .8rem; font-weight: 600; color: var(--text-soft, #475569);
+  padding-bottom: 9px;
+}
+
+/* ── The list ───────────────────────────────────────────────────────── */
+/* Narrow: a two-option select does not need the width of a name column. */
+.vt-sev{ width: auto; min-width: 104px; padding: 6px 8px; font-size: .82rem; }
+
+.vt-save-row{
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-top: 13px; padding-top: 13px;
+  border-top: 1px solid var(--border, #dde4f0);
+}
+.vt-hint{ font-size: .76rem; color: var(--text-muted, #5a6a8a); }
+
+/* ── Nothing to show ────────────────────────────────────────────────── */
+.vt-empty{ text-align: center; padding: 36px 20px; color: var(--text-muted, #5a6a8a); }
+.vt-empty i{ font-size: 1.9rem; opacity: .4; display: block; margin-bottom: 10px; }
+.vt-empty p{ margin: 0; font-size: .88rem; }
+
+@media (max-width: 560px){
+  /* Stacked, the add form's button should not sit alone on a short line. */
+  .vt-add-name, .vt-add-sev{ flex: 1 1 100%; }
+  .vt-add .btn-primary{ width: 100%; justify-content: center; }
+  .vt-crit{ padding-bottom: 0; }
+}

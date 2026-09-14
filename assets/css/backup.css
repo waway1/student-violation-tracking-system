@@ -1,0 +1,193 @@
+/* Admin backup page — extracted from backup.php so all CSS lives in stylesheets.
+
+   Laid out as four numbered steps down the page rather than a grid of equal
+   panels. The old shape gave a scope filter, an email form, two near-identical
+   file tables and a restore box the same visual weight, so nothing said what
+   to do first; these are sequential tasks and now read as one. */
+
+.bk-page{
+  --bk-ink:#1a2340; --bk-dim:#4c5a75; --bk-line:#e3e9f3;
+  --bk-soft:#f7f9fd; --bk-radius:14px;
+}
+
+/* ── Status strip: counts + whether Drive filing is actually on ─────── */
+.bk-strip{
+  display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:18px;
+}
+.bk-tile{
+  display:flex; align-items:center; gap:12px; background:var(--surface,#fff);
+  border:1px solid var(--bk-line); border-radius:var(--bk-radius); padding:14px 16px;
+  transition:box-shadow .18s ease, transform .18s ease;
+}
+.bk-tile:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(20,40,80,.10); }
+.bk-tile-ico{
+  width:42px; height:42px; flex:none; border-radius:12px; display:flex;
+  align-items:center; justify-content:center; font-size:1.05rem;
+}
+.bk-tile-ico.blue { background:#e8f0fd; color:#1a56b5; }
+.bk-tile-ico.red  { background:#fdeaea; color:#c22b2b; }
+.bk-tile-ico.slate{ background:#eef1f7; color:#4c5a75; }
+.bk-tile-ico.green{ background:#e6f6ec; color:#1b7f46; }
+.bk-tile-ico.amber{ background:#fdf2e0; color:#b07206; }
+.bk-tile-txt{ display:flex; flex-direction:column; line-height:1.25; font-size:.78rem;
+  color:var(--bk-dim); font-weight:600; min-width:0; }
+.bk-tile-txt b{ font-size:1.45rem; font-weight:800; color:var(--bk-ink); letter-spacing:-.02em; }
+.bk-drive .bk-tile-txt b{ font-size:.95rem; }
+.bk-drive.on { border-color:#bde3cb; background:linear-gradient(180deg,#fbfffc,#f4fbf7); }
+.bk-drive.off{ border-color:#f0dcb4; background:linear-gradient(180deg,#fffdf8,#fdf8ee); }
+.bk-tile-link{
+  margin-left:auto; flex:none; font-size:.76rem; font-weight:700; text-decoration:none;
+  color:#1a56b5; border:1px solid #cddffa; background:#fff;
+  border-radius:999px; padding:5px 12px; transition:background .15s ease, border-color .15s ease;
+}
+.bk-tile-link:hover{ background:#eef4ff; border-color:#9dc0f5; }
+@media (max-width:900px){ .bk-strip{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:520px){ .bk-strip{ grid-template-columns:1fr; } }
+
+.bk-alert{ margin-bottom:18px; display:flex; align-items:flex-start; gap:10px; line-height:1.55; }
+.bk-alert i{ margin-top:3px; }
+
+/* ── A numbered step ────────────────────────────────────────────────── */
+.bk-step{
+  background:var(--surface,#fff); border:1px solid var(--bk-line);
+  border-radius:var(--bk-radius); padding:22px 24px; margin-bottom:18px;
+}
+.bk-step.danger{ border-color:#f0c9c4; background:linear-gradient(180deg,#fffbfb,#fff); }
+.bk-step-head{ display:flex; align-items:flex-start; gap:13px; margin-bottom:16px; }
+.bk-step-head h3{
+  font-size:1.05rem; font-weight:800; color:var(--bk-ink); margin:0; letter-spacing:-.01em;
+}
+.bk-step-head p{ font-size:.83rem; color:var(--bk-dim); margin:3px 0 0; line-height:1.5; }
+.bk-num{
+  width:30px; height:30px; flex:none; border-radius:50%; background:var(--navy,#1a3a6b); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.88rem;
+}
+.bk-num.danger{ background:#a4110d; }
+.bk-count{
+  margin-left:auto; flex:none; font-size:.74rem; font-weight:700; color:var(--bk-dim);
+  background:var(--bk-soft); border:1px solid var(--bk-line); border-radius:999px; padding:5px 12px;
+  white-space:nowrap;
+}
+.bk-count.danger{ color:#a4110d; background:#fdeceb; border-color:#f5c9c4; }
+
+/* ── Filter rows (step 1 and step 3) ────────────────────────────────── */
+.bk-filter{ display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
+.bk-filter.compact{ margin-bottom:16px; }
+.bk-field{ display:flex; flex-direction:column; gap:5px; min-width:150px; }
+.bk-field.grow{ flex:1 1 200px; }
+.bk-field label{ font-size:.74rem; font-weight:700; color:var(--bk-dim); text-transform:uppercase; letter-spacing:.03em; }
+.bk-page .bk-field .vts-input{ height:44px !important; font-size:.9rem !important; }
+.bk-field-actions{ display:flex; gap:8px; align-items:flex-end; }
+.bk-page .bk-field-actions .btn-primary,
+.bk-page .bk-field-actions .btn-outline{
+  height:44px; display:inline-flex; align-items:center; gap:7px; padding:0 16px; font-size:.86rem;
+}
+
+.bk-summary{
+  margin:16px 0 0; font-size:.84rem; color:var(--bk-dim); line-height:1.6;
+  background:var(--bk-soft); border:1px solid var(--bk-line); border-radius:10px; padding:11px 14px;
+  display:flex; align-items:flex-start; gap:9px;
+}
+.bk-summary i{ margin-top:3px; color:#4c5a75; }
+.bk-summary b{ color:var(--bk-ink); }
+.bk-summary.good{ background:#f4fbf7; border-color:#cfe9db; }
+.bk-summary.good i{ color:#1b7f46; }
+
+/* ── Step 2: the three ways out, as equal cards ─────────────────────── */
+.bk-ways{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+@media (max-width:1000px){ .bk-ways{ grid-template-columns:1fr; } }
+.bk-way{
+  display:flex; flex-direction:column; border:1px solid var(--bk-line); border-radius:12px;
+  padding:18px; background:var(--bk-soft); transition:box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+}
+.bk-way:hover{ transform:translateY(-2px); box-shadow:0 12px 26px rgba(20,40,80,.10); border-color:#cdd8ea; }
+.bk-way-top{ display:flex; align-items:center; gap:11px; margin-bottom:11px; }
+.bk-way-top h4{ margin:0; font-size:.95rem; font-weight:800; color:var(--bk-ink); }
+.bk-way-sub{ font-size:.74rem; color:var(--bk-dim); font-weight:600; }
+.bk-way-ico{
+  width:38px; height:38px; flex:none; border-radius:11px; display:flex;
+  align-items:center; justify-content:center; font-size:1rem; background:#fff;
+}
+.bk-way-ico.green{ color:#1b7f46; box-shadow:inset 0 0 0 1px #cfe9db; }
+.bk-way-ico.slate{ color:#4c5a75; box-shadow:inset 0 0 0 1px #d9e0ec; }
+.bk-way-ico.blue { color:#1576c4; box-shadow:inset 0 0 0 1px #cddffa; }
+.bk-way > p{ font-size:.82rem; color:var(--bk-dim); line-height:1.6; margin:0 0 12px; }
+.bk-way-facts{ display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.bk-way-facts span{ font-size:.76rem; color:var(--bk-dim); font-weight:600; display:flex; align-items:center; gap:7px; }
+.bk-way-facts i{ width:14px; text-align:center; color:#8794ab; }
+.bk-way-form{ display:flex; flex-direction:column; gap:6px; margin-top:auto; }
+.bk-way-form label{ font-size:.74rem; font-weight:700; color:var(--bk-dim); text-transform:uppercase; letter-spacing:.03em; }
+.bk-page .bk-way-form .vts-input{ height:44px !important; font-size:.9rem !important; }
+.bk-way-btns{ margin-top:auto; display:flex; flex-direction:column; gap:8px; }
+.bk-way-btns form{ margin:0; }
+.bk-page .bk-way-btn{
+  width:100%; margin-top:auto; padding:12px 18px !important; font-size:.9rem !important;
+  font-weight:700 !important; border-radius:10px !important;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  transition:transform .16s ease, box-shadow .16s ease;
+}
+.bk-page .bk-way-btns .bk-way-btn{ margin-top:0; }
+.bk-page .bk-way-btn:hover{ transform:translateY(-1px); box-shadow:0 8px 18px rgba(26,58,107,.22); }
+
+.bk-sheets{ display:flex; gap:7px; flex-wrap:wrap; margin-bottom:14px; }
+.bk-sheets span{ background:#e9eff8; color:#2b3a55; border-radius:999px; padding:4px 11px; font-size:.72rem; font-weight:700; }
+
+/* ── Step 3: one table for every backup ─────────────────────────────── */
+.bk-table-wrap{ overflow-x:auto; border:1px solid var(--bk-line); border-radius:12px; }
+.bk-table{ margin:0; }
+.bk-table .nowrap{ white-space:nowrap; }
+.bk-table .ta-r{ text-align:right; }
+.bk-fname{ font-weight:600; word-break:break-all; color:var(--bk-ink); }
+.bk-fname i{ color:#8794ab; margin-right:6px; }
+.bk-pill-manual{ background:#e8f0fd !important; color:#1a56b5 !important; }
+.bk-pill-auto  { background:#eef1f7 !important; color:#4c5a75 !important; }
+.bk-lockicon{ display:inline-block; padding:0 9px; color:#b3bdcd; font-size:.8rem; }
+
+/* ── Step 4: restore ────────────────────────────────────────────────── */
+.bk-danger-note{
+  font-size:.83rem; color:var(--bk-dim); line-height:1.6; margin:0 0 16px;
+  background:#fdf6f5; border:1px solid #f3d6d2; border-radius:10px; padding:12px 14px;
+}
+.bk-danger-note b{ color:#8c1d13; }
+.bk-restore-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-bottom:16px; }
+@media (max-width:900px){ .bk-restore-grid{ grid-template-columns:1fr; } }
+.bk-restore .vts-form-group{ margin:0; }
+.bk-page .bk-restore .bk-way-btn{ width:auto; min-width:220px; }
+
+/* ── Empty state ────────────────────────────────────────────────────── */
+.bk-empty{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+  text-align:center; color:var(--bk-dim); font-size:.9rem; border:1.5px dashed #d7e0ee;
+  border-radius:14px; padding:34px 22px; background:#fbfcfe;
+}
+.bk-empty .bk-ill{
+  width:64px; height:64px; border-radius:18px; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,#eaf0fa,#dbe6f7); color:#2a5298; font-size:1.6rem; margin-bottom:6px;
+}
+.bk-empty b{ color:var(--bk-ink); font-size:.98rem; }
+.bk-empty p{ margin:2px 0 0; font-size:.82rem; }
+
+/* ── Last-backup chip + in-flight progress ──────────────────────────── */
+.bk-last{
+  display:inline-flex; align-items:center; gap:8px; font-size:.82rem; font-weight:600;
+  color:var(--bk-dim); background:#f3f6fb; border:1px solid var(--bk-line);
+  border-radius:999px; padding:6px 14px;
+}
+.bk-last i{ color:#1b7f46; }
+.bk-last.stale i{ color:#c47f00; }
+.bk-busy{
+  display:none; align-items:center; gap:10px; margin-top:16px; font-size:.85rem;
+  font-weight:600; color:#1a3a6b;
+}
+.bk-busy.on{ display:flex; }
+.bk-bar{ flex:1; height:6px; border-radius:999px; background:#e8eef8; overflow:hidden; max-width:260px; }
+.bk-bar span{
+  display:block; height:100%; width:38%; border-radius:999px; background:#2563c9;
+  animation:bkSlide 1.05s ease-in-out infinite;
+}
+@keyframes bkSlide{ 0%{ transform:translateX(-100%);} 100%{ transform:translateX(320%);} }
+@media (prefers-reduced-motion: reduce){
+  .bk-bar span{ animation:none; width:100%; }
+  .bk-tile,.bk-way,.bk-page .bk-way-btn{ transition:none; }
+  .bk-tile:hover,.bk-way:hover,.bk-page .bk-way-btn:hover{ transform:none; }
+}

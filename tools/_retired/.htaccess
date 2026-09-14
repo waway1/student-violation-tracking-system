@@ -1,0 +1,11 @@
+# Nothing in this folder is served. It holds files that were live in the
+# web root but should not have been — a setup script that reset every
+# seeded password, and an exported student list. They are kept here rather
+# than deleted so nothing is lost; delete the folder once you are sure.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

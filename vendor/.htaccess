@@ -1,0 +1,16 @@
+# Composer libraries. These are loaded by PHP on the server (via
+# vendor/autoload.php) and are NEVER fetched by a browser, so nothing here
+# should be served. Left open, the whole third-party source tree is readable
+# over the web -- including sample scripts that execute when requested and
+# file paths that tell an attacker exactly which library versions are in use.
+#
+# NOTE: this is the Composer vendor/ at the project root. The app's own
+# front-end libraries live in assets/vendor/ (Font Awesome, Chart.js) and are
+# a different folder -- those must stay reachable and are untouched by this.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

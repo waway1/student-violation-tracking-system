@@ -1,0 +1,363 @@
+/* =====================================================================
+   VTS CLEAN  ·  loads LAST — the light, airy SaaS layout
+   Modeled on the reference dashboards: white sidebar, near-white canvas,
+   white cards with hairline borders, one vivid accent, compact KPI cards
+   with deltas, generous white space. Precision over decoration.
+   ===================================================================== */
+:root{
+  --c-bg:#f7f8fa;          /* page canvas */
+  --c-surface:#ffffff;     /* cards */
+  --c-line:#ecedf1;        /* hairline border */
+  --c-line-2:#f2f3f6;
+  --c-ink:#111827;         /* headings */
+  --c-ink-2:#374151;       /* body */
+  --c-muted:#8b91a1;       /* labels */
+  --c-accent:#4f46e5;      /* single accent (indigo) */
+  --c-accent-soft:#eef0fe;
+  --c-up:#16a34a; --c-down:#e11d48;
+  --c-radius:12px;
+  --c-shadow:0 1px 2px rgba(17,24,39,.04);
+  --sidebar-w:248px;
+}
+
+/* ---------- Canvas ---------- */
+.vts-main-inner{
+    width:100% !important;
+    max-width:none !important;
+    padding:20px !important;
+}
+
+/* ---------- Typography: quiet, precise ---------- */
+body, .vts-navbar, .vts-sidebar, button, input, select, textarea{
+  font-family: var(--font-ui) !important;
+}
+.admin-welcome-row h1, .page-head h1, .page-head h2, .page-title{
+  font-size:1.35rem !important; font-weight:650 !important; color:var(--c-ink) !important; letter-spacing:-.01em !important;
+}
+.admin-welcome-row p, .page-head p{ font-size:.85rem !important; color:var(--c-muted) !important; }
+.panel-head h3{
+  font-size:.86rem !important; font-weight:650 !important; color:var(--c-ink) !important;
+  text-transform:none !important; letter-spacing:0 !important;
+}
+.panel-head a{ font-size:.78rem !important; color:var(--c-muted) !important; font-weight:500 !important; }
+.panel-head a:hover{ color:var(--c-accent) !important; }
+
+/* ---------- TOP BAR: GOLD + BLUE brand gradient ---------- */
+.vts-navbar{
+  background:linear-gradient(90deg,#1a3a6b 0%,#2a5298 52%,#c9a227 100%) !important;
+  border-bottom:none !important; box-shadow:0 2px 10px rgba(12,26,56,.18) !important;
+  height:60px !important; padding:0 18px !important; gap:14px;
+}
+.vts-navbar .nav-start{ display:flex; align-items:center; gap:10px; flex:0 0 auto; }
+.vts-navbar .brand{ display:flex; align-items:center; gap:12px; }
+.vts-navbar .brand-name{ color:#fff !important; font-weight:700 !important; font-size:.95rem !important;
+  text-shadow:0 1px 3px rgba(10,25,55,.4) !important; }
+.vts-navbar .brand img{ border:1px solid rgba(255,255,255,.5) !important; }
+/* Menu button now lives INSIDE the bar — it can never cover the page */
+.menu-tab{
+  position:static !important; transform:none !important; margin:0 !important;
+  width:38px !important; height:38px !important; min-width:0 !important; padding:0 !important;
+  display:inline-flex !important; align-items:center; justify-content:center;
+  background:rgba(255,255,255,.16) !important; color:#fff !important;
+  border:1px solid rgba(255,255,255,.26) !important; border-radius:9px !important;
+  box-shadow:none !important; font-size:.95rem !important; flex:0 0 auto; cursor:pointer;
+}
+.menu-tab i{ color:#fff !important; margin:0 !important; }
+.menu-tab:hover{ background:rgba(255,255,255,.28) !important; border-color:rgba(255,255,255,.45) !important; }
+/* Search: translucent glass on the gradient, no white flip */
+.vts-navbar .nav-search{
+  background:rgba(255,255,255,.16) !important; border:1px solid rgba(255,255,255,.28) !important;
+  border-radius:9px !important; height:38px !important;
+}
+.vts-navbar .nav-search:focus-within{
+  background:rgba(255,255,255,.26) !important; border-color:rgba(255,255,255,.6) !important;
+  box-shadow:0 0 0 3px rgba(255,255,255,.16) !important;
+}
+.vts-navbar .nav-search i, .vts-navbar .nav-search:focus-within i{ color:rgba(255,255,255,.9) !important; }
+.vts-navbar .nav-search input, .vts-navbar .nav-search:focus-within input{ color:#fff !important; }
+.vts-navbar .nav-search input::placeholder,
+.vts-navbar .nav-search:focus-within input::placeholder{ color:rgba(255,255,255,.78) !important; }
+/* Bell + profile on the gradient */
+.nav-bell{ background:rgba(255,255,255,.14) !important; color:#fff !important; width:38px !important; height:38px !important; }
+.nav-bell:hover{ background:rgba(255,255,255,.26) !important; }
+.nav-profile-btn{ background:rgba(255,255,255,.12) !important; border:1px solid rgba(255,255,255,.24) !important; }
+.nav-profile-btn:hover, .nav-profile.open .nav-profile-btn{ background:rgba(255,255,255,.22) !important; }
+.nav-profile-btn .user-role{ color:#fff !important; text-shadow:0 1px 3px rgba(10,25,55,.35) !important; }
+.nav-profile-btn .user-desc{ color:rgba(255,255,255,.8) !important; }
+.nav-profile-btn .np-caret{ color:rgba(255,255,255,.85) !important; }
+.nav-profile-btn .user-avatar{ border:1.5px solid rgba(255,255,255,.6) !important; background:rgba(255,255,255,.2) !important; color:#fff !important; }
+.btn-logout{ background:rgba(255,255,255,.92) !important; color:#1a3a6b !important; box-shadow:none !important; }
+.btn-logout:hover{ background:#fff !important; }
+
+/* ---------- SIDEBAR: GOLD + BLUE gradient, gold active accent ---------- */
+.vts-sidebar{
+  background:linear-gradient(180deg,#1a3a6b 0%,#22508f 55%,#8a7220 100%) !important;
+  backdrop-filter:none !important; border-right:none !important;
+  box-shadow:2px 0 14px rgba(12,26,56,.14) !important;
+  top:60px !important; height:calc(100vh - 60px) !important; padding-top:12px !important;
+  transition:width .22s ease !important;
+}
+.sidebar-nav{ padding:6px 0 !important; }
+.vts-sidebar .sidebar-brand{ justify-content:flex-start; padding:12px 16px !important; gap:10px; }
+.vts-sidebar .menu-tab{
+  position:static !important; top:auto !important; left:auto !important; transform:none !important;
+  width:38px !important; height:38px !important; padding:0 !important;
+  background:rgba(255,255,255,.14) !important; color:#fff !important;
+  border:1px solid rgba(255,255,255,.28) !important; border-radius:9px !important;
+  box-shadow:none !important; display:inline-flex !important; align-items:center; justify-content:center;
+}
+.vts-sidebar .menu-tab i{ color:#fff !important; margin:0 !important; }
+.vts-sidebar .menu-tab:hover{ background:rgba(255,255,255,.24) !important; }
+.vts-sidebar .sidebar-menu-label{ color:#fff; font-size:.92rem; font-weight:700; }
+.vts-sidebar.mini .sidebar-brand{ padding:12px 0 !important; }
+.vts-sidebar.mini .menu-tab{ width:38px !important; padding:0 !important; }
+.vts-sidebar.mini .sidebar-menu-label{ display:none; }
+.sidebar-nav a{
+  margin:2px 10px !important; padding:10px 13px !important; gap:12px !important;
+  border-radius:9px !important; font-size:.88rem !important; font-weight:500 !important;
+  color:rgba(255,255,255,.82) !important; box-shadow:none !important; white-space:nowrap;
+  transition:background .12s ease, color .12s ease !important;
+}
+.sidebar-nav a i{ width:20px !important; font-size:.95rem !important; text-align:center !important; color:rgba(255,255,255,.7) !important; flex:0 0 auto; }
+.sidebar-nav a:hover{ background:rgba(255,255,255,.12) !important; color:#fff !important; }
+.sidebar-nav a:hover i{ color:#fff !important; }
+.sidebar-nav a.active{
+  background:rgba(255,255,255,.16) !important; color:#fff !important; font-weight:650 !important;
+  box-shadow:inset 3px 0 0 #e2b83a !important;
+}
+.sidebar-nav a.active i{ color:#e2b83a !important; }
+.notif-badge{ background:var(--c-down) !important; font-size:.64rem !important; }
+.vts-sidebar::after{ color:rgba(255,255,255,.4) !important; border-top:1px solid rgba(255,255,255,.12) !important; font-size:.66rem !important; }
+.vts-sidebar::after{ content:none !important; display:none !important; }
+
+/* ---------- ICONS-ONLY RAIL (2nd click on Menu) ---------- */
+.vts-sidebar.mini{ width:66px !important; }
+.vts-main.mini{ margin-left:66px !important; }
+.vts-sidebar.mini .sidebar-brand{ justify-content:center; padding:12px 0 !important; }
+.vts-sidebar.mini .sidebar-brand img{ width:34px; height:34px; }
+.vts-sidebar.mini .sidebar-brand span{ display:none; }
+/* font-size:0 hides the bare text labels; the icon keeps its own size */
+.vts-sidebar.mini .sidebar-nav a{
+  font-size:0 !important; justify-content:center !important; padding:11px 0 !important; margin:2px 8px !important; gap:0 !important;
+}
+.vts-sidebar.mini .sidebar-nav a i{ font-size:1.05rem !important; width:auto !important; }
+.vts-sidebar.mini .notif-badge{ display:none !important; }
+.vts-sidebar.mini::after{ content:'' !important; padding:0 !important; border:none !important; }
+@media (max-width:900px){ .vts-main.mini{ margin-left:0 !important; } }
+
+/* ---------- CARDS: white, hairline, 12px, quiet ---------- */
+.kpi-card, .panel, .recent-table-wrap, .vts-card, .stat-card{
+  background:var(--c-surface) !important; border:1px solid var(--c-line) !important;
+  border-radius:var(--c-radius) !important; box-shadow:var(--c-shadow) !important;
+}
+.kpi-card:hover, .panel:hover, .stat-card:hover{
+  box-shadow:0 4px 14px rgba(17,24,39,.06) !important; transform:none !important;
+  border-color:#e2e4ea !important;
+}
+
+/* KPI: compact icon + label, big number, delta underneath */
+.kpi-grid{ gap:16px !important; margin-bottom:20px !important; }
+.kpi-card{ padding:16px 18px !important; min-height:0 !important; }
+.kpi-top{ gap:9px !important; }
+.kpi-icon{
+  width:30px !important; height:30px !important; border-radius:8px !important;
+  font-size:.8rem !important; background:#f3f4f7 !important; color:var(--c-ink-2) !important;
+}
+.kpi-icon.blue{ background:var(--c-accent-soft) !important; color:var(--c-accent) !important; }
+.kpi-icon.red, .kpi-icon.rose{ background:#fee9ee !important; color:var(--c-down) !important; }
+.kpi-icon.amber{ background:#fdf3e3 !important; color:#c2790b !important; }
+.kpi-icon.purple{ background:#f1ecfe !important; color:#7c3aed !important; }
+.kpi-label{ font-size:.8rem !important; font-weight:500 !important; color:var(--c-ink-2) !important; }
+.kpi-value{
+  font-size:1.75rem !important; font-weight:650 !important; color:var(--c-ink) !important;
+  margin:10px 0 2px !important; letter-spacing:-.02em !important;
+}
+.kpi-meta{ font-size:.75rem !important; color:var(--c-muted) !important; }
+.kpi-meta b{ color:var(--c-up) !important; font-weight:600 !important; }
+.kpi-bar{ height:4px !important; background:#f0f1f4 !important; margin-top:10px !important; }
+
+/* Panels */
+.panel{ padding:18px !important; }
+.panel-head{ margin-bottom:12px !important; }
+.recent-table-wrap{ padding:18px !important; }
+.panel-grid-3, .panel-grid-3b{ gap:16px !important; margin-bottom:20px !important; }
+
+/* ---------- TABLES: airy, hairline, quiet header ---------- */
+.data-table th, .vts-table thead th{
+  background:transparent !important; color:var(--c-muted) !important;
+  font-size:.72rem !important; font-weight:600 !important; text-transform:none !important;
+  letter-spacing:0 !important; padding:10px 12px !important;
+  border-bottom:1px solid var(--c-line) !important;
+}
+.data-table td, .vts-table tbody td{
+  padding:12px !important; font-size:.83rem !important; color:var(--c-ink-2) !important;
+  border-bottom:1px solid var(--c-line-2) !important;
+}
+.data-table tbody tr:nth-child(even) td{ background:transparent !important; }
+.data-table tbody tr:hover td{ background:#fafbfc !important; }
+
+/* ---------- BUTTONS: one accent, quiet secondaries ---------- */
+.btn-primary{
+  background:var(--c-accent) !important; border:1px solid var(--c-accent) !important; color:#fff !important;
+  border-radius:8px !important; font-weight:600 !important; font-size:.84rem !important;
+  box-shadow:none !important; min-height:38px !important;
+}
+.btn-primary:hover{ background:#4338ca !important; border-color:#4338ca !important; transform:none !important; box-shadow:none !important; }
+.btn-outline{
+  background:#fff !important; border:1px solid var(--c-line) !important; color:var(--c-ink-2) !important;
+  border-radius:8px !important; font-weight:550 !important; font-size:.84rem !important; min-height:38px !important;
+}
+.btn-outline:hover{ background:#f7f8fa !important; border-color:#dfe1e7 !important; color:var(--c-ink) !important; transform:none !important; }
+.btn-danger{ background:var(--c-down) !important; border-color:var(--c-down) !important; border-radius:8px !important; }
+.btn-sm{ min-height:32px !important; font-size:.79rem !important; padding:6px 11px !important; }
+
+/* ---------- Inputs ---------- */
+.vts-input, .vts-select{
+  border:1px solid var(--c-line) !important; border-radius:8px !important;
+  background:#fff !important; font-size:.86rem !important; color:var(--c-ink) !important;
+}
+.vts-input:focus, .vts-select:focus{
+  border-color:var(--c-accent) !important; box-shadow:0 0 0 3px rgba(79,70,229,.12) !important;
+}
+.filter-field label{ color:var(--c-muted) !important; font-size:.74rem !important; text-transform:none !important; letter-spacing:0 !important; }
+
+/* ---------- Quick actions / activity read as quiet list rows ---------- */
+.qa-card{ border:1px solid var(--c-line) !important; border-radius:10px !important; box-shadow:none !important; }
+.qa-card:hover{ background:#fafbfc !important; border-color:#dfe1e7 !important; transform:none !important; box-shadow:none !important; }
+.qa-ic{ background:#f3f4f7 !important; color:var(--c-ink-2) !important; width:34px !important; height:34px !important; border-radius:8px !important; }
+.qa-title{ font-size:.85rem !important; font-weight:600 !important; color:var(--c-ink) !important; }
+.qa-sub{ font-size:.74rem !important; color:var(--c-muted) !important; }
+.activity-dot{ background:#f3f4f7 !important; color:var(--c-ink-2) !important; }
+.activity-item{ border-bottom:1px solid var(--c-line-2) !important; }
+
+/* Pills */
+.pill{ font-size:.7rem !important; font-weight:600 !important; border-radius:6px !important; }
+
+/* ---------- Responsive ---------- */
+@media (max-width:1024px){ .kpi-grid{ grid-template-columns:1fr 1fr !important; } .panel-grid-3, .panel-grid-3b{ grid-template-columns:1fr !important; } }
+@media (max-width:560px){ .kpi-grid{ grid-template-columns:1fr !important; } .vts-main-inner{ padding:18px 14px 32px !important; } }
+
+/* ---- Sidebar department shortcuts (Admin/OSA) ----
+   One click opens that department's Official Sheet, ready to Export to Excel. */
+.sidebar-subhead{
+  padding:10px 18px 4px !important;
+  font-size:.66rem !important; font-weight:800 !important; letter-spacing:.08em !important;
+  text-transform:uppercase !important; color:rgba(255,255,255,.5) !important;
+}
+.sidebar-nav a.sidebar-sub{
+  padding-left:34px !important;
+  font-size:.86rem !important;
+  color:rgba(255,255,255,.82) !important;
+}
+.sidebar-nav a.sidebar-sub i{ font-size:.8rem !important; }
+.sidebar-nav a.sidebar-sub.active{
+  background:rgba(255,255,255,.14) !important;
+  color:#fff !important; font-weight:700 !important;
+}
+/* Icons-only mini rail: hide the sub-labels + heading, keep the icon */
+.vts-sidebar.mini .sidebar-subhead{ display:none !important; }
+
+/* ---- Major/Minor "kind" chip — readable everywhere ----
+   The old inline chips used padding:1px which clipped the text vertically. */
+.kind-chip{
+  display:inline-block;
+  padding:4px 12px;
+  border-radius:999px;
+  font-size:.78rem;
+  font-weight:800;
+  line-height:1.15;
+  letter-spacing:.02em;
+  white-space:nowrap;
+  vertical-align:middle;
+}
+.kind-chip.major{ color:#8a4b00; background:#fdf0dc; }
+.kind-chip.minor{ color:#1f6b41; background:#e6f5ec; }
+/* A record a proof review struck. Grey, not green: it is not an achievement,
+   it is a row that no longer counts. */
+.kind-chip.cleared{ color:#475569; background:#eef2f7; }
+
+/* ---- Status cell on a student's own violation list ----
+   A pill that is also a link to the record. Two states only: the row counts,
+   or a proof review found it unsupported and it does not.
+   Lives here rather than in a page stylesheet because student/violations.php
+   loads no stylesheet of its own. */
+.vstatus-link{
+  display:inline-block;
+  font-size:.76rem; font-weight:700;
+  text-decoration:none;
+  padding:3px 10px; border-radius:999px;
+  border:1px solid transparent;
+}
+.vstatus-link.is-active{ color:#475569; background:#eef2f7; border-color:#dbe3ec; }
+.vstatus-link.is-cleared{ color:#065f46; background:#d1fae5; border-color:#a7e8cd; }
+.vstatus-link:hover{ filter:brightness(.96); }
+
+/* ---- Sidebar dropdown (Violations & Reports ▸ departments) ----
+   The departments used to sit in the nav permanently under a "By Department"
+   heading — five extra rows on every page of the app for a filter most
+   visits never use. They fold into the item they belong to now.
+
+   Built on <details>/<summary>, so it works with no JavaScript and cannot
+   be left in a wrong state by a script that failed to load. Which one is
+   open is decided server-side from the current URL (see includes/sidebar.php),
+   so it survives a page load without needing to be remembered anywhere.
+
+   The summary is styled to match .sidebar-nav a exactly — it sits in the same
+   column as the real links and must not read as a different kind of thing. */
+.sidebar-drop{ display:block; }
+
+/* THE RULE THAT MAKES IT ACTUALLY COLLAPSE.
+   A closed <details> is supposed to hide its own content, and normally it
+   does — but `.sidebar-nav a{ display:flex }` (vts-theme.css, and again in
+   vts-polish.css) is an author rule on those children, and it wins. The
+   result was a dropdown that toggled its `open` attribute correctly while
+   the department links stayed on screen at full height, so clicking the
+   header appeared to do nothing at all.
+
+   Hiding them explicitly rather than relying on the browser's default keeps
+   this true no matter what the two files above decide to do later. */
+.sidebar-drop:not([open]) > a{ display:none !important; }
+.sidebar-drop-head{
+  display:flex !important; align-items:center; gap:12px;
+  margin:2px 10px; padding:10px 13px;
+  border-radius:9px; cursor:pointer; list-style:none;
+  font-size:.88rem; font-weight:500; color:rgba(255,255,255,.82);
+  white-space:nowrap;
+  transition:background .12s ease, color .12s ease;
+}
+/* Safari/Chrome draw their own triangle; this page has its own caret. */
+.sidebar-drop-head::-webkit-details-marker{ display:none; }
+.sidebar-drop-head::marker{ content:''; }
+
+.sidebar-drop-head i{
+  width:20px; font-size:.95rem; text-align:center;
+  color:rgba(255,255,255,.7); flex:0 0 auto;
+}
+.sidebar-drop-head:hover{ background:rgba(255,255,255,.12); color:#fff; }
+.sidebar-drop-head:hover i{ color:#fff; }
+/* Active = you are on the page this group leads to, open or shut. */
+.sidebar-drop-head.active{
+  background:rgba(255,255,255,.16); color:#fff; font-weight:650;
+  box-shadow:inset 3px 0 0 #e2b83a;
+}
+.sidebar-drop-head.active > i:first-child{ color:#e2b83a; }
+
+.sidebar-drop-label{ flex:1 1 auto; min-width:0; }
+
+/* The caret is the only thing that says this opens rather than navigates. */
+.sidebar-drop-caret{
+  font-size:.68rem !important; width:auto !important;
+  opacity:.6; transition:transform .15s ease;
+}
+.sidebar-drop[open] > .sidebar-drop-head .sidebar-drop-caret{ transform:rotate(180deg); }
+
+/* Icons-only mini rail: the label and caret go, the icon stays, and the
+   department links below keep the icon-only treatment .sidebar-nav a already
+   gets — so a collapsed sidebar still shows the group and its contents. */
+.vts-sidebar.mini .sidebar-drop-head{
+  font-size:0; justify-content:center; padding:11px 0; margin:2px 8px; gap:0;
+}
+.vts-sidebar.mini .sidebar-drop-label,
+.vts-sidebar.mini .sidebar-drop-caret{ display:none !important; }
+.vts-sidebar.mini .sidebar-drop-head i{ font-size:1.05rem !important; width:auto !important; }
+.vts-sidebar.mini .sidebar-nav a.sidebar-sub{ padding-left:0 !important; }

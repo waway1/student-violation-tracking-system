@@ -1,0 +1,475 @@
+/* Student self-lookup entry page (student_search.php).
+   Page-specific styles only — extracted from the old inline <style> block so
+   all CSS lives in a stylesheet. Shared auth/modal styles stay in
+   vts-theme.css / vts-admin.css and are NOT duplicated here. */
+
+/* ---- Live search dropdown ---- */
+.slp-search-wrap { position: relative; }
+
+.slp-results {
+  position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 20;
+  background: #fff; border: 1px solid #dfe4ee; border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(20, 40, 90, .18);
+  max-height: 300px; overflow-y: auto; display: none;
+}
+.slp-results.open { display: block; }
+
+.slp-item {
+  display: flex; align-items: center; gap: 11px; padding: 12px 14px; cursor: pointer;
+  border-bottom: 1px solid #f1f3f8; transition: background .12s;
+}
+.slp-item:last-child { border-bottom: 0; }
+.slp-item:hover, .slp-item.active { background: #eef3ff; }
+.slp-item .av {
+  width: 34px; height: 34px; border-radius: 50%; background: #e7f0ff; color: #2563eb;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: .9rem;
+}
+.slp-item .tx { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.slp-item .nm { font-weight: 700; color: #1a2340; font-size: .95rem; }
+.slp-item .meta { font-size: .78rem; color: #6b7896; }
+.slp-empty { padding: 14px; color: #8a93a8; font-size: .85rem; text-align: center; }
+
+.slp-back {
+  display: inline-flex; align-items: center; gap: 6px; color: #2a5298;
+  font-weight: 600; font-size: .85rem; text-decoration: none; margin-bottom: 4px;
+}
+#slpOpening { display: none; text-align: center; color: #2a5298; font-weight: 700; margin-top: 14px; }
+
+/* ---- Page-scoped polish (this page only; shared auth CSS untouched) ---- */
+/* The translucent wash + blur that used to sit here is gone with the photo
+   it was covering; the page is one opaque gradient now. See the entry-screen
+   block at the end of this file. */
+.auth-header { margin-bottom: 24px; }
+
+.auth-card .auth-logo { width: 64px; height: 64px; margin: 4px auto 14px; }
+.auth-card .auth-heading { margin-bottom: 8px; }
+.auth-card .auth-sub { margin-bottom: 26px; }
+.auth-card .slp-search-wrap { margin-bottom: 10px; }
+.slp-search-wrap .auth-label { text-align: center; font-size: .82rem; margin-bottom: 8px; }
+
+/* Taller search input with an in-field icon and a readable placeholder */
+.slp-search-box { position: relative; }
+.slp-search-ic {
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  color: #8b96ad; font-size: .95rem; pointer-events: none; transition: color .18s ease;
+}
+.slp-search-box:focus-within .slp-search-ic { color: #1a3a6b; }
+.slp-search-wrap .vts-input {
+  padding: 14px 16px 14px 46px !important; font-size: .98rem !important;
+  border-radius: 12px !important;
+  transition: border-color .18s ease, box-shadow .18s ease !important;
+}
+.slp-search-wrap .vts-input::placeholder { color: #7c88a1; }
+.slp-search-wrap .vts-input:focus {
+  border-color: #2a5298 !important; box-shadow: 0 0 0 4px rgba(42, 82, 152, .15) !important;
+}
+
+/* ---- Step 2: confirm-your-School-ID panel ---- */
+.slp-confirm-back {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  color: #2a5298; font-weight: 600; font-size: .85rem; margin-bottom: 14px;
+}
+.slp-confirm-back:hover { color: #1a3a6b; }
+.slp-confirm-who { text-align: center; color: #33415c; font-size: .92rem; margin-bottom: 16px; }
+.slp-confirm-who strong { color: #1a2340; }
+.slp-confirm .auth-label { text-align: center; font-size: .82rem; margin-bottom: 8px; display: block; }
+.slp-confirm .vts-input {
+  padding: 14px 16px 14px 46px !important; font-size: .98rem !important;
+  border-radius: 12px !important; letter-spacing: .04em;
+}
+.slp-confirm .vts-input:focus {
+  border-color: #2a5298 !important; box-shadow: 0 0 0 4px rgba(42, 82, 152, .15) !important;
+}
+.slp-confirm-err { display: none; color: #a0251d; font-size: .82rem; font-weight: 600; margin-top: 8px; text-align: center; }
+.slp-confirm-err.show { display: block; }
+
+/* Register looks like a button now */
+.slp-foot { text-align: center; margin-top: 18px; }
+.slp-foot .q { font-size: .82rem; color: #6b7896; margin-bottom: 10px; }
+.slp-register-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 26px; border: 1.5px solid #2a5298; border-radius: 11px;
+  color: #1a3a6b; font-weight: 700; font-size: .88rem; text-decoration: none; background: #fff;
+  transition: background .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.slp-register-btn:hover {
+  background: #1a3a6b; color: #fff; transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(26, 58, 107, .28);
+}
+
+/* Bigger card, softer deeper shadow — and never wider than the viewport
+   (this was the mobile overflow: the card/header spilled off the right). */
+.auth-page { width: 100%; max-width: 100%; overflow-x: hidden; }
+.auth-header { max-width: 100%; text-align: center; padding: 0 8px; }
+.auth-header .school-name { overflow-wrap: anywhere; }
+.auth-page .auth-card {
+  width: 100%; max-width: min(470px, 100%); padding: 40px 42px !important;
+  box-shadow: 0 28px 70px rgba(9, 23, 48, .42) !important;
+}
+
+@media (max-width: 480px) {
+  .auth-page .auth-card { padding: 28px 22px !important; }}
+
+/* ── Staff login: compact 2x2 layout (not a pyramid) ─────────────── */
+.role-pyramid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.role-tier {
+  display: contents;
+}
+.role-tier .role-option {
+  min-width: 0;
+  width: 100%;
+}
+.role-tier[data-tier="1"] .role-option,
+.role-tier[data-tier="2"] .role-option,
+.role-tier[data-tier="3"] .role-option {
+  border-color: #dfe7f7;
+  background: #fff;
+}
+.role-tier[data-tier="1"] .role-option {
+  border-color: #c9a227;
+  background: #fffdf5;
+}
+.role-tier[data-tier="1"] .role-option i {
+  color: #a9861a;
+}
+@media (max-width:520px){
+  .role-pyramid { grid-template-columns: 1fr; }
+}
+
+/* Password box on the confirm step. The icon + eye need the same room as the
+   School ID box above it, and the hint explains the blank-is-allowed case
+   for students who predate passwords. */
+.slp-search-box.password-wrap .vts-input{ padding-right: 44px; }
+.slp-search-box.password-wrap .eye{
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  padding: 0; border: 0; background: transparent; cursor: pointer;
+  color: var(--text-muted, #5a6a8a); z-index: 2; border-radius: 7px;
+}
+.slp-search-box.password-wrap .eye:hover{ color: var(--navy, #1a3a6b); background: #eef2f8; }
+.slp-pw-hint{
+  display: block; margin: 6px 2px 0;
+  font-size: .74rem; line-height: 1.45; color: var(--text-muted, #5a6a8a);
+}
+
+/* =====================================================================
+   LOGIN CARD POLISH
+
+   The pieces the card was missing: a ruled school-name header, the system
+   name as a badge rather than a line of grey text, the seal in a gold ring,
+   the picked student shown as a chip, a tick on a filled-in School ID, and
+   the trust/footer block under the card.
+
+   Colours are the theme's own navy and gold (vts-authbar.css) — nothing new
+   is introduced here, and the seal is the same assets/images/logo.jpg.
+   ===================================================================== */
+
+/* ── Confirm step: back link + "signing in as" chip on one row ── */
+.slp-confirm-top{
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.slp-confirm-top .slp-confirm-back{ margin: 0; }
+.slp-who-chip{
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 5px 12px 5px 10px;
+  border-radius: 999px;
+  background: #eef3ff;
+  border: 1px solid #d8e2f7;
+  font-size: .78rem; color: var(--text-muted, #5a6a8a);
+  max-width: 100%; min-width: 0;
+}
+.slp-who-chip .live{
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--success, #1b7f46); flex: 0 0 7px;
+}
+.slp-who-chip strong{
+  color: var(--text, #1a2340); font-weight: 700;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ── A filled-in field gets a tick ──────────────── */
+.slp-search-box .slp-ok{
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--success, #1b7f46); font-size: .95rem;
+  opacity: 0; transition: opacity .15s ease;
+  pointer-events: none;
+}
+.slp-search-box.is-ok .slp-ok{ opacity: 1; }
+/* The password box already has the eye button parked on the right. */
+.slp-search-box.password-wrap .slp-ok{ right: 40px; }
+
+/* ── Continue button ────────────────────────────── */
+#slpConfirmGo{
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  letter-spacing: .08em; text-transform: uppercase;
+  font-weight: 800; font-size: .84rem;
+  padding: 14px;
+}
+#slpConfirmGo i{ color: var(--gold, #c9a227); font-size: .8rem; }
+
+/* ── "Not on the list?" / Register ──────────────── */
+.slp-foot{ border-top: 1px solid var(--border, #dde4f0); padding-top: 18px; }
+.slp-register-btn{ width: 100%; justify-content: center; }
+
+/* ── Trust line, inside the card ────────────────── */
+.auth-trust{
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  margin-top: 18px; padding-top: 14px;
+  border-top: 1px solid var(--border, #dde4f0);
+  font-size: .7rem; font-weight: 600;
+  color: var(--text-faint, #9aa6bd);
+}
+.auth-trust i{ color: var(--success, #1b7f46); font-size: .72rem; }
+.auth-trust .dot{ opacity: .55; }
+
+/* ── Below the card ─────────────────────────────── */
+.auth-legal{
+  margin: 18px auto 4px;
+  text-align: center;
+  max-width: 460px;
+  padding: 0 12px;
+}
+.auth-legal .links{
+  display: flex; align-items: center; justify-content: center;
+  gap: 9px; flex-wrap: wrap;
+  font-size: .76rem;
+}
+.auth-legal .links a{
+  color: #cfdaf2; font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.auth-legal .links a:hover{ color: #fff; border-bottom-color: rgba(255,255,255,.5); }
+.auth-legal .links span.sep{ color: rgba(207,218,242,.45); }
+/* Not every item has somewhere real to point yet; those render as plain
+   text rather than as a link that goes nowhere. */
+.auth-legal .links span.flat{ color: #a9b8d6; font-weight: 600; }
+.auth-legal .copy{
+  margin-top: 8px;
+  font-size: .72rem;
+  color: rgba(190,204,232,.7);
+}
+
+@media (max-width: 560px){
+  .slp-confirm-top{ justify-content: center; }
+}
+
+@media (max-width: 560px){
+}
+
+/* ── Less to read ────────────────────────────────────
+   The card was carrying a label, a hint and a caveat around every box. The
+   headings and placeholders already say what each field is, so the labels
+   that only repeated them are gone and the rest are one line each. */
+.slp-confirm .auth-label{
+  text-align: left;
+  font-size: .74rem; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: var(--text-muted, #5a6a8a);
+  margin-bottom: 6px;
+}
+.slp-pw-hint{ font-size: .73rem; }
+.auth-sub{ margin-bottom: 20px !important; }
+
+/* The password label needs a little air above it; the School ID box sits
+   directly over it. Was an inline margin-top. */
+.slp-confirm .auth-label.slp-label-spaced{ margin-top: 12px; }
+#slpConfirmGo{ margin-top: 14px; }
+
+/* =====================================================================
+   ENTRY SCREEN — one flat, opaque surface.
+
+   This was five translucent layers stacked on one another: a photograph,
+   a gradient over it, a ::before wash, an ::after holding the school seal
+   ghosted at 8% in the corner, and semi-transparent chrome on top of all
+   of it. Nothing in that stack read as a thing — the photo came through as
+   an unidentifiable smear and the ghosted seal as a smudge — while every
+   layer cost a paint and bled colour into the text above it. Two different
+   .auth-page::before rules were also fighting each other with !important.
+
+   It is one opaque gradient in the brand navy now. No photograph, no
+   ghost, no blur, nothing see-through. The card is solid white, so the
+   contrast under the form is fixed and known instead of depending on
+   whichever pixels happened to land behind it.
+   ===================================================================== */
+.auth-page{
+  overflow: hidden;
+  /* Background intentionally NOT set here — vts-theme.css owns it. */
+}
+/* The two overlay layers the photograph needed are gone with it. */
+.auth-page::before,
+.auth-page::after{ content: none !important; }
+
+/* ── Header above the card ── */
+.auth-header{
+  margin-bottom: 20px;
+  max-width: 520px;
+}
+/* Colour only — the size, weight and spacing come from .auth-wordmark
+   in vts-forms.css, which the register page uses too. */
+.auth-page .auth-header .auth-wordmark{ color: rgba(255,255,255,.92); }
+
+/* ── The card ── */
+.auth-page .auth-card{
+  max-width: 500px;
+  padding: 36px 44px 28px !important;
+  background: #fff !important;        /* opaque: no blur, no tint from behind */
+  border: 1px solid #e4ebf6;
+  border-radius: 16px;
+  box-shadow: 0 26px 70px rgba(2, 13, 32, .42) !important;
+}
+.auth-page .auth-card::before{
+  height: 5px;
+  background: linear-gradient(90deg, #123b70, #2b68ad 62%, #d8a928);
+}
+
+/* ── Type ── */
+.auth-kicker{
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  margin-bottom: 9px;
+  color: #8a6a10;
+  font-size: .7rem; font-weight: 800;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+.auth-kicker i{ font-size: .78rem; }
+.auth-card .auth-heading{
+  font-size: clamp(1.45rem, 3vw, 1.8rem);
+  letter-spacing: -.02em;
+  color: #142947;
+}
+.auth-card .auth-sub{
+  max-width: 330px; margin-left: auto; margin-right: auto;
+  line-height: 1.55;
+}
+
+/* ── Fields ── */
+.slp-search-wrap .vts-input{
+  min-height: 54px;
+  border-color: #cdd8e8 !important;
+  background: #fbfcff;
+}
+.slp-search-wrap .vts-input:focus{
+  border-color: #2b68ad !important;
+  box-shadow: 0 0 0 4px rgba(43, 104, 173, .13) !important;
+}
+.slp-register-btn{
+  border-color: #d8a928;
+  color: #173862;
+}
+
+@media (max-width: 560px){
+  .auth-page .auth-card{ padding: 30px 22px 24px !important; }
+}
+
+/* ── The chosen student, shown under the field ──────────────────────
+   Picking a suggestion fills the box with that name; this confirms which
+   record it resolved to and offers a way out of it. */
+.slp-picked{
+  display: inline-flex; align-items: center; gap: 7px;
+  margin-top: 8px; padding: 4px 6px 4px 11px;
+  border-radius: 999px;
+  background: #eef3ff; border: 1px solid #d8e2f7;
+  font-size: .78rem; font-weight: 700; color: var(--text, #1a2340);
+  max-width: 100%; min-width: 0;
+}
+.slp-picked .live{
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--success, #1b7f46); flex: 0 0 7px;
+}
+.slp-picked > span:not(.live){
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.slp-picked-x{
+  flex: 0 0 auto; width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 50%;
+  background: transparent; color: var(--text-muted, #5a6a8a);
+  font-size: .72rem; cursor: pointer;
+}
+.slp-picked-x:hover{ background: #dce6f8; color: var(--navy, #1a3a6b); }
+
+/* "Register here" inside the empty-results row (was an inline style). */
+.slp-empty-link{ color: #2a5298; font-weight: 700; }
+
+/* ── The merged card ────────────────────────────────────────────────
+   One card, two fields, one button. What it needed was a clear break
+   between "who are you" and "prove it", and a footer that reads as a
+   footer rather than as a third field.
+   ================================================================== */
+.auth-page .auth-card{ padding: 34px 38px 26px !important; }
+
+/* Labels: small, uppercase, left-aligned over their own field. */
+.auth-card .auth-label{
+  display: block;
+  text-align: left;
+  font-size: .72rem; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-muted, #5a6a8a);
+  margin: 0 0 7px;
+}
+.slp-label-spaced{ margin-top: 16px !important; }
+
+/* Both fields the same height, same radius, same icon inset. */
+.auth-card .slp-search-box .vts-input{
+  min-height: 50px;
+  padding: 13px 16px 13px 44px !important;
+  border-radius: 11px !important;
+  font-size: .95rem !important;
+}
+.auth-card .slp-search-ic{ left: 15px; font-size: .9rem; }
+
+.slp-pw-hint{ margin-top: 7px; }
+
+/* The action, with real space above it. */
+#slpConfirmGo{ margin-top: 20px; min-height: 50px; border-radius: 11px; }
+
+/* Footer: a rule, then the secondary action, then the quiet trust line. */
+.slp-foot{ margin-top: 22px; padding-top: 18px; }
+.slp-foot .q{ margin-bottom: 9px; }
+.auth-trust{ margin-top: 14px; padding-top: 12px; }
+
+@media (max-width: 480px){
+  .auth-page .auth-card{ padding: 26px 20px 22px !important; }
+}
+
+/* "— only if you have no password yet": secondary half of a label. */
+.auth-label-opt{
+  font-weight: 600; text-transform: none;
+  letter-spacing: 0; color: var(--text-faint, #9aa6bd);
+}
+
+/* "Forgot password?" under the Continue button, matching the staff modal. */
+/* Left, matching .auth-forgot-link on the staff card of the same page — it
+   was centred here and right-aligned there, on one screen. */
+.slp-forgot{ text-align: left; margin-top: 12px; }
+.slp-forgot a{ font-size: .82rem; font-weight: 600; color: var(--navy, #1a3a6b); }
+.slp-forgot a:hover{ text-decoration: underline; }
+
+/* ── A COMPLAINT ABOUT ONE FIELD, UNDER THAT FIELD ─────────────────────
+   Sign-in errors used to be one banner above both boxes, so "that School ID
+   and password don't match" left the reader to guess which of the two to
+   retype. The handlers name the field now and this is where it lands. */
+.slp-field-err{
+  display: flex; align-items: flex-start; gap: 7px;
+  margin: 7px 0 0;
+  font-size: .78rem; line-height: 1.45;
+  color: var(--danger, #e03535);
+  font-weight: 600;
+}
+.slp-field-err[hidden]{ display: none !important; }
+.slp-field-err i{ margin-top: 2px; flex: 0 0 auto; font-size: .72rem; }
+
+/* The box itself is marked too: the sentence says what is wrong, the border
+   says where. */
+.vts-input.is-invalid,
+.slp-search-box.is-invalid .vts-input{
+  border-color: var(--danger, #e03535) !important;
+  box-shadow: 0 0 0 3px rgba(224,53,53,.14) !important;
+}
