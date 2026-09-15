@@ -1,0 +1,38 @@
+/* Forgot-password page — extracted from forgot_password.php so all CSS lives in stylesheets.
+   NB: url() paths are relative to THIS file (assets/css/), hence ../images/. */
+
+/* Same campus photo + single overlay as the login, register and landing
+   pages — every signed-out screen is one surface. See .auth-page in
+   vts-theme.css for the overlay's reasoning. */
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+       background:linear-gradient(165deg,rgba(8,22,46,.78) 0%,rgba(11,31,63,.70) 45%,rgba(6,17,38,.82) 100%),
+       url('../images/school.jpg') center / cover no-repeat fixed;position:relative;}
+  body > *{position:relative;z-index:1;}
+  .fbox{background:#fff;border-radius:16px;max-width:430px;width:100%;padding:32px 28px;}
+  .fbox .ic{width:60px;height:60px;border-radius:50%;background:#e8eef9;color:#1a3a6b;
+    display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 14px;}
+  .fbox h1{color:#1a3a6b;font-size:1.2rem;text-align:center;margin-bottom:4px;}
+  .fbox .sub{color:#6b7690;font-size:.86rem;text-align:center;margin-bottom:18px;}
+  .fbtn{width:100%;padding:13px;background:#1a3a6b;color:#fff;border:none;border-radius:10px;
+    font-size:.95rem;font-weight:700;cursor:pointer;margin-top:4px;}
+  .fbtn:hover{background:#142f57;}
+  .flinks{margin-top:14px;font-size:.84rem;text-align:center;}
+  .flinks a{color:#1c5aa8;font-weight:600;}
+
+/* Testing-only reset-code panel. Loud on purpose: it is a secret printed on
+   a page, and it must never be mistaken for ordinary UI. */
+.dev-code{
+  margin: 0 0 16px; padding: 12px 14px;
+  border: 2px dashed #b0122b; border-radius: 10px;
+  background: #fff5f6; text-align: center;
+}
+.dev-code-warn{
+  font-size: .7rem; font-weight: 800; letter-spacing: .06em;
+  text-transform: uppercase; color: #b0122b; margin-bottom: 6px;
+}
+.dev-code-value{
+  font-size: 1.9rem; font-weight: 800; letter-spacing: .34em;
+  color: #1a2340; line-height: 1.2;
+}
+.dev-code-note{ margin-top: 6px; font-size: .7rem; color: #6b7896; line-height: 1.45; }
+.dev-code-note code{ background: #eef2f8; padding: 1px 4px; border-radius: 4px; }

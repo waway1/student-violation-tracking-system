@@ -1,0 +1,16 @@
+{
+  "name": "QR Shield Scanner — Golden West Colleges",
+  "short_name": "QR Shield",
+  "description": "Hybrid online/offline QR scanner for Guard/Marshal — QR Shield, the Student Violation Tracking System",
+  "start_url": "spck_scanner.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e2f52",
+  "theme_color": "#123a63",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "assets/icons/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

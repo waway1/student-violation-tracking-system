@@ -1,0 +1,407 @@
+/* =====================================================================
+   QR SHIELD — LANDING PAGE
+   =====================================================================
+
+   WHAT THIS PAGE IS FOR
+   Everyone who arrives here arrives for one of three reasons: they are a
+   student who wants to know what is on their record, a new student who has
+   to register, or someone — a panel member, a parent, an officer from
+   another school — who has heard of the system and wants to know what it
+   is and why it was built. The page is laid out in that order.
+
+   THE SHAPE
+   Borrowed deliberately from the calm/wellness pattern the brief pointed
+   at: a photograph running the full width with nothing on it, and the
+   words underneath on quiet ground. Putting the headline ON the picture is
+   the reflex, and it is why so many hero images end up with a dark scrim
+   over them — the text needs contrast the photograph was never chosen to
+   give. Here the campus keeps its own light, and the sentence under it is
+   read against paper.
+
+   THE MOTION
+   The same vocabulary as the portfolio this was modelled on: sections
+   fade up as they arrive, the hero photograph drifts slower than the page,
+   and the buttons lean toward the pointer. Every one of them is gated on
+   `prefers-reduced-motion` and on the device actually having a pointer, so
+   a phone and a person who has asked for stillness get a plain, fast page.
+   ===================================================================== */
+
+:root{
+  --l-navy:      #12325c;
+  --l-navy-deep: #0b1f3f;
+  --l-ink:       #10233f;
+  --l-body:      #53617a;
+  --l-gold:      #c9a227;
+  --l-line:      #e3e9f2;
+  --l-paper:     #f6f8fb;
+  --l-white:     #ffffff;
+  --l-nav-h:     72px;
+  --l-radius:    16px;
+  --l-ease:      cubic-bezier(.22,.61,.36,1);
+}
+*,*::before,*::after{ box-sizing:border-box; }
+
+/* Labels that exist for a screen reader and not for the eye. The search
+   box has a placeholder, which is not a label -- it disappears the moment
+   anyone types into it. */
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+html{ scroll-behavior:smooth; }
+body{
+  margin:0; background:var(--l-white); color:var(--l-ink);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+img{ max-width:100%; display:block; }
+a{ color:inherit; }
+
+/* ---------------------------------------------------------------- NAV */
+.lp-nav{
+  position:fixed; inset:0 0 auto 0; z-index:60; height:var(--l-nav-h);
+  display:flex; align-items:center; gap:18px; padding:0 clamp(16px,4vw,44px);
+  /* Transparent over the photograph, solid once the page has moved: the
+     bar has to sit on a mountain and on white paper in the same session. */
+  background:transparent; transition:background .3s var(--l-ease), box-shadow .3s var(--l-ease);
+}
+.lp-nav.solid{
+  background:rgba(255,255,255,.92);
+  backdrop-filter:saturate(1.6) blur(12px); -webkit-backdrop-filter:saturate(1.6) blur(12px);
+  box-shadow:0 1px 0 var(--l-line), 0 8px 30px rgba(12,32,68,.06);
+}
+.lp-brand{ display:flex; align-items:center; gap:11px; text-decoration:none; flex:0 0 auto; }
+.lp-brand img{
+  width:40px; height:40px; border-radius:50%; object-fit:cover;
+  box-shadow:0 2px 10px rgba(8,20,44,.25);
+}
+.lp-brand-t{ line-height:1.1; }
+.lp-brand-n{
+  font-family:'Plus Jakarta Sans',Inter,sans-serif; font-weight:800; font-size:1.04rem; color:#fff;
+  text-shadow:0 1px 3px rgba(6,18,40,.55);
+}
+.lp-brand-s{
+  display:block; font-size:.66rem; letter-spacing:.06em; text-transform:uppercase;
+  color:rgba(255,255,255,.92); text-shadow:0 1px 3px rgba(6,18,40,.55);
+}
+.lp-nav.solid .lp-brand-n{ color:var(--l-navy); text-shadow:none; }
+.lp-nav.solid .lp-brand-s{ color:var(--l-body); text-shadow:none; }
+
+.lp-nav-links{ display:flex; align-items:center; gap:22px; margin-left:10px; }
+.lp-nav-links a{
+  text-decoration:none; font-size:.88rem; font-weight:700; color:#fff;
+  padding:6px 0; border-bottom:2px solid transparent; transition:border-color .18s, color .18s;
+  /* Belt and braces over a photograph: a shadow keeps the letters readable
+     even where the gradient is thinnest. Dropped the moment the bar is
+     solid, where it would only muddy dark text on white. */
+  text-shadow:0 1px 3px rgba(6,18,40,.55);
+}
+.lp-nav.solid .lp-nav-links a{ text-shadow:none; }
+.lp-nav-links a:hover{ border-bottom-color:currentColor; }
+.lp-nav.solid .lp-nav-links a{ color:var(--l-ink); }
+
+.lp-nav-right{ margin-left:auto; display:flex; align-items:center; gap:12px; }
+
+/* Search. It is the student lookup, because that is the only thing anyone
+   would type here — a name or a School ID — and it is the thing the whole
+   site exists to answer. */
+.lp-search{ position:relative; display:flex; align-items:center; }
+.lp-search input{
+  width:clamp(150px,20vw,250px); height:42px; padding:0 14px 0 38px;
+  border-radius:999px; border:1px solid rgba(255,255,255,.42);
+  background:rgba(255,255,255,.16); color:#fff; font:inherit; font-size:.86rem;
+  outline:none; transition:background .2s, border-color .2s, width .25s var(--l-ease);
+}
+.lp-search input::placeholder{ color:rgba(255,255,255,.8); }
+.lp-search input:focus{ background:rgba(255,255,255,.28); border-color:#fff; }
+.lp-search .ic{
+  position:absolute; left:14px; color:rgba(255,255,255,.9); font-size:.85rem; pointer-events:none;
+}
+.lp-nav.solid .lp-search input{
+  background:var(--l-paper); border-color:var(--l-line); color:var(--l-ink);
+}
+.lp-nav.solid .lp-search input::placeholder{ color:#93a0b5; }
+.lp-nav.solid .lp-search .ic{ color:#93a0b5; }
+
+/* ---- LIVE RESULTS UNDER THE SEARCH BOX ----------------------------------
+   The box used to hand everything to student_search.php and answer nothing
+   itself, so "Find your record" could not tell you whether your record was
+   there. It asks auth/student_lookup_search.php now - the SAME endpoint the
+   sign-in page already calls, one click further on, so this exposes nothing
+   new: names only, never a School ID, and three characters minimum. See the
+   long note at the top of that file for what it will and will not answer.
+
+   The panel is white in both nav states. The transparent nav sits on a
+   photograph, and translucent results over a photograph are unreadable. */
+.lp-results{
+  position:absolute; top:calc(100% + 8px); right:0;
+  width:min(340px, calc(100vw - 32px));
+  background:#fff; border:1px solid var(--l-line,#e3e8f0); border-radius:14px;
+  box-shadow:0 18px 44px rgba(10,22,48,.22);
+  overflow:hidden; z-index:60;
+  display:none;
+}
+.lp-results.open{ display:block; }
+.lp-results-list{ max-height:min(58vh,340px); overflow-y:auto; -webkit-overflow-scrolling:touch; }
+
+.lp-hit{
+  display:flex; align-items:center; gap:11px;
+  padding:11px 14px; cursor:pointer; border:0; width:100%; background:none;
+  text-align:left; font:inherit; border-bottom:1px solid #f1f4f9;
+}
+.lp-hit:last-child{ border-bottom:0; }
+.lp-hit:hover, .lp-hit.is-active{ background:#f3f7fd; }
+.lp-hit:focus-visible{ outline:2px solid var(--l-accent,#1a3a6b); outline-offset:-2px; }
+.lp-hit-av{
+  flex:0 0 auto; width:32px; height:32px; border-radius:50%;
+  background:#e8eef9; color:#1a3a6b;
+  display:grid; place-items:center; font-size:.8rem;
+}
+.lp-hit-tx{ min-width:0; }
+.lp-hit-nm{
+  display:block; font-size:.87rem; font-weight:650; color:#16233f;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.lp-hit-meta{
+  display:block; font-size:.74rem; color:#7c8aa3;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+/* The part of the name that was typed, so a long list is scannable. */
+.lp-hit-nm mark{ background:#fff2c4; color:inherit; padding:0 1px; border-radius:3px; }
+
+/* One line of state: searching, how many, or nothing found. */
+.lp-results-note{
+  padding:12px 14px; font-size:.8rem; color:#6b7896; line-height:1.5;
+}
+.lp-results-note b{ color:#16233f; }
+.lp-results-note a{ color:#1a3a6b; font-weight:700; text-decoration:underline; }
+.lp-results-foot{
+  padding:9px 14px; border-top:1px solid #f1f4f9; background:#fafbfd;
+  font-size:.74rem; color:#7c8aa3;
+}
+.lp-spin{
+  display:inline-block; width:12px; height:12px; margin-right:7px;
+  border:2px solid #d8e0ee; border-top-color:#1a3a6b; border-radius:50%;
+  animation:lpspin .6s linear infinite; vertical-align:-2px;
+}
+@keyframes lpspin{ to{ transform:rotate(360deg); } }
+@media (prefers-reduced-motion:reduce){ .lp-spin{ animation:none; } }
+
+.lp-login{
+  font-size:.88rem; font-weight:700; color:#fff; text-decoration:none; white-space:nowrap;
+  padding:10px 14px; border-radius:999px; min-height:44px; display:inline-flex; align-items:center;
+  border:1px solid rgba(255,255,255,.5); text-shadow:0 1px 3px rgba(6,18,40,.55);
+  transition:background .18s ease, border-color .18s ease;
+}
+.lp-login:hover{ background:rgba(255,255,255,.16); }
+.lp-nav.solid .lp-login{
+  color:var(--l-ink); border-color:var(--l-line); text-shadow:none;
+}
+.lp-nav.solid .lp-login:hover{ background:var(--l-paper); }
+
+.lp-pill{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  height:46px; padding:0 24px; border-radius:999px; border:0; cursor:pointer;
+  background:#fff; color:var(--l-navy); font:inherit; font-size:.88rem; font-weight:800;
+  text-decoration:none; white-space:nowrap;
+  box-shadow:0 6px 20px rgba(8,20,44,.18);
+  transition:transform .18s var(--l-ease), box-shadow .18s var(--l-ease);
+}
+.lp-pill:hover{ box-shadow:0 10px 28px rgba(8,20,44,.32); transform:translateY(-1px); }
+.lp-pill:focus-visible,.lp-login:focus-visible,.lp-btn:focus-visible,.lp-burger:focus-visible{
+  outline:3px solid #ffd75e; outline-offset:3px;
+}
+.lp-nav.solid .lp-pill{ background:var(--l-navy); color:#fff; }
+
+.lp-burger{
+  display:none; width:44px; height:44px; border-radius:12px; border:1px solid rgba(255,255,255,.4);
+  background:rgba(255,255,255,.14); color:#fff; cursor:pointer; font-size:1.05rem;
+}
+.lp-nav.solid .lp-burger{ border-color:var(--l-line); background:var(--l-paper); color:var(--l-ink); }
+
+/* ------------------------------------------------------------- HERO */
+/* The photograph is a band, not a backdrop. Nothing is written on it. */
+.lp-hero{ position:relative; height:min(58vh,520px); min-height:300px; overflow:hidden; background:var(--l-navy); }
+.lp-hero-img{
+  position:absolute; inset:-12% 0 -12% 0; width:100%; height:124%;
+  object-fit:cover; will-change:transform;
+}
+/* THE BAR HAS TO BE LEGIBLE ON WHATEVER THE PHOTOGRAPH IS DOING.
+
+   The campus photo is a sunset: pale sky exactly where the nav sits, so
+   white text on it was white on near-white. A deeper, taller gradient
+   fixes the text without turning the picture grey — it is only over the
+   top 220px, and the building and trees below keep their own light. */
+.lp-hero::after{
+  content:''; position:absolute; inset:0 0 auto 0; height:220px;
+  background:linear-gradient(180deg,rgba(6,18,40,.78),rgba(6,18,40,.34) 55%,transparent);
+  pointer-events:none;
+}
+
+.lp-head{
+  text-align:center; padding:clamp(46px,7vw,84px) 20px clamp(40px,6vw,70px);
+  background:var(--l-paper);
+}
+.lp-head h1{
+  margin:0 auto; max-width:16ch;
+  font-family:'Plus Jakarta Sans',Inter,sans-serif; font-weight:800;
+  font-size:clamp(2rem,5.2vw,3.4rem); line-height:1.08; color:var(--l-navy);
+  letter-spacing:-.02em;
+}
+.lp-head p{
+  margin:18px auto 0; max-width:52ch; color:var(--l-body);
+  font-size:clamp(1rem,1.6vw,1.12rem); line-height:1.6;
+}
+.lp-cta{ margin-top:30px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+.lp-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:9px;
+  height:54px; padding:0 30px; border-radius:999px; border:1.5px solid transparent;
+  font:inherit; font-size:.95rem; font-weight:700; text-decoration:none; cursor:pointer;
+  transition:transform .18s var(--l-ease), box-shadow .18s var(--l-ease), background .18s;
+}
+.lp-btn-primary{
+  background:linear-gradient(100deg,var(--l-navy),#2a5298 62%,#3b6fc0);
+  color:#fff; box-shadow:0 10px 26px rgba(18,50,92,.3);
+}
+.lp-btn-primary:hover{ box-shadow:0 14px 34px rgba(18,50,92,.38); }
+.lp-btn-ghost{ background:#fff; border-color:var(--l-line); color:var(--l-ink); }
+.lp-btn-ghost:hover{ border-color:#c3d1e4; }
+
+.lp-sdg{
+  margin:26px auto 0; display:inline-flex; align-items:center; gap:9px;
+  padding:8px 16px; border-radius:999px; background:rgba(201,162,39,.12);
+  color:#8a6d0b; font-size:.8rem; font-weight:700;
+}
+
+/* ----------------------------------------------------------- SECTIONS */
+.lp-sec{ padding:clamp(56px,8vw,104px) clamp(20px,5vw,48px); }
+.lp-sec.paper{ background:var(--l-paper); }
+.lp-sec.navy{ background:var(--l-navy); color:#fff; }
+.lp-wrap{ max-width:1120px; margin:0 auto; }
+.lp-eyebrow{
+  display:inline-block; font-size:.72rem; font-weight:800; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--l-gold); margin-bottom:12px;
+}
+.lp-sec h2{
+  margin:0 0 14px; font-family:'Plus Jakarta Sans',Inter,sans-serif; font-weight:800;
+  font-size:clamp(1.55rem,3.4vw,2.3rem); line-height:1.18; color:var(--l-navy);
+  letter-spacing:-.015em; max-width:22ch;
+}
+.lp-sec.navy h2{ color:#fff; }
+.lp-lead{ margin:0 0 34px; max-width:62ch; color:var(--l-body); font-size:1.02rem; line-height:1.65; }
+.lp-sec.navy .lp-lead{ color:rgba(255,255,255,.8); }
+
+/* The four problems. Numbered, because they are a list of findings from
+   the study and the numbering is how they are cited. */
+.lp-grid{ display:grid; gap:18px; grid-template-columns:repeat(auto-fit,minmax(248px,1fr)); }
+.lp-card{
+  background:#fff; border:1px solid var(--l-line); border-radius:var(--l-radius);
+  padding:26px 24px; transition:transform .25s var(--l-ease), box-shadow .25s var(--l-ease);
+}
+.lp-card:hover{ transform:translateY(-4px); box-shadow:0 16px 40px rgba(14,34,68,.09); }
+.lp-card .n{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:10px; margin-bottom:14px;
+  background:rgba(18,50,92,.08); color:var(--l-navy); font-weight:800; font-size:.9rem;
+}
+.lp-card h3{ margin:0 0 7px; font-size:1.02rem; color:var(--l-ink); line-height:1.3; }
+.lp-card p{ margin:0; color:var(--l-body); font-size:.91rem; line-height:1.6; }
+
+/* The three modes. On navy, because this is the answer, not the problem. */
+.lp-modes{ display:grid; gap:18px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); }
+.lp-mode{
+  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.16);
+  border-radius:var(--l-radius); padding:26px 24px;
+  transition:background .25s var(--l-ease), transform .25s var(--l-ease);
+}
+.lp-mode:hover{ background:rgba(255,255,255,.12); transform:translateY(-4px); }
+.lp-mode .ic{
+  width:44px; height:44px; border-radius:12px; margin-bottom:16px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(201,162,39,.2); color:var(--l-gold); font-size:1.05rem;
+}
+.lp-mode h3{ margin:0 0 7px; font-size:1.06rem; color:#fff; }
+.lp-mode p{ margin:0; color:rgba(255,255,255,.76); font-size:.91rem; line-height:1.6; }
+
+/* Numbers from the evaluation. */
+.lp-stats{ display:grid; gap:18px; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }
+.lp-stat{ text-align:center; padding:24px 16px; border-radius:var(--l-radius); background:#fff; border:1px solid var(--l-line); }
+.lp-stat .v{
+  font-family:'Plus Jakarta Sans',Inter,sans-serif; font-weight:800;
+  font-size:clamp(1.9rem,4vw,2.6rem); color:var(--l-navy); line-height:1;
+}
+.lp-stat .k{ margin-top:8px; font-size:.84rem; color:var(--l-body); line-height:1.45; }
+
+/* A picture band between sections, drifting on scroll. */
+.lp-band{ position:relative; height:min(40vh,340px); overflow:hidden; background:var(--l-navy); }
+.lp-band img{ position:absolute; inset:-14% 0; width:100%; height:128%; object-fit:cover; will-change:transform; }
+.lp-band .cap{
+  position:absolute; inset:auto 0 0 0; padding:28px clamp(20px,5vw,48px);
+  background:linear-gradient(0deg,rgba(8,22,48,.78),transparent);
+  color:#fff; font-size:clamp(.95rem,2vw,1.2rem); font-weight:700; text-align:center;
+}
+
+/* ------------------------------------------------------------- FOOTER */
+.lp-foot{ background:#0b1f3f; color:rgba(255,255,255,.62); padding:44px 20px 34px; text-align:center; font-size:.83rem; }
+.lp-foot a{ color:rgba(255,255,255,.85); }
+.lp-foot .row{ display:flex; gap:18px; justify-content:center; flex-wrap:wrap; margin-bottom:14px; }
+
+/* ------------------------------------------------------------ MOTION */
+/* The portfolio's vocabulary: arrive, do not appear. */
+.reveal{ opacity:0; transform:translateY(28px); transition:opacity .7s var(--l-ease), transform .7s var(--l-ease); }
+.reveal.in{ opacity:1; transform:none; }
+.reveal.d1{ transition-delay:.08s; } .reveal.d2{ transition-delay:.16s; }
+.reveal.d3{ transition-delay:.24s; } .reveal.d4{ transition-delay:.32s; }
+
+#lpTop{
+  position:fixed; right:18px; bottom:18px; z-index:70;
+  width:46px; height:46px; border-radius:50%; border:0; cursor:pointer;
+  background:var(--l-navy); color:#fff; font-size:1rem;
+  opacity:0; pointer-events:none; transform:translateY(10px);
+  transition:opacity .25s, transform .25s; box-shadow:0 8px 24px rgba(8,20,44,.3);
+}
+#lpTop.show{ opacity:1; pointer-events:auto; transform:none; }
+
+/* ---------------------------------------------------------- RESPONSIVE */
+@media (max-width:900px){
+  .lp-nav-links{ display:none; }
+  .lp-search{ display:none; }          /* the hero's own lookup takes over */
+  .lp-burger{ display:inline-flex; align-items:center; justify-content:center; }
+  .lp-login{ display:none; }
+}
+@media (max-width:560px){
+  .lp-brand-s{ display:none; }
+  .lp-pill{ height:42px; padding:0 16px; font-size:.82rem; }
+  .lp-btn{ width:100%; }
+  .lp-cta{ flex-direction:column; }
+}
+
+/* A drawer for the links the narrow bar drops. */
+.lp-drawer{
+  position:fixed; inset:var(--l-nav-h) 0 auto 0; z-index:55;
+  background:#fff; border-bottom:1px solid var(--l-line);
+  padding:14px clamp(16px,4vw,44px) 20px; display:none;
+  box-shadow:0 18px 40px rgba(12,32,68,.12);
+}
+.lp-drawer.open{ display:block; }
+.lp-drawer a{
+  display:block; padding:13px 2px; min-height:44px; text-decoration:none;
+  font-weight:700; color:var(--l-ink); border-bottom:1px solid var(--l-line);
+}
+.lp-drawer a:last-child{ border-bottom:0; }
+
+@media (prefers-reduced-motion:reduce){
+  html{ scroll-behavior:auto; }
+  .reveal{ opacity:1; transform:none; transition:none; }
+  .lp-hero-img,.lp-band img{ transform:none !important; }
+  .lp-card:hover,.lp-mode:hover{ transform:none; }
+}
+
+/* Footer links are the last thing a thumb reaches on a phone, and they were
+   the smallest thing on the page. */
+@media (hover: none), (max-width: 900px){
+  .lp-foot .row{ gap:6px 18px; }
+  .lp-foot .row a{
+    display:inline-flex; align-items:center; min-height:44px; padding:0 4px;
+  }
+}

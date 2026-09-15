@@ -1,0 +1,21 @@
+# Internal includes (auth.php, session.php) must NOT be web-reachable.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>
+# ...but these form handlers must stay reachable.
+# device_verify.php is a PAGE the browser is sent to (the new-device code
+# step), not an include — without it here the whole folder's "deny" applied
+# and a new-device sign-in dead-ended on a 403.
+<FilesMatch "^(login_process|register_process|logout|forgot_process|reset_process|verify_process|student_lookup_search|student_lookup_process|device_verify)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Allow from all
+    </IfModule>
+</FilesMatch>

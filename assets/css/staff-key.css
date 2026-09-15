@@ -1,0 +1,118 @@
+/* ============================================================
+   STAFF ACCESS KEY — the phone's version of the hidden shortcut
+   ============================================================
+
+   On a desktop, staff reach their login two ways: Ctrl+Shift+S, or by
+   typing the code into the student search box. A phone has neither a
+   Ctrl key nor — reliably — a text field that will let the code through
+   untouched: a mobile keyboard autocapitalises and autocorrects an
+   eight-letter non-word into something else entirely, so the exact match
+   the page was waiting for never arrived. That is why "you can't type
+   the secret key on mobile".
+
+   This is the way in that a phone CAN do: a quiet gesture on the seal
+   opens a small pad with one PASSWORD field — password fields are the
+   one input every mobile keyboard leaves alone, no autocorrect, no
+   capitalisation, no suggestion strip learning the code.
+
+   Self-contained on purpose. The landing page and the search page load
+   different stylesheets, and this has to look the same on both, so it
+   depends on none of them. Everything is prefixed .skg- so it cannot
+   collide with the app's own modal.
+   ============================================================ */
+
+.skg-overlay{
+  position: fixed; inset: 0; z-index: 9500;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  background: rgba(10,20,45,.62);
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .18s ease, visibility .18s ease;
+}
+.skg-overlay.open{ opacity: 1; visibility: visible; pointer-events: auto; }
+
+.skg-card{
+  width: 100%; max-width: 340px;
+  background: #fff; border-radius: 16px;
+  padding: 24px 22px 20px;
+  box-shadow: 0 20px 60px rgba(8,18,40,.4);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  transform: scale(.95); transition: transform .18s ease;
+}
+.skg-overlay.open .skg-card{ transform: scale(1); }
+
+.skg-ic{
+  width: 44px; height: 44px; margin: 0 auto 12px;
+  border-radius: 50%; background: #eef2ff; color: #1e3a8a;
+  display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
+}
+.skg-card h3{
+  margin: 0 0 4px; text-align: center;
+  font-size: 1.08rem; font-weight: 800; color: #0f172a;
+}
+.skg-card .skg-sub{
+  margin: 0 0 16px; text-align: center;
+  font-size: .8rem; line-height: 1.45; color: #64748b;
+}
+
+.skg-field{ position: relative; }
+.skg-field input{
+  width: 100%; box-sizing: border-box;
+  padding: 12px 44px 12px 14px;
+  border: 1.5px solid #d8dee9; border-radius: 10px;
+  font-size: 1rem;               /* 16px — anything smaller and iOS zooms the page */
+  font-family: inherit; color: #0f172a; background: #fff;
+  letter-spacing: .08em;
+  outline: none; transition: border-color .15s ease, box-shadow .15s ease;
+}
+.skg-field input:focus{ border-color: #1e3a8a; box-shadow: 0 0 0 3px rgba(30,58,138,.12); }
+.skg-field input::placeholder{ letter-spacing: normal; color: #9aa6b8; }
+.skg-eye{
+  position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+  width: 34px; height: 34px; border: 0; background: none; cursor: pointer;
+  color: #94a3b8; font-size: .9rem; border-radius: 8px;
+}
+.skg-eye:hover{ color: #475569; }
+
+.skg-err{
+  display: none; margin-top: 9px;
+  font-size: .78rem; font-weight: 600; color: #dc2626;
+}
+.skg-err.show{ display: block; }
+
+.skg-actions{ display: flex; gap: 9px; margin-top: 16px; }
+.skg-actions button{
+  flex: 1; padding: 11px 12px; border-radius: 10px;
+  font-family: inherit; font-size: .86rem; font-weight: 700; cursor: pointer;
+  border: 1.5px solid transparent; transition: background .15s ease, color .15s ease;
+}
+.skg-go{ background: #1e3a8a; color: #fff; }
+.skg-go:hover{ background: #172e6e; }
+.skg-go[disabled]{ background: #94a3b8; cursor: not-allowed; }
+.skg-cancel{ background: #fff; color: #475569; border-color: #d8dee9; }
+.skg-cancel:hover{ background: #f4f6fa; }
+
+/* A wrong key shakes rather than shouting — the pad is meant to be quiet. */
+.skg-card.shake{ animation: skgShake .32s ease; }
+@keyframes skgShake{
+  0%,100%{ transform: scale(1) translateX(0); }
+  20%{ transform: scale(1) translateX(-7px); }
+  40%{ transform: scale(1) translateX(6px); }
+  60%{ transform: scale(1) translateX(-4px); }
+  80%{ transform: scale(1) translateX(3px); }
+}
+
+/* The gesture target must not look tappable, but it must not fight the
+   tap either: the long-press was selecting the seal image and raising
+   the browser's own "save image" sheet on top of the pad. */
+[data-staff-key-trigger]{
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .skg-overlay, .skg-card{ transition: none; }
+  .skg-card.shake{ animation: none; }
+}

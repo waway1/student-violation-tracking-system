@@ -1,0 +1,277 @@
+/* =====================================================================
+   vts-forms.css — form validation presentation.
+
+   Split out of vts-dashboard.css so the standalone auth pages
+   (register, login, forgot password, verify) can load it too. They do not
+   include the shared shell, so anything living only in the dashboard
+   stylesheet never reached them -- and register.php, with its 18 required
+   fields, is exactly where this matters most.
+
+   Pairs with assets/js/vts-ui.js.
+   ===================================================================== */
+
+/* =====================================================================
+   FORM VALIDATION — say what is wrong, next to the thing that is wrong.
+
+   The browser's own bubble shows ONE problem at a time, in wording nobody
+   chose ("Please select an item in the list"), and it disappears the
+   moment you click away — so on a form with three blanks you get three
+   rounds of guessing. These styles back a small module in footer.php that
+   marks every problem at once, in the app's own words, under the field.
+   ===================================================================== */
+
+/* The field itself */
+.field.has-error .vts-input,
+.field.has-error .vts-select,
+.field.has-error textarea,
+.has-error > .vts-input,
+.has-error > .vts-select{
+  border-color:#e0402f !important;
+  background:#fffafa;
+  box-shadow:0 0 0 3px rgba(224,64,47,.12) !important;
+}
+.field.has-error label{ color:#c8351f; }
+
+/* The message under it */
+.field-error{
+  display:flex; align-items:flex-start; gap:6px;
+  margin-top:6px; font-size:.79rem; font-weight:600; line-height:1.45; color:#c8351f;
+}
+.field-error i{ font-size:.85em; margin-top:2px; flex:0 0 auto; }
+
+/* A one-line summary at the top of the form, so a problem below the fold
+   is still announced. Clicking it jumps to the first field. */
+.form-problems{
+  display:flex; align-items:flex-start; gap:10px;
+  margin:0 0 16px; padding:12px 14px; border-radius:10px;
+  background:#fdeceb; border:1px solid #f5c6c0; color:#a62915;
+  font-size:.85rem; font-weight:600; line-height:1.5;
+}
+.form-problems i{ margin-top:2px; flex:0 0 auto; }
+.form-problems a{ color:#a62915; text-decoration:underline; cursor:pointer; }
+.form-problems ul{ margin:6px 0 0; padding-left:18px; font-weight:500; }
+.form-problems li{ margin-bottom:2px; }
+
+/* The required marker. It was a faint asterisk squeezed against the label
+   text; at .7rem in a muted grey it read as a speck. Now it is large
+   enough to see and spaced off the label. */
+.req{
+  color:#e0402f;
+  font-weight:800;
+  font-size:1.05em;
+  line-height:1;
+  margin-left:3px;
+  vertical-align:middle;
+}
+
+/* A field that has just been corrected: quietly confirm it, so the user
+   knows the form registered the fix without having to submit again. */
+.field.is-fixed .vts-input,
+.field.is-fixed .vts-select,
+.field.is-fixed textarea{ border-color:#37b877 !important; }
+
+@media (prefers-reduced-motion: no-preference){
+  .field-error{ animation:vtsFieldErr .18s ease-out; }
+  @keyframes vtsFieldErr{ from{ opacity:0; transform:translateY(-3px); } to{ opacity:1; transform:none; } }
+}
+
+
+/* =====================================================================
+   FILE INPUTS — "No file chosen"
+
+   A bare <input type="file"> paints its button and its "No file chosen"
+   label in the OS's own tiny system font. It ignores the app's type scale
+   and colours completely, and in a narrow column the button plus the
+   filename run past the edge of the field. This gives it a real control:
+   an app-styled button, and a filename that truncates instead of
+   overflowing.
+   ===================================================================== */
+input[type="file"].vts-input,
+input[type="file"].vts-select{
+  /* Room for the button, and the native control's own line-height is
+     shorter than a text input's -- match the others. */
+  padding:9px 12px;
+  font-size:.86rem;
+  line-height:1.5;
+  color:var(--d-ink-2,#44506a);
+  background:#fff;
+  cursor:pointer;
+  /* The filename can be long; keep it inside the box. */
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+/* The "Choose file" button itself, in both engines. */
+input[type="file"].vts-input::file-selector-button,
+input[type="file"].vts-select::file-selector-button{
+  font:inherit;
+  font-weight:700;
+  font-size:.84rem;
+  margin:-2px 12px -2px 0;
+  padding:8px 15px;
+  border:1px solid #d9e1ee;
+  border-radius:8px;
+  background:#f5f8ff;
+  color:var(--d-navy,#1a3a6b);
+  cursor:pointer;
+  transition:background .12s ease, border-color .12s ease;
+}
+input[type="file"].vts-input::file-selector-button:hover,
+input[type="file"].vts-select::file-selector-button:hover{
+  background:#e8f0ff;
+  border-color:#c2d2ea;
+}
+/* Older WebKit uses its own pseudo-element name. */
+input[type="file"].vts-input::-webkit-file-upload-button,
+input[type="file"].vts-select::-webkit-file-upload-button{
+  font:inherit;
+  font-weight:700;
+  font-size:.84rem;
+  margin:-2px 12px -2px 0;
+  padding:8px 15px;
+  border:1px solid #d9e1ee;
+  border-radius:8px;
+  background:#f5f8ff;
+  color:var(--d-navy,#1a3a6b);
+  cursor:pointer;
+}
+
+/* =====================================================================
+   SMALL TEXT — the hint lines under fields were .76rem in a light grey,
+   which is below comfortable reading size and under the contrast most
+   people need. Bigger, darker, and given room to breathe.
+   ===================================================================== */
+.field-hint, small.field-hint{
+  display:block;
+  margin-top:6px;
+  font-size:.8rem !important;
+  line-height:1.5;
+  color:#5c6b87 !important;
+}
+.field label, .form-group label{
+  font-size:.82rem;
+  font-weight:700;
+  color:#33415c;
+  margin-bottom:6px;
+  display:block;
+}
+/* Inputs themselves: 16px on phones so iOS does not zoom the page when a
+   field is focused, which is what made forms jump around mid-entry. */
+@media (max-width:560px){
+  .vts-input, .vts-select, textarea, input[type="file"].vts-input{
+    font-size:16px !important;
+  }
+  input[type="file"].vts-input::file-selector-button{ font-size:15px; padding:9px 14px; }
+}
+
+/* =====================================================================
+   PASSWORD REQUIREMENTS CHECKLIST  (shared: Register + Student Profile)
+
+   The rules are on screen from the start and tick off as they are met,
+   instead of being revealed one at a time by successive rejected submits.
+   Each line says what is required; the icon says whether it is there yet.
+
+   The met/unmet difference is carried by the ICON and the text weight, not
+   by colour alone — a red/green pair is the one thing a colour-blind reader
+   cannot use.
+   ===================================================================== */
+.pw-rules{
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 3px;
+}
+.pw-rules li{
+  display: flex; align-items: center; gap: 7px;
+  font-size: .76rem; line-height: 1.4;
+  color: var(--text-muted, #5a6a8a);
+}
+.pw-rules li i{
+  font-size: .58rem;
+  width: 12px; text-align: center; flex: 0 0 12px;
+}
+.pw-rules li.met{
+  color: var(--success, #1b7f46);
+  font-weight: 600;
+}
+.pw-rules li.met i{ font-size: .72rem; }
+
+/* =====================================================================
+   SMALL SHARED PIECES that were inline attributes.
+
+   These were written as style="" on the element, which is how a codebase
+   ends up with four hundred of them and a palette nobody can find the edges
+   of. Each is used in more than one place, so each earns a name.
+   ===================================================================== */
+
+/* A banner that needs an action button on the right of its message. */
+.vts-notice-row{ display: flex; align-items: center; gap: 11px; margin-bottom: 16px; }
+.vts-notice-row > .grow{ flex: 1; min-width: 0; }
+.vts-notice-row > .btn-primary,
+.vts-notice-row > .btn-outline{ flex-shrink: 0; }
+
+/* Forms that sit side by side on one line (the link-style buttons under the
+   OTP box, the inline actions in a notification row). */
+.vts-inline-form{ display: inline; }
+
+/* A card that follows another card down the page. */
+.vts-card-stacked{ margin-top: 18px; }
+
+/* An alert inside a fieldset, above the fields it refers to. */
+.vts-field-alert{ margin-bottom: 14px; }
+
+/* Warning-coloured icon, where the surrounding text is not itself a warning. */
+.ic-warning{ color: var(--warning, #e07a10); }
+
+/* =====================================================================
+   AUTH HEADER — one definition, used by the login AND the register page.
+
+   These two headers had drifted into different designs: the seal had four
+   competing size/border/glow rules across three stylesheets, the login
+   carried a bordered pill spelling out the full system name while the
+   register showed the same words as a plain gold line, and the school name
+   had six rules setting its size. Same information, two looks, and no one
+   place to change either.
+
+   It is defined here, once, in the file both pages load. Per-page rules
+   below this point should not re-declare these — only the colour, which
+   genuinely differs (white over the photo, navy on the white card).
+   ===================================================================== */
+
+/* The seal. One size, a thin ring, a single soft shadow — no stacked halo. */
+.auth-logo-ring{
+  width: 76px; height: 76px;
+  margin: 0 auto 14px;
+  flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #0f2547;
+  border: 2px solid var(--gold, #c9a227);
+  box-shadow: 0 6px 18px rgba(6, 16, 36, .34);
+}
+.auth-logo-ring .auth-logo,
+.auth-logo-ring img{
+  display: block;
+  width: 100%; height: 100%; margin: 0;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* The wordmark under it. Small, letterspaced, one line. */
+.auth-wordmark{
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  margin: 0 0 4px;
+}
+
+@media (max-width: 560px){
+  .auth-logo-ring{ width: 64px; height: 64px; margin-bottom: 12px; }
+  .auth-wordmark{ font-size: .62rem; letter-spacing: .13em; }
+}

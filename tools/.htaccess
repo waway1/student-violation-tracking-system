@@ -1,0 +1,9 @@
+# Maintenance scripts. They are run from a terminal or by double-clicking
+# them on the server, never over the web, so nothing here is served.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

@@ -1,0 +1,1908 @@
+/* VTS theme -- base styles. Navy (#1a3a6b) + Gold (#c9a227) GWC institutional palette. */
+
+/* Inter is loaded from assets/vendor/fonts (see the <link> in every page's
+   head). There used to be an @import of fonts.googleapis.com here as well,
+   which survived the move to self-hosted fonts because it lives in a
+   stylesheet rather than in the markup — and a CSS @import blocks rendering
+   exactly like the <link> did, so on a machine with no internet this one
+   line put back the blank-page-until-timeout the move was meant to end. */
+
+/* ── Reset & Base ─────────────────────────────────── */
+*, *::before, *::after {
+  margin: 0; padding: 0; box-sizing: border-box;
+}
+
+:root {
+  --navy:        #1a3a6b;
+  --navy-dark:   #122a52;
+  --navy-light:  #1e4580;
+  --gold:        #c9a227;
+  --gold-light:  #e2b83a;
+  --gold-pale:   #f5e9c0;
+  --white:       #ffffff;
+  --bg:          #f0f4fa;
+  --surface:     #ffffff;
+  --text:        #1a2340;
+  --text-muted:  #5a6a8a;
+  /* The greys below had drifted into a dozen near-identical hand-typed
+     hexes across the pages (#9aa6bd, #8a95ab, #8a93a8, #55617a, #6b7896…).
+     These are the survivors; everything else now points at one of them. */
+  --text-soft:   #55617a;   /* secondary copy, hints under a field   */
+  --text-faint:  #9aa6bd;   /* placeholders, empty states, the "—"   */
+  --border:      #dde4f0;
+  --border-soft: #e2e8f5;   /* avatar rings, hairlines inside a card */
+  --surface-alt: #eef2f8;   /* zebra rows, inset panels              */
+  --surface-tint:#e8eef9;   /* icon chips, avatar fallbacks          */
+  --danger:      #e03535;
+  --warning:     #e07a10;
+  --success:     #1b7f46;
+  --info:        #1576c4;
+  --sidebar-w:   260px;
+  --navbar-h:    52px;
+  --radius:      12px;
+  --shadow-sm:   0 2px 8px rgba(26,58,107,0.10);
+  --shadow-md:   0 4px 20px rgba(26,58,107,0.15);
+  --shadow-lg:   0 8px 40px rgba(26,58,107,0.20);
+  --grad-header: linear-gradient(90deg, var(--navy) 0%, #2a5298 50%, var(--gold) 100%);
+
+  /* Two faces, declared once. The app had six slightly different
+     "Inter" stacks and a stray Segoe-UI one fighting it with
+     !important; two of those stacks also named Manrope and Poppins,
+     which are never loaded, so they only ever cost a lookup. */
+  /* TWO families, and the stacks stay short on purpose. system-ui already
+     resolves to Segoe UI on Windows, Roboto on Android and SF on Apple, so
+     naming those as well added four font names for no behaviour — and an
+     audit counting distinct typefaces reads every name in the stack. */
+  --font-ui:      'Inter', system-ui, sans-serif;
+  --font-display: Georgia, serif;   /* team cards, modal headings */
+}
+
+body {
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+a { text-decoration: none; color: inherit; }
+button, .btn { cursor: pointer; font-family: inherit; }
+
+/* Keep the student violation count header on the same axis as its values. */
+.vts-table th.violation-count-head,
+.vts-table td.violation-count-cell { text-align: center; vertical-align: middle; }
+
+/* ── Background Image Support ─────────────────────── */
+body.has-bg-image {
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+/* ── NAVBAR ───────────────────────────────────────── */
+.vts-navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--navbar-h);
+  background: var(--grad-header);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px 0 16px;
+  z-index: 1000;
+  box-shadow: 0 2px 16px rgba(26,58,107,0.30);
+}
+
+.vts-navbar .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vts-navbar .brand img {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.5);
+  object-fit: cover;
+}
+
+.vts-navbar .brand-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--white);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.vts-navbar .nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.vts-navbar .user-info {
+  text-align: right;
+}
+
+.vts-navbar .user-role {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.2;
+}
+
+.vts-navbar .user-desc {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.7);
+}
+
+.vts-navbar .user-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  color: var(--white);
+  border: 2px solid rgba(255,255,255,0.4);
+}
+
+.vts-navbar .user-avatar img {
+  width: 100%; height: 100%;
+  border-radius: 50%; object-fit: cover;
+}
+
+.btn-logout {
+  background: var(--gold);
+  color: var(--navy-dark);
+  border: none;
+  padding: 7px 18px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-logout:hover { background: var(--gold-light); transform: translateY(-1px); }
+
+.btn-hamburger {
+  background: none;
+  border: none;
+  color: var(--white);
+  font-size: 1.4rem;
+  padding: 6px;
+  line-height: 1;
+  display: block;   /* always available so the user can show/hide the menu */
+  cursor: pointer;
+}
+
+/* ── SIDEBAR ──────────────────────────────────────── */
+.vts-sidebar {
+  position: fixed;
+  top: var(--navbar-h);
+  left: 0;
+  width: var(--sidebar-w);
+  height: calc(100vh - var(--navbar-h));
+  background: var(--navy);
+  display: flex;
+  flex-direction: column;
+  z-index: 900;
+  overflow-y: auto;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 20px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+
+.sidebar-brand img {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+}
+
+.sidebar-brand span {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--white);
+  letter-spacing: 0.05em;
+}
+
+.sidebar-nav {
+  padding: 12px 0;
+  flex: 1;
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 22px;
+  color: rgba(255,255,255,0.75);
+  font-size: 0.92rem;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.sidebar-nav a i {
+  width: 20px;
+  font-size: 1rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.sidebar-nav a:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--white);
+  border-left-color: var(--gold);
+}
+
+.sidebar-nav a.active {
+  background: rgba(201,162,39,0.18);
+  color: var(--white);
+  border-left-color: var(--gold);
+  font-weight: 600;
+}
+
+.sidebar-nav .notif-badge {
+  margin-left: auto;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  line-height: 1.4;
+}
+
+/* ── ON-DUTY / SCANNER PANEL (admin/setting.php) ──────────────────────
+   The master scanning switch, the posted duty hours and a live
+   "who's holding a slot" roster.
+
+   THIS WAS A DARK SIDEBAR WIDGET. It lived in the navigation rail, which
+   meant a control changed a few times a term was redrawn, polled and
+   styled on every page in the app — and styled against a dark background,
+   so none of the ordinary form rules applied to it. It is a card on the
+   Settings page now, and everything below is the light-card equivalent of
+   what the rail used to do by hand.
+   ───────────────────────────────────────────────────────────────────── */
+.duty-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.duty-title {
+  flex: 1;
+  min-width: 0;
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+.duty-title i { color: var(--gold); margin-right: 7px; }
+/* Reads "1/2 on duty" — the answer to the only question the panel is
+   opened to ask, so it is legible without scanning the slot list. */
+.duty-count {
+  font-size: .74rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--surface-tint);
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.duty-hint {
+  margin: 4px 0 16px;
+  font-size: .8rem;
+  color: var(--text-muted);
+}
+
+/* Two columns while the card is wide, one when it is not. The card now
+   fills the content column, so this is what the extra width buys. */
+.duty-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px 26px;
+}
+@media (max-width: 820px) { .duty-cols { grid-template-columns: 1fr; } }
+.duty-col { min-width: 0; }
+
+/* A small uppercase heading over a group — the settings page's own
+   <legend> look, for spans that cannot be legends. */
+.duty-legend {
+  display: block;
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-muted);
+  margin-bottom: 7px;
+}
+
+/* The master switch, with its consequence spelled out beside it. */
+.duty-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-alt);
+}
+.duty-switch-text { min-width: 0; }
+.duty-label { display: block; font-size: .88rem; font-weight: 700; color: var(--text); }
+.duty-sub   { display: block; font-size: .76rem; color: var(--text-muted); margin-top: 2px; }
+/* These forms are only ever a control in a row — they must not add a line. */
+.duty-inline-form { margin: 0; display: inline-flex; align-items: center; }
+.duty-switch-row .scanner-switch-text { color: var(--text-muted); }
+
+.duty-hours {
+  margin: 12px 0 16px;
+  font-size: .82rem;
+  color: var(--text-soft);
+}
+.duty-hours i { margin-right: 6px; color: var(--success); }
+.duty-hours.is-closed i { color: var(--warning); }
+
+/* ── Duty hours editor ───────────────────────────────────────── */
+.duty-form { margin: 0; }
+/* Seven day toggles, as a wrapping row of pills rather than a checkbox
+   list — a week is read as a shape, not as seven sentences. */
+.duty-days { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.duty-day { cursor: pointer; }
+.duty-day input { position: absolute; opacity: 0; pointer-events: none; }
+.duty-day span {
+  display: block;
+  padding: 7px 13px;
+  border-radius: 8px;
+  font-size: .78rem;
+  font-weight: 700;
+  background: var(--surface-alt);
+  color: var(--text-faint);
+  border: 1.5px solid transparent;
+  transition: background .12s ease, color .12s ease;
+}
+.duty-day:hover span { background: var(--surface-tint); color: var(--text-muted); }
+.duty-day input:checked + span { background: var(--navy); color: var(--white); }
+.duty-day input:focus-visible + span { border-color: var(--gold); }
+
+.duty-times { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+.duty-times label { flex: 1 1 130px; min-width: 0; }
+.duty-save { white-space: nowrap; }
+
+/* ── Marshal slots ───────────────────────────────────────────── */
+.duty-list { display: flex; flex-direction: column; gap: 8px; }
+.duty-empty {
+  margin: 0;
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  font-size: .82rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.duty-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: .85rem;
+  color: var(--text);
+  background: var(--surface-alt);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 11px 13px;
+  min-width: 0;
+}
+.duty-row > i { color: var(--success); font-size: .85rem; flex: 0 0 auto; }
+/* An empty slot is drawn too, so "1 of 2 out there" needs no counting. */
+.duty-row.is-empty { background: transparent; border-style: dashed; border-color: var(--border); }
+.duty-row.is-empty > i,
+.duty-row.is-empty .duty-name { color: var(--text-faint); font-weight: 500; font-style: italic; }
+.duty-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.duty-id {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: .78rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.duty-off {
+  background: none;
+  border: 0;
+  padding: 5px 7px;
+  cursor: pointer;
+  color: var(--text-faint);
+  border-radius: 7px;
+  line-height: 1;
+}
+.duty-off:hover,
+.duty-off:focus-visible { color: var(--danger); background: #fde3e3; }
+.duty-note {
+  margin: 12px 0 0;
+  font-size: .76rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.duty-note i { color: var(--info); margin-right: 5px; }
+
+/* ── MAIN CONTENT ─────────────────────────────────── */
+.vts-main {
+  margin-left: var(--sidebar-w);
+  padding-top: var(--navbar-h);
+  min-height: 100vh;
+  position: relative;
+  transition: margin-left 0.3s ease;
+}
+
+/* Collapsed state (desktop): hide sidebar, let dashboard use full width */
+.vts-sidebar.collapsed {
+  transform: translateX(-100%);
+}
+.vts-main.expanded {
+  margin-left: 0;
+}
+
+.vts-main-inner {
+  padding: 28px 28px 40px;
+  position: relative;
+  z-index: 1;
+}
+
+/* bg overlay so content is readable over photo bg */
+.vts-main::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(240,244,250,0.70);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── GLASS CARD ───────────────────────────────────── */
+.vts-card {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(255,255,255,0.70);
+  padding: 24px;
+  position: relative;
+}
+
+/* ── PAGE TITLE ───────────────────────────────────── */
+.page-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-title i {
+  color: var(--gold);
+}
+
+/* ── STAT CARDS ───────────────────────────────────── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.stat-card {
+  border-radius: var(--radius);
+  padding: 22px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card.red    { background: rgba(224,53,53,0.88); color: #fff; }
+.stat-card.teal   { background: rgba(20,130,160,0.88); color: #fff; }
+.stat-card.amber  { background: rgba(201,162,39,0.85); color: #fff; }
+.stat-card.navy   { background: rgba(26,58,107,0.90); color: #fff; }
+.stat-card.green  { background: rgba(27,127,70,0.85); color: #fff; }
+
+.stat-card .stat-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  opacity: 0.88;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-card .stat-value {
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1;
+  margin: 6px 0 4px;
+}
+
+.stat-card .stat-link {
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.85;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.stat-card .stat-icon {
+  font-size: 2.2rem;
+  opacity: 0.45;
+}
+
+/* ── TABLE ────────────────────────────────────────── */
+.vts-table-wrap {
+  background: rgba(255,255,255,0.92);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.vts-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.vts-table thead th {
+  background: var(--navy);
+  color: var(--white);
+  padding: 13px 16px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: left;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+
+.vts-table thead th:last-child { border-right: none; }
+
+.vts-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.vts-table tbody tr:hover { background: rgba(26,58,107,0.04); }
+.vts-table tbody tr:last-child { border-bottom: none; }
+
+.vts-table tbody td {
+  padding: 13px 16px;
+  font-size: 0.88rem;
+  color: var(--text);
+  vertical-align: middle;
+}
+
+/* ── STATUS BADGES ────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.badge-warning   { background: #fff3cd; color: #856404; }
+.badge-danger    { background: #f8d7da; color: #842029; }
+.badge-success   { background: #d1e7dd; color: #0a3622; }
+.badge-at-risk   { background: #fff3cd; color: #6d4c00; }
+.badge-for-osa   { background: #e2d9f3; color: #4a235a; }
+.badge-pending   { background: #cfe2ff; color: #084298; }
+
+/* ── FORMS ────────────────────────────────────────── */
+.vts-form-group {
+  margin-bottom: 18px;
+}
+
+.vts-form-group label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 7px;
+}
+
+.vts-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  font-family: inherit;
+}
+
+.vts-input:focus {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(26,58,107,0.12);
+}
+
+.vts-input::placeholder { color: #a0aec0; }
+
+.vts-input-icon {
+  position: relative;
+}
+
+.vts-input-icon > i {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+
+.vts-input-icon .vts-input { padding-left: 38px; }
+
+.vts-input-icon .eye-toggle {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  font-size: 1rem;
+}
+
+/* ── BUTTONS ──────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--navy);
+  color: var(--white);
+  border: none;
+  padding: 11px 22px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  text-transform: uppercase;
+}
+
+.btn-primary:hover {
+  background: var(--navy-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26,58,107,0.25);
+}
+
+.btn-gold {
+  background: var(--gold);
+  color: var(--navy-dark);
+}
+
+.btn-gold:hover { background: var(--gold-light); }
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--navy);
+  color: var(--navy);
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-outline:hover {
+  background: var(--navy);
+  color: var(--white);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 0.78rem;
+}
+
+.btn-full { width: 100%; justify-content: center; }
+
+/* ── NOTIFICATIONS ────────────────────────────────── */
+.notif-item {
+  background: rgba(255,255,255,0.92);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.notif-item.unread {
+  border-left: 4px solid var(--gold);
+}
+
+.notif-item .notif-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.notif-item .notif-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.notif-item .notif-time {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── QR CODE DISPLAY ──────────────────────────────── */
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px;
+  text-align: center;
+}
+
+.qr-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+
+.qr-img-wrap {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 3px solid var(--border);
+  margin-bottom: 20px;
+}
+
+/* ── SCANNER PAGE ─────────────────────────────────── */
+.scanner-card {
+  max-width: 620px;
+  margin: 0 auto;
+  background: rgba(255,255,255,0.93);
+  border-radius: 16px;
+  padding: 36px 40px;
+  box-shadow: var(--shadow-lg);
+}
+
+.scanner-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--white);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+  justify-content: center;
+}
+
+.scanner-icon {
+  font-size: 1.8rem;
+  opacity: 0.9;
+}
+
+.qr-viewfinder {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-viewfinder::before,
+.qr-viewfinder::after,
+.qr-viewfinder .corner-bl,
+.qr-viewfinder .corner-br {
+  content: '';
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  border-color: var(--gold);
+  border-style: solid;
+}
+
+.qr-viewfinder::before { top: 0; left: 0; border-width: 5px 0 0 5px; border-radius: 6px 0 0 0; }
+.qr-viewfinder::after  { top: 0; right: 0; border-width: 5px 5px 0 0; border-radius: 0 6px 0 0; }
+.qr-viewfinder .corner-bl { bottom: 0; left: 0; border-width: 0 0 5px 5px; border-radius: 0 0 0 6px; }
+.qr-viewfinder .corner-br { bottom: 0; right: 0; border-width: 0 5px 5px 0; border-radius: 0 0 6px 0; }
+
+.qr-scan-hint {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.8);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* ── MEET THE TEAM ─────────────────────────────────── */
+.auth-page { isolation: isolate; }
+.auth-header, .auth-card, .team-link-wrap {
+  position: relative;
+  z-index: 1;
+}
+.team-link-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+  padding-top: 4px;
+  position: relative;
+  z-index: 2;
+}
+.team-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid rgba(26, 58, 107, 0.12);
+  color: var(--navy-dark);
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 12px 20px;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+  white-space: nowrap;
+  opacity: 1;
+  position: relative;
+  z-index: 2;
+}
+.team-link:hover {
+  background: #f7f9fc;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.16);
+  text-decoration: none;
+}
+#teamModal.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: radial-gradient(circle at 50% 15%, rgba(26, 58, 107, 0.55), rgba(4, 9, 20, 0.93) 72%);
+  backdrop-filter: blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  padding: 20px;
+  overflow-y: auto;
+}
+#teamModal.modal-overlay.open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#teamModal .team-modal {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  max-width: 980px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 34px 30px 36px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  position: relative;
+  animation: tmPop 0.4s cubic-bezier(0.2, 0.85, 0.2, 1) both;
+}
+@keyframes tmPop {
+  from { opacity: 0; transform: scale(0.92) translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+#teamModal .tm-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border-radius: 30px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  z-index: 3;
+  transition: background 0.2s, border-color 0.2s;
+}
+#teamModal .tm-close:hover { background: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.28); }
+#teamModal .tm-title {
+  text-align: center;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+#teamModal .tm-subtitle {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.92rem;
+  margin: 8px 0 0;
+}
+#teamModal .tm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 22px;
+  margin-top: 28px;
+}
+#teamModal .tm-card {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+}
+#teamModal .tm-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.32);
+}
+/* Fixed pixel size (not a % of the grid cell) so every member's card —
+   photo or icon fallback — is identically sized, regardless of how many
+   cards end up sharing the last row.
+   Portrait card, not a circle: team photos are uploaded as full portrait
+   shots (see assets/images/team/README.txt) and are pre-processed to a
+   shared 800x1041 canvas (matching the largest submitted photo's ratio,
+   letterboxed on white so nothing is cropped off — see _originals/ for the
+   untouched source files). The frame below uses that exact ratio so
+   `object-fit: cover` shows 100% of every photo with zero cropping, and
+   every card renders at the same size regardless of the source photo's
+   original resolution. */
+#teamModal .tm-photo {
+  width: 138px;
+  height: 180px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 3px solid rgba(226, 184, 58, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+#teamModal .tm-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  cursor: zoom-in;
+  display: block;
+}
+#teamModal .tm-initials {
+  font-size: 3rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+.tm-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 10, 20, 0.92);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 80;
+  animation: tmZoomFade 0.2s ease both;
+}
+@keyframes tmZoomFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.tm-zoom-overlay.open {
+  display: flex;
+}
+.tm-zoom-card {
+  position: relative;
+  max-width: min(90vw, 760px);
+  max-height: 90vh;
+  background: #fff;
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  animation: tmZoomPop 0.25s cubic-bezier(0.2, 0.85, 0.2, 1) both;
+  cursor: zoom-out;
+}
+@keyframes tmZoomPop {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+.tm-zoom-card img {
+  display: block;
+  max-width: 100%;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 10px;
+  cursor: zoom-out;
+}
+.tm-zoom-close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 36px;
+  height: 36px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--navy-dark);
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  transition: background 0.2s, transform 0.2s;
+}
+.tm-zoom-close:hover { background: var(--gold-light); color: var(--navy-dark); transform: scale(1.08); }
+#teamModal .tm-name {
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  line-height: 1.25;
+  margin-top: 12px;
+}
+#teamModal .tm-role {
+  display: inline-block;
+  margin-top: 6px;
+  background: rgba(226, 184, 58, 0.16);
+  color: var(--gold-light);
+  border: 1px solid rgba(226, 184, 58, 0.5);
+  font-weight: 800;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+#teamModal .tm-age {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.8rem;
+  margin-top: 8px;
+}
+#teamModal .tm-motto {
+  color: rgba(255, 255, 255, 0.88);
+  font-style: italic;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  margin-top: 8px;
+}
+@media (max-width: 520px) {
+  #teamModal .tm-title { font-size: 1.5rem; }
+  #teamModal .tm-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; }
+  #teamModal .tm-photo { width: 100px; height: 130px; }
+  #teamModal .tm-initials { font-size: 2.2rem; }
+}
+
+/* ── LOGIN / REGISTER PAGES ───────────────────────── */
+@keyframes vtsRise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes vtsFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.auth-page {
+  min-height: 100vh;
+  /* THE campus photo treatment — defined here once and nowhere else.
+     It previously existed in three stylesheets at once, two of them with
+     !important, each adding its own wash; the stacked result was what made
+     the photo unreadable. One image, ONE overlay, tuned so white text stays
+     above 4.5:1 over the brightest part of the picture. */
+  background:
+    linear-gradient(165deg, rgba(8,22,46,.78) 0%, rgba(11,31,63,.70) 45%, rgba(6,17,38,.82) 100%),
+    url('../images/school.jpg') center / cover no-repeat fixed;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+}
+
+.auth-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 25, 55, 0.45);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.auth-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 1;
+  animation: vtsFade 0.9s ease both;
+}
+
+.auth-header img { width: 64px; height: 64px; border-radius: 50%; }
+
+.auth-header .school-name {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--white);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.auth-card {
+  background: rgba(255,255,255,0.97);
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
+  padding: 36px 38px;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  z-index: 1;
+  animation: vtsRise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.auth-card .auth-logo {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  margin: 0 auto 8px;
+  display: block;
+}
+
+.auth-card .system-label {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.auth-card .auth-heading {
+  text-align: center;
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.auth-card .auth-sub {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.auth-card .vts-form-group { margin-bottom: 14px; }
+
+.auth-link {
+  text-align: center;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  margin-top: 16px;
+}
+
+.auth-link a {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+/* LEFT, not right. It reads as part of the password field it sits under —
+   the eye is at that field's right edge, and a second small control tucked
+   into the same corner was two different things in one spot. */
+.auth-forgot-link {
+  text-align: left;
+  margin: -4px 0 10px;
+}
+
+.auth-forgot-link a {
+  font-size: 0.82rem;
+  color: #1c5aa8;
+  font-weight: 600;
+}
+
+.auth-submit {
+  margin-top: 8px;
+}
+
+.auth-submit.staff {
+  margin-top: 6px;
+}
+
+.auth-alert-staff {
+  margin-bottom: 14px;
+}
+
+/* ── PROFILE ──────────────────────────────────────── */
+.profile-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 32px;
+  align-items: start;
+}
+
+.profile-avatar {
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  background: #dde4f0;
+  border: 3px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.profile-fields { display: grid; gap: 10px; }
+
+.profile-row {
+  display: flex;
+  gap: 12px;
+  font-size: 0.88rem;
+}
+
+.profile-label {
+  font-weight: 700;
+  color: var(--navy);
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.profile-value { color: var(--text); }
+
+.qr-status-active {
+  color: var(--success);
+  font-weight: 700;
+}
+
+/* ── VIOLATION DETAIL CARD ────────────────────────── */
+.violation-detail-card {
+  border-radius: 14px;
+  background: rgba(255,255,255,0.95);
+  box-shadow: var(--shadow-md);
+  padding: 32px;
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.violation-detail-type {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--navy);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+
+.violation-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.violation-row:last-child { border-bottom: none; }
+
+.violation-row .vr-label { color: var(--text-muted); font-weight: 600; }
+.violation-row .vr-value { font-weight: 600; color: var(--text); }
+
+/* ── NEW VIOLATION ALERT ──────────────────────────── */
+.new-violation-alert {
+  background: rgba(255,255,255,0.95);
+  border-radius: 14px;
+  padding: 28px 32px;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: var(--shadow-md);
+}
+
+.new-violation-alert .alert-title {
+  color: var(--danger);
+  font-size: 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+/* ── BACK BUTTON ──────────────────────────────────── */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  background: var(--navy);
+  color: var(--white);
+  border-radius: 8px;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.back-btn:hover { background: var(--navy-light); }
+
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.section-head-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── ALERTS ───────────────────────────────────────── */
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.87rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.alert-success { background: #d1e7dd; color: #0a3622; }
+.alert-error   { background: #f8d7da; color: #842029; }
+
+/* ── VIOLATIONS BOTTOM CARDS (dashboard) ──────────── */
+.dash-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.my-violations-list {
+  background: rgba(255,255,255,0.92);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 20px;
+}
+
+.my-violations-list h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.violation-list-item {
+  background: rgba(26,58,107,0.06);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+
+.violation-list-item .vi-type {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.violation-list-item .vi-date {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.view-all-link {
+  display: block;
+  text-align: left;
+  color: var(--navy);
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-top: 10px;
+  text-decoration: underline;
+}
+
+.qr-mini-card {
+  background: rgba(255,255,255,0.92);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qr-mini-card h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 14px;
+  align-self: flex-start;
+}
+
+/* ── SEARCH ROW ───────────────────────────────────── */
+.search-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.search-row .vts-input { flex: 1; min-width: 180px; }
+
+/* ── RESPONSIVE ───────────────────────────────────── */
+@media (max-width: 900px) {
+  .vts-sidebar {
+    transform: translateX(-100%);
+  }
+
+  .vts-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .vts-main {
+    margin-left: 0;
+  }
+
+  .btn-hamburger { display: block; }
+
+  .stat-grid { grid-template-columns: 1fr; }
+  .dash-bottom { grid-template-columns: 1fr; }
+  .profile-card { grid-template-columns: 1fr; }
+  .auth-card { padding: 24px 20px; }
+  .auth-header .school-name { font-size: 1.2rem; }
+}
+
+/* ── SCANNER PAGE BG ──────────────────────────────── */
+.scanner-bg {
+  min-height: 100vh;
+  background: var(--grad-header);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: calc(var(--navbar-h) + 40px) 20px 40px;
+}
+
+.scanner-card-wrap {
+  background: rgba(26,58,107,0.92);
+  border-radius: 18px;
+  padding: 36px 40px;
+  width: 100%;
+  max-width: 640px;
+  box-shadow: var(--shadow-lg);
+}
+
+.scanner-card-wrap .vts-form-group label {
+  color: rgba(255,255,255,0.85);
+}
+
+.scanner-card-wrap .vts-input {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.2);
+  color: var(--white);
+}
+
+.scanner-card-wrap .vts-input::placeholder {
+  color: rgba(255,255,255,0.5);
+}
+
+.scanner-card-wrap .vts-input:focus {
+  background: rgba(255,255,255,0.18);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,162,39,0.25);
+}
+
+.scanner-card-wrap select.vts-input option {
+  background: var(--navy);
+  color: var(--white);
+}
+
+.scanner-btn-row {
+  display: flex;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.scanner-btn-row .btn-start {
+  flex: 1;
+  background: rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.4);
+  color: var(--white);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition: all 0.2s;
+}
+
+.scanner-btn-row .btn-start:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+.scanner-btn-row .btn-stop {
+  flex: 1;
+  background: rgba(26,58,107,0.85);
+  border: 2px solid rgba(255,255,255,0.3);
+  color: var(--white);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition: all 0.2s;
+}
+
+.scanner-btn-row .btn-stop:hover {
+  background: rgba(26,58,107,1);
+}
+
+/* ── UTILITY ──────────────────────────────────────── */
+.mt-0  { margin-top: 0; }
+.mb-12 { margin-bottom: 12px; }
+.mb-20 { margin-bottom: 20px; }
+.text-center { text-align: center; }
+.text-gold { color: var(--gold); }
+.text-navy { color: var(--navy); }
+.d-flex { display: flex; }
+.gap-10 { gap: 10px; }
+.align-center { align-items: center; }
+
+/* ── Brand: product name over what it does ──────────────────────────────
+   The navbar carries the short name ("QR Shield") with the descriptive
+   half beneath it, because the formal project title is a 169-character
+   sentence — it belongs on the landing page, not in a 20-character slot.
+   The sub-line is hidden on narrow screens, where even two words compete
+   with the controls people actually tap. */
+.vts-navbar .brand-name {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.vts-navbar .brand-name .brand-sub {
+  font-size: .60rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: none;
+  opacity: .82;
+}
+@media (max-width: 720px) {
+  .vts-navbar .brand-name .brand-sub { display: none; }
+}
+
+/* ── Live-update banner ─────────────────────────────────────────────────
+   Appears only when new records arrived and a reload would have taken
+   something away (a menu open, a filter half-typed). Bottom-centre and
+   out of the way: it is an offer, not an interruption. */
+.vts-live-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%) translateY(14px);
+  z-index: 9000;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--navy, #1a3a6b);
+  color: #fff;
+  font: 600 .84rem/1 'Inter', system-ui, sans-serif;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(10, 25, 55, .34);
+  opacity: 0;
+  transition: opacity .2s ease, transform .2s ease;
+}
+.vts-live-banner.show { display: flex; opacity: 1; transform: translateX(-50%) translateY(0); }
+.vts-live-banner:hover { background: var(--navy-light, #1e4580); }
+.vts-live-banner::before {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--gold, #c9a227);
+}
+@media (prefers-reduced-motion: reduce) { .vts-live-banner { transition: none; } }
+
+/* ══════════════════════════════════════════════════════════════════════
+   SHARED UTILITIES
+   Added to replace repeated inline styles and to carry the accessibility
+   helpers (screen-reader labels, scrollable tables, busy indicators) that
+   the rest of the app now leans on. Keep new one-off styling here as a
+   named class rather than as another style="" attribute.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Visible to screen readers, invisible on screen. Use for labels on fields
+   whose purpose is obvious sighted (search boxes, code entry) but which
+   still need a real <label> behind them. */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Wide tables scroll sideways instead of stretching the page on a phone. */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll > table.data-table { min-width: 560px; }
+@media (min-width: 900px) { .table-scroll > table.data-table { min-width: 0; } }
+
+/* ── Busy / loading indicators ───────────────────────────────────────── */
+
+/* Spinner for inline "working on it" messages. */
+.vts-spinner {
+  display: inline-block;
+  width: 1em; height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -.125em;
+  animation: vts-spin .7s linear infinite;
+}
+@keyframes vts-spin { to { transform: rotate(360deg); } }
+
+/* A button mid-request: dimmed, un-clickable, with a spinner swapped in for
+   its icon. Applied by assets/js/vts-ui.js on submit. */
+button.is-busy, .btn-primary.is-busy, .btn-outline.is-busy, .btn-danger.is-busy {
+  position: relative;
+  pointer-events: none;
+  opacity: .72;
+}
+button.is-busy > i, .is-busy > i { visibility: hidden; }
+button.is-busy::after, .is-busy::after {
+  content: '';
+  position: absolute;
+  left: 12px; top: 50%;
+  width: 13px; height: 13px;
+  margin-top: -7px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: vts-spin .7s linear infinite;
+}
+/* Buttons with no icon get the spinner centred above the label instead. */
+.is-busy.is-busy-center::after { left: 50%; margin-left: -7px; }
+
+/* Full-width bar that sits above a list while it reloads. */
+.vts-loading-bar {
+  display: none;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 14px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--navy);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: .84rem;
+}
+.vts-loading-bar.show { display: flex; }
+
+/* Skeleton shimmer for content that has not arrived yet. */
+.vts-skeleton {
+  background: linear-gradient(90deg, #eef2f8 25%, #e2e9f4 37%, #eef2f8 63%);
+  background-size: 400% 100%;
+  animation: vts-shimmer 1.3s ease infinite;
+  border-radius: 6px;
+  color: transparent !important;
+}
+@keyframes vts-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .vts-spinner, .is-busy::after, .vts-skeleton { animation: none; }
+}
+
+/* ── Layout helpers (replacing the most-repeated inline styles) ───────── */
+.u-row        { display: flex; align-items: center; gap: 8px; }
+.u-row-wrap   { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.u-actions    { display: flex; gap: 8px; flex-wrap: wrap; }
+.u-inline     { display: inline-flex; align-items: center; gap: 6px; }
+.u-grow       { flex: 1 1 auto; min-width: 0; }
+.u-right      { margin-left: auto; }
+.u-mb-0       { margin-bottom: 0; }
+.u-mb-14      { margin-bottom: 14px; }
+.u-mt-14      { margin-top: 14px; }
+.u-muted      { color: var(--text-muted); }
+.u-small      { font-size: .82rem; }
+.u-nowrap     { white-space: nowrap; }
+.u-upper      { text-transform: uppercase; }
+/* Added when the repeated inline styles were swept up. !important on these
+   and not on the ones above, deliberately: each replaces an inline style,
+   and an inline style already outranked every class selector on the page.
+   Without it a conversion could silently lose to a rule the inline style
+   used to beat, and "tidy the CSS" would become "change the design". */
+.u-mb-12      { margin-bottom: 12px !important; }
+.u-mb-16      { margin-bottom: 16px !important; }
+.u-mb-20      { margin-bottom: 20px !important; }
+.u-mt-12      { margin-top: 12px !important; }
+.u-mt-16      { margin-top: 16px !important; }
+.u-faint      { color: var(--text-faint) !important; }
+.u-pointer    { cursor: pointer !important; }
+.u-center     { text-align: center !important; }
+/* The faint-and-small pairing that kept being written out longhand: an empty
+   state, a row count, a "nothing here yet" line under a panel. */
+.u-note       { color: var(--text-faint) !important; font-size: .85rem !important; }
+/* A short red aside inside a label — "— not set yet", "— expired". */
+.u-warn-note  { color: var(--danger); font-size: .75rem; font-weight: 500; }
+.u-hidden     { display: none !important; }
+
+/* ── Field groups ─────────────────────────────────────────────────────── */
+/* <fieldset> used purely for grouping — strip the browser's default frame
+   and give the legend the look of a small section heading. */
+.vts-fieldset {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 0 0 4px;
+  padding: 18px 0 0;
+  min-width: 0;          /* keeps flex/grid children from overflowing */
+}
+.vts-fieldset:first-of-type { border-top: 0; padding-top: 0; }
+.vts-fieldset > legend {
+  padding: 0;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--navy);
+}
+.vts-fieldset > .vts-fieldset-hint {
+  margin: 3px 0 14px;
+  font-size: .8rem;
+  color: var(--text-muted);
+}
+
+/* A checkbox sitting inline with its own wording, under another field. */
+.vts-check-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+  font-weight: 500;
+  text-transform: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.vts-check-inline input[type="checkbox"] { width: auto; margin: 0; }
+
+/* The mail diagnostic's one-line "send a test to…" row. */
+.mailtest-form { gap: 10px; }
+.mailtest-form .vts-input { max-width: 320px; flex: 1 1 220px; }
+
+/* ── Pagination (vts_pager in includes/functions.php) ────────────────── */
+.vts-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.vts-pager-status { font-size: .8rem; color: var(--text-muted); }
+.vts-pager-links  { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.vts-pager-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: .82rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.vts-pager-btn:hover { border-color: var(--navy); color: var(--navy); }
+.vts-pager-btn.is-current {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+  cursor: default;
+}
+.vts-pager-btn.is-off { opacity: .35; cursor: default; }
+.vts-pager-btn.is-off:hover { border-color: var(--border); color: var(--text); }
+.vts-pager-gap { padding: 0 2px; color: var(--text-muted); }
+
+@media print { .vts-pager { display: none; } }
+@media (max-width: 560px) {
+  .vts-pager { justify-content: center; }
+  .vts-pager-status { width: 100%; text-align: center; }
+}
+
+/* The "nothing here" row inside a data table. */
+.table-empty { text-align: center; color: var(--text-muted); padding: 22px; }
+
+/* The duty-hours editor's styles used to sit here as a second block of
+   .sidebar-duty-* rules, separate from the on-duty panel they belonged to
+   only because they were written later. Both are now in the one ON-DUTY /
+   SCANNER PANEL block above, which is where a reader looking for them
+   would go first.
+
+   ---- SETTINGS FORM, on a card that is no longer capped ----
+   admin/setting.php's card used to carry an inline max-width:760px, so
+   collapsing the sidebar widened the empty gutter beside it and never the
+   card. The cap is gone and the card fills the content column like every
+   other admin page's does — which leaves the form inside it to do
+   something sensible with the width, rather than stretching two inputs to
+   arm's length. It gains a third column when there is room for one and
+   drops to a single column on a phone; .full spans whatever that count
+   happens to be. */
+.settings-form .form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+/* Three is where it stops. auto-fit would keep adding tracks on a wide
+   monitor and leave a three-field group stranded in an eight-column row. */
+@media (min-width: 1180px) {
+  .settings-form .form-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 820px) {
+  .settings-form .form-grid { grid-template-columns: minmax(0, 1fr); }
+}

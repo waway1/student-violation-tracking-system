@@ -1,0 +1,142 @@
+/* Student dashboard — extracted from dashboard.php so all CSS lives in stylesheets. */
+
+/* ---- Student dashboard polish (this page only) ---- */
+/* Section rhythm: cards and sections breathe more */
+.stat-grid{ gap: 22px; margin-bottom: 26px; }
+.dash-bottom{ gap: 22px; margin-top: 26px; align-items: stretch; }
+
+/* Stat cards: each one has its own colour again — Total Violations orange,
+   This Month yellow, Status green/amber/red by how the student is doing.
+   (Deep enough that the white text stays easy to read.) */
+/* =====================================================================
+   The saturated gradient tiles that used to live here — full-bleed orange,
+   yellow, navy and green with heavy drop shadows — are gone. Every tile
+   shouted at the same volume, so the dashboard had no hierarchy and the
+   numbers were the hardest thing on it to read.
+
+   .stat-card is now defined once in vts-design.css: a white tile, a hairline
+   border, a 3px coloured rule along the top and a tinted icon chip. The
+   colour still carries the meaning; it is simply no longer the whole
+   surface. Nothing is redefined here, so the two files cannot disagree —
+   this stylesheet loads AFTER the design system and would have won.
+   ===================================================================== */
+.stat-card .stat-label{ font-size: .74rem; font-weight: 700; letter-spacing: .07em; opacity: .85; }
+.stat-card .stat-value{ font-size: 2.2rem; letter-spacing: -.02em; margin: 8px 0 10px; }
+/* Icon sits in a soft chip — clearer hierarchy than the faded glyph */
+.stat-card .stat-icon{ font-size: 1.35rem; opacity: 1; width: 52px; height: 52px; border-radius: 14px;
+  background: var(--n-100); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+/* "View all" reads as a real control now */
+.stat-card .stat-link{ display: inline-flex; align-items: center; gap: 6px; background: var(--n-100);
+  color: #fff; padding: 6px 13px; border-radius: 999px; font-size: .74rem; font-weight: 700;
+  text-decoration: none; opacity: 1; transition: background .15s ease; }
+.stat-card .stat-link::after{ content: '\2192'; }
+.stat-card .stat-link:hover{ background: var(--n-200); }
+
+/* Bottom cards: equal height, generous padding, consistent titles */
+.my-violations-list, .qr-mini-card{ padding: 24px 26px !important; border-radius: 16px !important;
+  box-shadow: 0 1px 2px rgba(20,40,80,.05), 0 12px 30px rgba(20,40,80,.09) !important;
+  transition: box-shadow .18s ease, transform .18s ease; }
+.my-violations-list:hover, .qr-mini-card:hover{ transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgba(20,40,80,.13) !important; }
+.my-violations-list h4, .qr-mini-card h4{ font-size: .78rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .06em; color: #1c2b4a; margin-bottom: 16px; }
+/* QR card fills the row height: title top, QR centered, button at the bottom */
+.qr-mini-card h4{ align-self: flex-start; margin-bottom: auto; padding-bottom: 16px; }
+.qr-mini-card .qr-download-btn{ margin-top: auto; }
+.qr-mini-card .btn-primary, .qr-mini-card .btn-outline{ transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
+.qr-mini-card .btn-primary:hover, .qr-mini-card .btn-outline:hover{ transform: translateY(-1px); box-shadow: 0 8px 18px rgba(26,58,107,.24); }
+
+/* Violation rows: clear hover feedback */
+.violation-list-item{ padding: 12px 15px; border-radius: 10px; margin-bottom: 9px;
+  transition: background .15s ease, transform .15s ease; }
+.violation-list-item:hover{ background: rgba(26,58,107,.11); transform: translateX(3px); }
+/* List "View all": button-style, obviously clickable */
+.view-all-link{ display: inline-flex; align-items: center; gap: 7px; margin-top: 14px;
+  padding: 9px 16px; border: 1.5px solid #2a5298; border-radius: 10px; color: #1a3a6b;
+  font-size: .82rem; font-weight: 700; text-decoration: none;
+  transition: background .16s ease, color .16s ease, box-shadow .16s ease; }
+.view-all-link::after{ content: '\2192'; }
+.view-all-link:hover{ background: #1a3a6b; color: #fff; box-shadow: 0 6px 16px rgba(26,58,107,.25); }
+
+/* Small screens */
+@media (max-width: 1080px){ .stat-grid{ grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); } }
+@media (max-width: 768px){
+  .stat-grid, .dash-bottom{ grid-template-columns: 1fr; gap: 16px; }
+  .stat-card{ padding: 20px 18px !important; }
+  .my-violations-list, .qr-mini-card{ padding: 20px 18px !important; }
+}
+
+/* =====================================================================
+   OFFENSE WARNING — banner + modal.
+
+   The four escalation levels used to be sixteen hex values in a PHP array,
+   echoed into style="" on ten elements. That put the palette somewhere no
+   stylesheet could see it and made the markup unreadable.
+
+   Each level now sets four custom properties and everything below reads
+   them, so changing what "final warning" looks like is one line here.
+   ===================================================================== */
+.warn-level{
+  --w-fg: #8a0c22; --w-bg: #fdeaee; --w-border: #f2b8c2; --w-accent: #c8102e;
+}
+.warn-level.is-warn      { --w-fg:#8a6100; --w-bg:#fff7e6; --w-border:#ffe2a6; --w-accent:#e0a021; }
+.warn-level.is-caution   { --w-fg:#8a4b00; --w-bg:#fff1e0; --w-border:#ffd0a3; --w-accent:#e07a10; }
+.warn-level.is-final     { --w-fg:#8a0c22; --w-bg:#fdeaee; --w-border:#f2b8c2; --w-accent:#c8102e; }
+.warn-level.is-escalation{ --w-fg:#6a0016; --w-bg:#fbe0e6; --w-border:#e9a9b6; --w-accent:#9c0022; }
+
+/* ── The banner ── */
+.warn-banner{
+  display: flex; align-items: center; gap: 11px;
+  background: var(--w-bg); border: 1px solid var(--w-border);
+  border-left: 4px solid var(--w-accent);
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 22px;
+}
+.warn-banner > .ic{ color: var(--w-accent); font-size: 1.1rem; flex-shrink: 0; }
+.warn-banner > .body{ flex: 1; min-width: 0; }
+.warn-banner .warn-title{ font-weight: 800; color: var(--w-fg); font-size: .88rem; }
+.warn-banner .warn-msg{ color: var(--w-fg); font-size: .83rem; line-height: 1.45; }
+.warn-banner .warn-msg a{ color: var(--w-fg); font-weight: 700; text-decoration: underline; }
+.warn-banner .warn-alerts-btn{
+  display: none; margin-top: 8px;
+  background: var(--w-accent); color: #fff; border: 0;
+  border-radius: 8px; padding: 6px 13px;
+  font-weight: 700; font-size: .8rem; cursor: pointer;
+}
+
+/* ── The modal ── */
+.warn-modal{
+  display: none; position: fixed; inset: 0; z-index: 6000;
+  background: rgba(16,26,45,.55);
+  align-items: center; justify-content: center; padding: 20px;
+}
+.warn-modal.open{ display: flex; }
+.warn-modal .sheet{
+  background: #fff; border-radius: 16px; max-width: 440px; width: 100%;
+  box-shadow: 0 24px 64px rgba(8,18,40,.4); overflow: hidden;
+}
+.warn-modal .sheet-head{
+  background: var(--w-accent); color: #fff; padding: 18px 22px;
+  display: flex; align-items: center; gap: 12px;
+}
+.warn-modal .sheet-head .ic{ font-size: 1.6rem; }
+.warn-modal .sheet-head .ttl{ font-weight: 800; font-size: 1.1rem; }
+.warn-modal .sheet-body{ padding: 22px; }
+.warn-modal .sheet-body p{ color: var(--text-soft, #33415c); font-size: .92rem; line-height: 1.6; margin-bottom: 8px; }
+.warn-modal .tally{
+  display: flex; align-items: center; gap: 10px;
+  margin: 14px 0; padding: 12px 14px;
+  background: var(--w-bg); border-radius: 10px;
+}
+.warn-modal .tally .n{ font-size: 1.8rem; font-weight: 800; color: var(--w-accent); line-height: 1; }
+.warn-modal .tally .lbl{ color: var(--w-fg); font-size: .85rem; font-weight: 600; }
+.warn-modal .sheet-actions{ display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+
+/* ── Page heading / QR ── */
+.sd-greeting{ font-size: 1.5rem; font-weight: 800; color: var(--text); letter-spacing: -.02em; margin-bottom: 4px; }
+.sd-sub{ color: var(--text-muted); font-size: .86rem; font-weight: 500; margin-bottom: 24px; }
+.sd-qr{ width: 160px; height: 160px; border-radius: 8px; border: 2px solid var(--border); margin-bottom: 14px; }
+.sd-qr-empty{
+  width: 160px; height: 160px; background: var(--surface-alt, #eee); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-faint, #aaa); margin-bottom: 14px; font-size: 3rem;
+}

@@ -1,0 +1,3227 @@
+<!DOCTYPE html>
+<!-- spck_scanner.html: offline PWA QR scanner — MARSHAL-ONLY, no login.
+     Flow: (1) import the student-list file (.vtsl / Students.csv) the Head
+     Marshal hands over on a USB; (2) the marshal enters name + School ID and
+     scans; (3) Finish Session exports the day's Violations (.vtsl), named after
+     the marshal, to give back to the Head Marshal.
+     Fully offline — no server, no Admin/OSA, no internet. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>QR Shield — Scanner | Golden West Colleges</title>
+<link rel="manifest" href="scanner.webmanifest">
+<meta name="theme-color" content="#0e2f52">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="VTS Scanner">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- The icons live in assets/icons/. This pointed at a bare
+     "icon-192.png" that exists nowhere, so iOS fell back to a
+     screenshot tile when the app was added to the home screen. -->
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+<style>
+  /* ============================================================
+     Design tokens — restrained navy/gold kiosk theme.
+     Spacing scale: 4 8 12 16 20 24 32.  Radius: 10 12 16.
+     ============================================================ */
+  /* Dark kiosk shell, but the navy/gold accents + gradient header match the
+     website theme (assets/css/vts-theme.css): navy #1a3a6b, gold #c9a227. */
+  :root{
+    --bg:#0b2038; --bg-2:#0e2f52; --surface:#16345d; --surface-2:#1c4680;
+    --line:rgba(255,255,255,.14); --line-strong:rgba(255,255,255,.24);
+    --brand:#2a5298; --navy:#1a3a6b; --gold:#c9a227; --gold-light:#e2b83a;
+    /* Solid medium-dark navy, matching the site header and sidebar. It was a
+       navy-to-gold gradient, the same one the rest of the app has dropped. */
+    --header-bg:#1B3A5F;
+    --text:#eef4fb; --muted:#9fb4cd; --muted-2:#7d95b3;
+    --green:#37b877; --green-ink:#bff3d6; --red:#e86a6a; --red-ink:#ffc7c7; --amber:#e0a53a;
+    --shadow:0 10px 30px rgba(0,0,0,.28);
+    --radius:16px; --radius-sm:12px; --radius-xs:10px;
+
+    /* Type scale — one place, so nothing is a hand-picked odd size.
+       16px base: anything under 16px makes iOS Safari zoom the page when a
+       field is focused, which is what made the scan screen jump around. */
+    --fs:16px;
+    --fs-xs:.75rem;    /* meta lines, timestamps          */
+    --fs-sm:.8125rem;  /* hints, secondary text           */
+    --fs-md:.875rem;   /* body                            */
+    --fs-lg:1rem;      /* inputs, buttons                 */
+    --fs-h1:1.375rem;  /* screen title                    */
+    --lh-tight:1.3; --lh:1.5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    /* The platform's own UI face, asked for by the name each platform
+       actually answers to. 'Inter' was named first but is not bundled and
+       must not be fetched — this app has to run with the phone offline —
+       so every device silently fell through to a different fallback and
+       the type came out a different size and weight on each one. */
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    font-size:var(--fs);color:var(--text);
+    background:radial-gradient(120% 90% at 50% -10%,#16406a 0%,var(--bg) 62%);
+    min-height:100vh;min-height:100dvh;line-height:var(--lh);
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+    font-variant-numeric:tabular-nums;      /* IDs and counts stop jittering */
+  }
+  svg.ic{width:1.15em;height:1.15em;stroke:currentColor;fill:none;stroke-width:1.9;
+    stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto;}
+  .ic-lg{width:26px;height:26px;stroke-width:1.8;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+    gap:12px;height:56px;padding:0 14px;padding-top:env(safe-area-inset-top);
+    background:var(--header-bg);
+    box-shadow:0 2px 12px rgba(0,0,0,.3);
+  }
+  .tb-left{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;overflow:hidden;}
+  .iconbtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;
+    border-radius:10px;border:1px solid rgba(255,255,255,.32);background:rgba(0,0,0,.16);color:#fff;
+    cursor:pointer;text-decoration:none;transition:background .12s;}
+  .iconbtn:hover{background:rgba(0,0,0,.28);}
+  .brand-logo{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex-shrink:0;
+    border-radius:50%;background:#fff;border:1px solid rgba(255,255,255,.6);overflow:hidden;
+    box-shadow:0 2px 6px rgba(0,0,0,.18);}
+  .brand-logo img{width:100%;height:100%;object-fit:cover;display:block;}
+  .brand{display:flex;flex-direction:column;line-height:1.12;min-width:0;overflow:hidden;}
+  .brand b{font-size:.98rem;font-weight:800;letter-spacing:.04em;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+  .brand span{font-size:.64rem;color:rgba(255,255,255,.74);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+  .tb-right{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
+  /* Below this the school name is the first thing that can go: the app name
+     and the connection pill both matter more than the subtitle. */
+  @media (max-width:400px){ .brand span{display:none;} }
+
+  /* =================================================================
+     THE BAR HAS TO KEEP THE SEAL AND THE NAME
+     =================================================================
+     On a 390px phone the right-hand side -- the connection pill and the
+     marshal's chip with their full name in it -- took about 300px of the
+     390 available. .tb-left is flex:1 with overflow:hidden, so what was
+     left was clipped, and what got clipped first was the seal and the
+     words "QR Shield". The app was running with no logo and no title.
+
+     The fix is an order of priority rather than a smaller font: the
+     marshal's NAME is the thing to give up, because they already know
+     who they are and the chip is still there to press. The seal and the
+     app name identify the app, which is what someone holding an
+     unfamiliar phone at a gate actually needs.
+     ================================================================= */
+  @media (max-width:560px){
+    /* Every pixel here is spent on "QR Shield" being readable in full.
+       Truncated to "QR Shi..." it is not a name, it is a glitch. */
+    .topbar{ gap:7px; padding:0 9px; }
+    .brand b{ font-size:.92rem; letter-spacing:.01em; }
+    /* Never let the identity be the thing that shrinks. */
+    .tb-left{ flex:1 1 auto; min-width:0; }
+    .brand-logo{ flex:0 0 36px; }
+    .tb-right{ flex:0 1 auto; min-width:0; }
+    /* The chip becomes the Switch control it always was; the name goes. */
+    .whochip .nm{ display:none; }
+    .whochip{ padding:5px 10px; }
+    .whochip .sw{ border-left:0; padding-left:0; }
+    /* The pill keeps its dot and its word -- that is the whole point of it. */
+    .netpill{ padding:5px 8px; font-size:.64rem; gap:5px; }
+    .iconbtn{ width:34px; height:34px; }
+  }
+  @media (max-width:380px){
+    .brand b{ font-size:.9rem; }
+    /* Last to go, and only here: the status word. The coloured dot still
+       says it, and the pill is still tappable for the detail. */
+    .netpill span:not(.d){ display:none; }
+    .netpill{ padding:6px; }
+  }
+  .netpill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 10px;
+    font-size:.7rem;font-weight:700;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.16);color:#eaf1fb;white-space:nowrap;}
+  .netpill .d{width:7px;height:7px;border-radius:50%;background:#cbd8ea;}
+  .netpill{transition:color .15s,border-color .15s;}
+  .net-on{color:#d6f6e5;border-color:rgba(55,184,119,.55);} .net-on .d{background:var(--green);}
+  /* "No server": there IS a network, but this system can't be reached. It
+     gets amber rather than green so it can never be mistaken for synced. */
+  .net-warn{color:#ffe6b8;border-color:rgba(224,165,58,.6);} .net-warn .d{background:var(--amber);}
+  .net-warn .d{animation:netpulse 1.8s ease-in-out infinite;}
+  .net-off .d{background:#cbd8ea;}
+  @keyframes netpulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  @media (prefers-reduced-motion:reduce){ .net-warn .d{animation:none;} }
+  .whochip{display:none;align-items:center;gap:8px;border-radius:999px;padding:5px 6px 5px 12px;
+    border:1px solid rgba(255,255,255,.32);background:rgba(0,0,0,.2);cursor:pointer;color:#fff;
+    font-size:.74rem;font-weight:700;max-width:52vw;}
+  .whochip .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+  .whochip .sw{display:inline-flex;align-items:center;gap:4px;color:#e7eefb;border-left:1px solid rgba(255,255,255,.32);
+    padding-left:8px;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;}
+
+  /* ---------- Stepper ---------- */
+  .steps{display:flex;align-items:center;justify-content:center;gap:6px;padding:16px 14px 4px;}
+  .stp{display:flex;align-items:center;gap:8px;color:var(--muted-2);font-size:.72rem;font-weight:700;
+    letter-spacing:.08em;text-transform:uppercase;}
+  .stp .n{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;
+    border:1.6px solid var(--line-strong);font-size:.78rem;}
+  .stp.on{color:var(--text);} .stp.on .n{border-color:var(--gold);color:var(--gold);}
+  .stp.done{color:var(--green-ink);} .stp.done .n{border-color:var(--green);background:var(--green);color:#06301d;}
+  /* The labels are three short words -- Setup, Duty, Scan -- and without
+     them the indicator is three bare circles that say nothing about what
+     they are counting. They stay at every width; only the connector line
+     between them shortens. */
+  .stp .lbl{display:inline;}
+  .sline{width:26px;height:1.6px;background:var(--line-strong);border-radius:2px;}
+  .sline.done{background:var(--green);}
+  @media(min-width:420px){ .sline{width:40px;} }
+  @media(max-width:400px){ .stp{font-size:.66rem;gap:6px;} .stp .n{width:23px;height:23px;} }
+
+  /* ---------- Layout / card ---------- */
+  .wrap{display:flex;justify-content:center;padding:8px 14px 56px;}
+  .card{width:100%;max-width:480px;}
+  .panel-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:22px 20px;}
+  h1{font-size:var(--fs-h1);font-weight:700;letter-spacing:-.011em;line-height:var(--lh-tight);margin-bottom:6px;}
+  .lead{color:var(--muted);font-size:var(--fs-md);line-height:var(--lh);margin-bottom:18px;max-width:44ch;}
+  .lead b{color:var(--text);font-weight:700;}
+  .screen{display:none;} .screen.active{display:block;}
+
+  /* ---------- Forms ---------- */
+  .field{margin-bottom:14px;}
+  label{display:block;font-size:var(--fs-xs);font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:7px;}
+  /* A label that only a screen reader gets, for fields whose purpose is
+     obvious on sight (the student search, the hidden file picker). */
+  .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  .in{width:100%;padding:14px;border:1.5px solid var(--line-strong);border-radius:var(--radius-xs);
+    background:rgba(0,0,0,.16);color:var(--text);font-family:inherit;font-size:var(--fs-lg);
+    line-height:1.35;outline:none;transition:border-color .12s,background .12s;}
+  .in::placeholder{color:var(--muted-2);}
+  .in:focus{border-color:var(--brand);background:rgba(0,0,0,.28);}
+  /* VALIDATION ON THE FIELD, NOT ONLY ABOVE IT.
+     A rejected School ID printed a red paragraph at the top of the card
+     and left the box looking untouched, so on a phone -- where the message
+     can be a scroll away from the input -- it read as nothing having
+     happened. The box that is wrong is now the box that says so. */
+  .in.bad{ border-color:rgba(232,106,106,.85); background:rgba(232,106,106,.10); }
+  .in.bad:focus{ border-color:var(--red,#e86a6a); }
+  /* The focus ring and the error must not contradict each other. The ring
+     is gold everywhere else because that means "you are here"; on a field
+     that has just been rejected it turns red, so "you are here" and "this
+     is what is wrong" are the same colour instead of two arguments. */
+  .in.bad:focus-visible, .in.bad:focus{ outline-color:#ff9a9a !important; }
+  .fieldnote{
+    display:none; margin-top:7px; font-size:.78rem; line-height:1.45;
+    color:var(--red-ink,#ffc9c9);
+  }
+  .fieldnote.show{ display:flex; gap:6px; align-items:flex-start; }
+  @keyframes shakeX{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-5px);}
+                     75%{transform:translateX(5px);} }
+  .in.bad.shake{ animation:shakeX .28s ease; }
+  @media (prefers-reduced-motion:reduce){ .in.bad.shake{ animation:none; } }
+  select.in{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%239fb4cd' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3 6 8 11 13 6'/></svg>");
+    background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;}
+  select.in option{color:#12233c;}
+  .hint{color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh);margin:2px 0 14px;max-width:46ch;}
+  .hint b{color:var(--text);}
+
+  /* Role selector */
+  .roles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .role{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:14px 14px;border-radius:var(--radius-sm);
+    border:1.5px solid var(--line-strong);background:rgba(255,255,255,.02);color:var(--text);cursor:pointer;text-align:left;
+    transition:border-color .12s,background .12s;}
+  .role .rt{display:flex;align-items:center;gap:9px;font-weight:800;font-size:.98rem;}
+  .role small{color:var(--muted);font-weight:600;font-size:.72rem;}
+  .role.sel{border-color:var(--gold);background:rgba(217,182,75,.1);}
+  .role.sel .rt{color:var(--gold);}
+
+  /* Buttons */
+  .btn{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:14px 16px;
+    border:none;border-radius:var(--radius-xs);font-size:1rem;font-weight:750;cursor:pointer;transition:filter .12s,background .12s;}
+  /* A disabled button at 50% opacity on a navy card reads as a rendering
+     fault rather than a rule -- it is the same grey as the muted text
+     around it. Given an outline and a dashed edge it reads as "not yet",
+     which is what it means, and the label beside it says what is missing. */
+  .btn:disabled{
+    opacity:1; cursor:not-allowed;
+    background:rgba(255,255,255,.09) !important; color:rgba(255,255,255,.55) !important;
+    border:1.5px dashed rgba(255,255,255,.3) !important; box-shadow:none !important;
+  }
+  .btn:disabled svg{ opacity:.55; }
+  .btn-primary{background:#fff;color:#0f2f52;}
+  .btn-primary:hover:not(:disabled){background:#eaf1fa;}
+  .btn-accent{background:var(--green);color:#04331e;}
+  .btn-accent:hover:not(:disabled){filter:brightness(1.06);}
+  .btn-outline{background:transparent;color:var(--text);border:1.5px solid var(--line-strong);}
+  .btn-outline:hover:not(:disabled){background:rgba(255,255,255,.06);}
+  .btn-quiet{background:transparent;color:var(--muted);border:1.5px solid var(--line);}
+  .btn-quiet:hover:not(:disabled){color:var(--text);}
+  .btn+.btn{margin-top:10px;}
+  .linkbtn{background:none;border:none;color:var(--gold);font-weight:700;font-size:.85rem;cursor:pointer;
+    padding:6px;text-decoration:underline;text-underline-offset:2px;}
+
+  /* Alerts */
+  .alert{display:none;border-radius:var(--radius-xs);padding:11px 13px;font-size:.86rem;margin-bottom:14px;line-height:1.5;}
+  .alert.show{display:block;}
+  .alert.err{background:rgba(232,106,106,.14);border:1px solid rgba(232,106,106,.45);color:var(--red-ink);}
+  .alert.ok{background:rgba(55,184,119,.14);border:1px solid rgba(55,184,119,.45);color:var(--green-ink);}
+
+  /* File pick row */
+  .filebox{display:flex;align-items:center;gap:12px;border:1.5px dashed var(--line-strong);border-radius:var(--radius-sm);
+    padding:14px;margin-bottom:14px;}
+  .filebox .fi{display:flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:10px;
+    background:rgba(255,255,255,.05);color:var(--muted);flex:0 0 auto;}
+  .filebox .ft{min-width:0;flex:1;}
+  .filebox .ft .name{font-weight:700;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .filebox .ft .sub{color:var(--muted);font-size:.76rem;margin-top:2px;}
+
+  /* Provisioned status strip */
+  .statusstrip{display:flex;align-items:center;gap:12px;border:1px solid rgba(55,184,119,.4);
+    background:rgba(55,184,119,.08);border-radius:var(--radius-sm);padding:13px 15px;margin-bottom:16px;}
+  .statusstrip .si{color:var(--green);}
+  .statusstrip .st b{font-weight:800;} .statusstrip .st span{display:block;color:var(--muted);font-size:.8rem;margin-top:2px;}
+
+  /* Duty identity line */
+  .whoLine{display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.16);border:1px solid var(--line);
+    border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;}
+  .whoLine .av{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;
+    background:rgba(217,182,75,.16);color:var(--gold);flex:0 0 auto;}
+  .whoLine .n{font-weight:750;font-size:.94rem;} .whoLine .r{color:var(--muted);font-size:.78rem;margin-top:1px;}
+
+  /* Camera */
+  #reader{width:min(76vw,260px);height:min(76vw,260px);margin:6px auto 10px;border-radius:14px;overflow:hidden;
+    background:rgba(0,0,0,.4);border:1px solid var(--line-strong);position:relative;}
+  #reader::after{content:'';position:absolute;inset:14px;border:2px solid rgba(217,182,75,.55);border-radius:10px;pointer-events:none;}
+  .camhint{color:var(--muted);text-align:center;font-size:.84rem;margin-bottom:14px;line-height:1.5;}
+  .camhint b{color:var(--text);}
+
+  .divider{display:flex;align-items:center;gap:12px;color:var(--muted-2);font-size:.7rem;font-weight:700;
+    text-transform:uppercase;letter-spacing:.12em;margin:14px 0;}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--line);}
+
+  /* Search results */
+  .results{max-height:220px;overflow:auto;margin-top:8px;}
+  .results:empty{display:none;}
+  .rItem{border:1px solid var(--line);border-radius:var(--radius-xs);padding:11px 13px;margin-bottom:7px;cursor:pointer;
+    background:rgba(255,255,255,.02);transition:background .12s;}
+  .rItem:hover,.rItem:active{background:rgba(47,111,191,.16);}
+  .rItem .rn{font-weight:700;font-size:.92rem;} .rItem .rs{color:var(--muted);font-size:.78rem;margin-top:2px;}
+  .empty{color:var(--muted);text-align:center;font-size:.84rem;padding:12px;}
+
+  /* Selected-student sheet */
+  .sheet{display:none;background:#fff;color:#12233c;border-radius:var(--radius-sm);padding:16px;margin-bottom:16px;}
+  .sheet.show{display:block;}
+  .sheet .top{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+  .sheet .init{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;
+    background:#e8eef8;color:#123a63;font-weight:800;font-size:1.1rem;flex:0 0 auto;}
+  .sheet .nm{font-weight:800;font-size:1.04rem;line-height:1.25;} .sheet .sub{color:#5b6b83;font-size:.82rem;margin-top:2px;}
+  .offnote{display:flex;align-items:center;gap:8px;background:#f1f5fb;border:1px solid #dde6f2;border-radius:10px;
+    padding:9px 12px;margin-bottom:14px;color:#33507a;font-size:.82rem;font-weight:650;}
+  .offnote b{color:#12233c;}
+  .vlabel{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#33507a;margin-bottom:7px;}
+  .vsearch{width:100%;padding:12px 13px;border:1.5px solid #d4ddea;border-radius:10px;font-size:.96rem;color:#12233c;margin-bottom:8px;outline:none;}
+  .vsearch:focus{border-color:#2f6fbf;}
+  .vlist{max-height:200px;overflow:auto;border:1px solid #e2e8f2;border-radius:10px;margin-bottom:14px;}
+  .vRow{padding:12px 13px;border-bottom:1px solid #eef2f8;cursor:pointer;color:#12233c;font-size:.92rem;
+    display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .vRow:last-child{border-bottom:none;}
+  .vRow:hover,.vRow.sel{background:#eef4ff;}
+  .vRow .pick{color:#2f6fbf;opacity:0;} .vRow.sel .pick{opacity:1;}
+  .sheet .btn+.btn{margin-top:8px;}
+  .btn-cancel{background:#fff;color:#5b6b83;border:1.5px solid #d4ddea;}
+
+  /* Big confirmation */
+  .bigok{display:none;text-align:center;padding:34px 12px;}
+  .bigok.show{display:block;}
+  .bigok .circ{display:flex;align-items:center;justify-content:center;width:82px;height:82px;border-radius:50%;
+    background:var(--green);color:#04331e;margin:0 auto 14px;animation:pop .25s ease;}
+  @keyframes pop{from{transform:scale(.6);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .bigok .msg{font-weight:750;font-size:1.02rem;line-height:1.55;white-space:pre-line;}
+  .bigok .next{color:var(--muted);font-size:.84rem;margin-top:8px;}
+
+  /* Collapsible panels */
+  .panel{border:1px solid var(--line);border-radius:var(--radius-sm);margin-top:14px;overflow:hidden;background:rgba(0,0,0,.1);}
+  .panelHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 15px;cursor:pointer;
+    font-weight:750;font-size:.92rem;}
+  .panelHead .lft{display:flex;align-items:center;gap:9px;}
+  .panelHead .cnt{background:rgba(217,182,75,.18);color:var(--gold);border-radius:999px;padding:1px 9px;font-size:.74rem;font-weight:800;}
+  .panelHead .chev{color:var(--muted);transition:transform .18s;}
+  .panel.open .panelHead .chev{transform:rotate(180deg);}
+  .panelBody{display:none;padding:0 15px 15px;}
+  .panel.open .panelBody{display:block;}
+
+  .recRow{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);
+    border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:7px;background:rgba(255,255,255,.02);}
+  .recRow .rnum{display:flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 7px;border-radius:8px;
+    background:rgba(47,111,191,.2);color:#bcd6f5;font-weight:800;font-size:.78rem;flex:0 0 auto;}
+  .recRow .rt{font-size:var(--fs-md);font-weight:600;line-height:var(--lh-tight);}
+  .recRow .rd{color:var(--muted);font-size:var(--fs-xs);margin-top:3px;line-height:1.45;}
+  .recRow .mid{min-width:0;flex:1;}
+  .recRow .del{background:none;border:none;color:var(--red);cursor:pointer;flex:0 0 auto;padding:4px;}
+  .sbadge{display:inline-flex;align-items:center;gap:4px;font-size:.64rem;font-weight:800;padding:1px 7px;border-radius:999px;margin-left:2px;vertical-align:middle;}
+  .sb-synced{background:rgba(55,184,119,.2);color:var(--green-ink);}
+  .sb-queued{background:rgba(224,165,58,.18);color:#ffe0a1;}
+  /* The server refused this one. It is NOT lost — it still leaves in the
+     end-of-shift .vtsl, so it reads as "held", not "failed". */
+  .sb-held{background:rgba(232,106,106,.18);color:var(--red-ink);}
+
+  .miniHint{color:var(--muted);font-size:var(--fs-sm);line-height:var(--lh);margin:4px 0 12px;}
+  /* Secondary actions sit side by side and quiet, so the one primary action
+     on the screen stays the obvious one. */
+  .quietRow{display:flex;gap:8px;margin-top:12px;}
+  .quietRow .btn{margin-top:0;flex:1 1 0;min-width:0;font-size:var(--fs-sm);}
+  .miniHint b{color:var(--text);}
+  /* "It won't connect" — folded away until it is needed, because it is a
+     wall of text that is useless on the day everything works. */
+  .connHelp{margin-top:14px;border:1px solid var(--line);border-radius:var(--radius-xs);
+    background:rgba(0,0,0,.14);overflow:hidden;}
+  .connHelp > summary{cursor:pointer;list-style:none;padding:11px 14px;
+    font-size:var(--fs-sm);font-weight:700;color:var(--gold-light);}
+  .connHelp > summary::-webkit-details-marker{display:none;}
+  .connHelp > summary::after{content:'+';float:right;font-weight:700;opacity:.7;}
+  .connHelp[open] > summary::after{content:'\2212';}
+  .connHelp ol{margin:0;padding:0 14px 12px 32px;}
+  .connHelp li{color:var(--muted);font-size:var(--fs-sm);line-height:1.55;margin-bottom:8px;}
+  .connHelp li b{color:var(--text);}
+  .connHelp p{color:var(--muted);font-size:var(--fs-sm);line-height:1.55;padding:0 14px 12px;margin:0;}
+  .connHelp code{background:rgba(0,0,0,.3);border-radius:5px;padding:1px 6px;
+    font-size:.92em;color:#cfe2fb;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+
+  .lockrow{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:var(--fs-sm);line-height:1.45;margin-bottom:12px;}
+  .lockrow .ic{color:var(--gold);}
+
+  /* Modal (staff re-auth) */
+  .modal{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:18px;
+    background:rgba(4,15,28,.6);backdrop-filter:blur(3px);}
+  .modal.show{display:flex;}
+  .modalCard{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--line-strong);
+    border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 20px;}
+  .modalCard h2{font-size:1.1rem;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:9px;}
+  .modalCard h2 .ic{color:var(--gold);}
+  .modalCard p{color:var(--muted);font-size:.85rem;margin-bottom:16px;}
+  .modalActions{display:flex;gap:10px;margin-top:4px;}
+  .modalActions .btn{margin-top:0;}
+
+    /* Identity confirmation on the duty screen: the record the typed ID
+       resolved to. Deliberately the loudest thing on the step -- the whole
+       point is that the marshal READS the name before confirming. */
+    .whoFound{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);
+      border-radius:14px;padding:16px 18px;margin:4px 0 12px;text-align:left;}
+    .whoFound-lbl{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;opacity:.6;font-weight:700;}
+    .whoFound-name{font-size:1.22rem;font-weight:800;margin-top:6px;line-height:1.25;}
+    .whoFound-sub{font-size:.8rem;opacity:.72;margin-top:4px;}
+  
+    /* "Others" detail box. Styled like the search field above it so the
+       sheet does not suddenly change texture, but labelled, because this
+       one is a required answer rather than an optional filter. */
+    .otherLbl{display:block;font-size:.74rem;font-weight:700;letter-spacing:.03em;
+      text-transform:uppercase;opacity:.7;margin:12px 0 5px;}
+    .otherBox{width:100%;resize:vertical;min-height:58px;line-height:1.45;}
+    .otherCount{font-size:.7rem;opacity:.55;margin-top:4px;text-align:right;}
+
+    /* ---- Proof photo (auto-captured after the cooldown) ----
+       Sits directly above Confirm, because it is the last thing to check
+       before filing: the marshal reads the reason, glances at the picture,
+       and presses the button. */
+    .proofwrap{margin:12px 0 4px;}
+    .prooflbl{display:flex;align-items:center;justify-content:space-between;gap:8px;
+      font-size:.74rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;
+      opacity:.7;margin-bottom:5px;}
+    .retakeBtn{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);
+      color:inherit;font:inherit;font-size:.68rem;font-weight:700;letter-spacing:.03em;
+      padding:4px 10px;border-radius:999px;cursor:pointer;text-transform:uppercase;}
+    .retakeBtn:active{transform:translateY(1px);}
+    /* A fixed 4:3 box: the frame lands in the same place every time, so the
+       Confirm button never jumps as the photo arrives. */
+
+    /* ---- THE ONE CAMERA ---- */
+    .camStage{position:relative;border-radius:14px;overflow:hidden;}
+    .camStage #reader{margin:0;}
+    .camStage > img{width:100%;display:block;border-radius:14px;}
+    /* In the proof stage the still replaces the live feed in place, so the
+       frame the marshal is judging is exactly where the lens was. */
+    .camStage[data-stage="proof"] #reader{outline:3px solid var(--accent,#e2b83a);outline-offset:-3px;border-radius:14px;}
+    .camStage[data-stage="shot"] #reader{display:none;}
+
+    .camStep{display:flex;align-items:flex-start;gap:10px;margin:10px 0 2px;
+      font-size:.9rem;line-height:1.4;}
+    .camStep-n{flex:0 0 auto;width:24px;height:24px;border-radius:50%;
+      background:var(--gold,#e2b83a);color:#12233c;font-weight:800;font-size:.8rem;
+      display:flex;align-items:center;justify-content:center;margin-top:1px;}
+    .camStep-t{flex:1 1 auto;min-width:0;}
+    /* Only the LEAD sentence is its own line. Scoped to the first child,
+       or an emphasised phrase mid-sentence ("press Use this photo")
+       becomes a block and the instruction breaks into rubble. */
+    .camStep-t > b:first-child{display:block;font-size:.95rem;margin-bottom:2px;}
+    .camStep.done .camStep-n{background:#46c878;color:#08331c;}
+
+    /* =================================================================
+       PHONE FIT
+       =================================================================
+       Measured on the four sizes this is actually used at, and three
+       things were wrong on every one of them:
+
+       1. THE SHUTTER WAS BELOW THE FOLD on a 320px-wide phone -- it sat at
+          y=609 in a 568px viewport, so on the smallest handset still in
+          use the marshal had to scroll down to take the photo they had
+          just been told to take. The viewfinder is capped against the
+          VIEWPORT HEIGHT on short screens now, so the camera, the
+          instruction and the shutter always fit together.
+
+       2. EVERY TEXT FIELD WAS UNDER 16px. Mobile Safari zooms the whole
+          page in when a field smaller than that takes focus, and it does
+          not zoom back out -- which is why typing a violation or a School
+          ID left the app enlarged and cut off. 16px is the threshold, not
+          a preference.
+
+       3. THE BACK BUTTON was 36px, and squeezed to 21px wide on the
+          widest phone. Below the ~44px a fingertip actually covers.
+       ================================================================= */
+    @media (max-height: 720px){
+      .camStage #reader,
+      .camStage > img{ max-height: 34vh; object-fit: cover; }
+      .camStep{ margin: 8px 0 2px; font-size: .86rem; }
+      .camBar{ margin: 8px 0 2px; }
+      .shutter{ width:64px; height:64px; }
+      .shutter-in{ width:50px; height:50px; }
+    }
+    @media (max-height: 600px){
+      .camStage #reader,
+      .camStage > img{ max-height: 30vh; }
+      .camStep-t{ font-size: .82rem; }
+    }
+
+    /* 16px is the point below which iOS zooms on focus. */
+    .in, .vsearch, .otherBox, input[type="text"], input[type="search"],
+    input[type="number"], input[type="tel"], textarea, select{
+      font-size: 16px !important;
+    }
+
+    /* Fingertip-sized, and never squeezed by a flex row. */
+    #backBtn{ min-width:44px; min-height:44px; flex:0 0 auto; }
+
+    /* The shutter must clear the home indicator on a gesture-bar phone. */
+    .camBar{ padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+    .camBadge{position:absolute;top:9px;left:10px;display:flex;align-items:center;gap:6px;
+      background:rgba(0,0,0,.58);color:#fff;font-size:.62rem;font-weight:800;letter-spacing:.08em;
+      text-transform:uppercase;padding:5px 9px;border-radius:999px;pointer-events:none;z-index:3;}
+    .camBadge b{width:7px;height:7px;border-radius:50%;background:#7ee2a8;animation:proofPulse 1.1s ease-in-out infinite;}
+    .camStage[data-stage="proof"] .camBadge b{background:#ffcf4d;}
+    .camStage[data-stage="shot"]  .camBadge b{background:#7ee2a8;animation:none;}
+
+    /* ---- CAMERA CONTROLS ----
+       A round white shutter is the one control every phone owner can already
+       work without being told. After the shot the row becomes the only two
+       questions that matter, both as real buttons with icons and with enough
+       contrast to be seen on a navy panel outdoors. */
+    .camBar{margin:12px 0 2px;}
+    .camBar-aim{display:none;justify-content:center;padding:4px 0 2px;}
+    .camBar-done{display:none;gap:10px;}
+    .camBar-done .btn{margin-top:0;flex:1;min-height:52px;}
+    .camStage[data-stage="proof"] ~ .camBar .camBar-aim,
+    .camBar.is-aim  .camBar-aim { display:flex; }
+    .camBar.is-done .camBar-done{ display:flex; }
+
+    .shutter{
+      width:76px;height:76px;border-radius:50%;padding:0;cursor:pointer;
+      background:#fff;border:3px solid rgba(255,255,255,.55);
+      box-shadow:0 0 0 4px rgba(8,18,40,.35), 0 6px 18px rgba(0,0,0,.35);
+      display:flex;align-items:center;justify-content:center;
+      transition:transform .1s ease;
+    }
+    .shutter:active{transform:scale(.94);}
+    .shutter-in{
+      width:60px;height:60px;border-radius:50%;background:#f4f7fc;
+      border:1px solid rgba(18,35,60,.18);
+      display:flex;align-items:center;justify-content:center;
+      color:#12233c;font-weight:800;font-size:1.15rem;
+    }
+
+    /* Outline buttons on the navy panel were navy-on-navy. */
+    .camBtn.btn-outline{
+      background:rgba(255,255,255,.10) !important;
+      border:1.5px solid rgba(255,255,255,.55) !important;
+      color:#fff !important;
+    }
+    .camBtn.btn-outline:active{background:rgba(255,255,255,.18) !important;}
+
+    /* One compact chip in the sheet. It reports the state of this record's
+       proof in as few words as the state takes -- it is not a second set of
+       instructions. */
+    .proofChip{display:inline-flex;align-items:center;gap:7px;
+      font-size:.76rem;font-weight:700;letter-spacing:.02em;
+      padding:7px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.2);
+      background:rgba(255,255,255,.06);color:inherit;}
+    .proofChip .dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex:0 0 auto;}
+    .proofChip.ok{color:#6fe0a0;border-color:rgba(70,200,120,.45);background:rgba(70,200,120,.12);}
+    .proofChip.warn{color:#ffcf6b;border-color:rgba(255,170,0,.45);background:rgba(255,170,0,.12);}
+    .proofChip.wait{opacity:.72;}
+    .proofActs{display:flex;gap:6px;flex:0 0 auto;}
+    .proofwait{display:flex;align-items:center;gap:8px;font-size:.8rem;opacity:.7;padding:0 14px;text-align:center;}
+    .proofdot{width:9px;height:9px;border-radius:50%;background:currentColor;
+      animation:proofPulse 1s ease-in-out infinite;flex:0 0 auto;}
+    @keyframes proofPulse{0%,100%{opacity:.25;}50%{opacity:1;}}
+    /* Camera unavailable — the scan still records, and the office is told
+       the photo is missing rather than being left to wonder. */
+
+    /* =================================================================
+       USABILITY + ACCESSIBILITY
+       =================================================================
+
+       TOUCH TARGETS. This is used one-handed, outdoors, by someone who is
+       also holding a student's ID and watching a queue. The proof controls
+       were 4px of padding round 11px text -- about 24px tall, well under
+       the 44px a fingertip actually needs, and they are the two buttons
+       the marshal has to hit while aiming a camera. Missing "Take photo"
+       and hitting "Retake" costs the shot.
+
+       FOCUS. There was not one :focus-visible rule in the file, and
+       several controls set outline:none outright. Anyone driving this by
+       keyboard or switch control -- or with a phone keyboard attached --
+       had no way to see where they were. :focus-visible only shows for
+       keyboard-style focus, so nothing changes for touch.
+
+       These are additive: nothing above needs to know about them. */
+    .retakeBtn{min-height:44px;padding:0 16px;font-size:.74rem;}
+    .recRow .del{min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;}
+    .panelHead{min-height:48px;}
+    .vRow,.rItem{min-height:46px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+
+    :where(button,[role="button"],a,input,select,textarea,[tabindex]):focus-visible{
+      outline:3px solid #ffd75e;
+      outline-offset:2px;
+      border-radius:8px;
+    }
+    /* The sheet's white surface needs a focus ring that reads against it. */
+    .sheet :where(button,[role="button"],input,textarea,[tabindex]):focus-visible{
+      outline-color:#12233c;
+    }
+
+    /* The panel headers are real buttons now (see togglePanel), so give the
+       caret a state to point at. */
+    .panelHead[aria-expanded="true"] .cvr{transform:rotate(180deg);}
+
+    /* Whether a record has proof, in the list. The marshal could file a
+       whole shift without ever being able to tell which violations went
+       out backed by a photo and which did not. */
+    .pbadge{display:inline-flex;align-items:center;gap:4px;font-size:.62rem;font-weight:800;
+      letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:999px;
+      border:1px solid transparent;white-space:nowrap;}
+    .pb-yes{background:rgba(70,200,120,.14);border-color:rgba(70,200,120,.4);color:#2e9b5e;}
+    .pb-no{background:rgba(255,170,0,.12);border-color:rgba(255,170,0,.38);color:#9a6b00;}
+
+    @media (prefers-reduced-motion: reduce){
+      .proofdot{animation:none;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- Line-icon set (offline; no external font). -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-back" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5.5c0 4.2-2.9 7.4-7 8.5-4.1-1.1-7-4.3-7-8.5V6z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 21 2m-4 4 3 3m-6 0 3 3"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><polyline points="14 3 14 8 19 8"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 19V8"/><polyline points="7 12 12 7 17 12"/><line x1="5" y1="21" x2="19" y2="21"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11"/><polyline points="7 11 12 16 17 11"/><line x1="5" y1="20" x2="19" y2="20"/></symbol>
+  <symbol id="i-rotate" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-check-c" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="16 9.5 11 14.5 8.5 12"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><polyline points="3 6 21 6"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></symbol>
+  <symbol id="i-switch" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.5 15a9 9 0 1 1-2.1-9.4L23 10"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10"/><path d="M20.5 15a9 9 0 0 1-14.9 3.4L1 14"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M18 16.5a3.5 3.5 0 0 0-1-6.9A5 5 0 0 0 7 9.5 4 4 0 0 0 7 17h10.5"/><polyline points="12 15 12 9"/><polyline points="9.5 11.5 12 9 14.5 11.5"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 15l6-6"/><path d="M11 5l1-1a4 4 0 0 1 5.6 5.6l-1 1"/><path d="M13 19l-1 1a4 4 0 0 1-5.6-5.6l1-1"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><line x1="4" y1="8" x2="20" y2="8"/><circle cx="9" cy="8" r="2.4"/><line x1="4" y1="16" x2="20" y2="16"/><circle cx="15" cy="16" r="2.4"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><line x1="8" y1="7" x2="20" y2="7"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="8" y1="17" x2="16" y2="17"/><circle cx="4" cy="7" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="17" r="1"/></symbol>
+</svg>
+
+<div class="topbar">
+  <div class="tb-left">
+    <a href="student_search.php" class="iconbtn" id="backBtn" title="Back" aria-label="Back" onclick="return goBack(event)"><svg class="ic"><use href="#i-back"/></svg></a>
+    <span class="brand-logo"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAYEBQUFBAYFBQUHBgYHCQ8KCQgICRMNDgsPFhMXFxYTFRUYGyMeGBohGhUVHikfISQlJygnGB0rLismLiMmJyb/2wBDAQYHBwkICRIKChImGRUZJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJib/wAARCABgAGADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD6nooqtqN7aabYz39/cx2tpboZJZpWwqKOpJoAs1554u+LXhbQLttMszNr2rg7fsWmqJCrejv91f1PtXn/AIl8XeIPiKs8ekzzeHvBqFkN22Y5tQIBO3dj5AwBwvU9/QYlxqPhvwhp7W+mxRWFswZBLIgNxOpIIyvOGBH3h69a87FZhTw8/ZQXPU7Lv8t/NL709Dpo4WdWPPJ8sO7/AK/rsdRf+OPirqsbT2lhpPhazKu6Ncfv5iFYKw5wpIJHGM1k3UvjaV5DefFafevmcWUCKpKgEY2r0bOAfbmuFl8Wa7rd0TpGkPJ5yyT/AG3UZNiMqkb5CzELgEjJLdSB3rI1LU/FUem6bqC65YSf2nM0MFvZgM4ZSAwYlNowWUfePUdqUaGdV9Vy0/J2v+Ck/vZMq2XUt+afp/wWl+B6lFJ40gk/0H4sTuwbA+126spGzdk7l6Z+X6+1a1j43+KukhZLuw0nxVa5QMbb9xNll3BRtyu7APGOMV5TBD41Oq3Gn2Ov6TqT2zCKRt6qvnl2QQfMqnzCyNgdCBnOKhsfHmo6bPbHVtOe2eWJZ4prVij7HHDgZ7jPccUOhnVLX3ai7K1/xSf4gq2XT096Hm/+A2vwPo7wh8W/C3iC6TTbtpdC1ZuBZ6koj3n0R/ut+YPtXodfMEWpeHfF+neTqMEWpQIoXfGoSeEKhCr7DOCTjJx1rc8O+Ltf+HBgh1a6l8R+DJH8uK9ALTWZAGQM8ui5AIPTt6F4XMKeIl7Ka5Ki6P8A4O3o/S7ZVbDTpR54vmj3X9f12PoOiq2nXtpqVjBf2FzHdWlwgkimibKup6EGrNeicwV8+eO9dPxE8Sz6XDPs8G6HL/pD7iq6jcLyUDAEYGCFHQnn0x6D8cPEtzoHg02emOV1fWpRYWe0/MpYfO4+i559SK8j1iSz8G+Fk0yJSsdhEDOuHjaaY9EdScZUkjIHc152Y4qeHpqFL+JN2X5fe9l83ukdOFoxqzcqnwx1f9f10M/xr4qWwaDT9OtxJdyBYbK0VQNq5IQuFwGbnHqfpXMeDLTQdRvNR1PxfezSX2n5e5srhAGCLIofCH/WAKXBQbWUgFc1d8HabcSxHxRO9pcapKZJbqy1aLbE1kdoLqHXlMbm81c7NirglsVBbWD+PdabXtTiitdMgUQxssQilulUnaX28F8YBYYzjtXdhcNhsnwzqVX732pdW/5V5f8ADvy4q9atmFZRgtOi6W7vz/4Ye3iCS/n03+w7C81HU9JVrQ38czW8M8K5RGLKQ43RiM7dyAEE4JY02+8M+MNeke6vbi0t915LeqsCHEcr7NxUqOPuJxk8jPUmu0it4bWFIrWAQWy8RqFwOKs295PboUicAHJ6Z/z0r5ivxViHU/cxUI/e/wAdPwPbp5HSUP3jcn9y/wA/xOSubX4gW8txcnUNPu5pwBmW2VDHIu/EifKAsg81zu65ck1jalfQLJqr6npkvh/VL6wjsoJ+Z7UKoVWVe8YZEVMgtgFvXj0a5u7i6wJnDBSSoAAxnH+FVpbeC5geK7thcWz/ACujDI//AF0YbiqvCparFSj6Wf4afgOtkdKULwbT+9f5/icbf+E47a8tYvCNx5d5aJEkmpTXYjgvJHB2qmeCzkEoFJUpjcFINbfgPxfDqkcttdwKZimy8tMgCeMEE7SQSvIGccj6VkzWsvg24XbNPJ4R1CXbexRKpliDKUbaxBK5U7TtIJXjOcGq3iuC6eKPxRaRabo7WDBLWCFSjXEOyJlK4AUrtlBUH94UJDElDX0+Jw2HznDqrTfvfZl1T/ll5d1tbVaHiUa1XLqrhNadV0t3X+Z6b4D1uT4c+I7fS7idpfBmuy4tZyGEdlcnGVUt/ASdp7A8+ufoOvmHRvsfjTwzJprRbxqMX7kKgd451/gBJAUZ5J9hXrfwO8TXHiDwYtpqUm/V9GkNheEnl9o+R/8AgS457kGuLL8VPEUnGqrVIOz/AK7rZ/LqzsxNGNKacPhlqv6/rqcb8Rbkaz8aLWzlHmWfhvTDcOjRtInmycncF5xtCjPbNeQ/Eq5fUNSsNG+0wQGYmaR7mXZGGOQu5j0HB5PrXo1xMJ/iH8RryQjzBPHbISzg4VEXjbx07NxXCWLX0nxK1O5s4kkFnZhJXMjJJCj7I/MjZVYq6mQHIU4G7NTQSrZ3r/y7jdfcl+cmxVn7PLtPtyt+b/JIb4im1jWLLS9E1S3tI7/WrwXEj21350axxAoJEQFkj3ZYfIQCIx8ortrS3gha106BAttCViRVIHHAPJ4z9a5eyhdvijfvPbQwy2VjGNwbeZsopErnYmXZTk/Kp7EZzXSHnPvXjcU4pyxEKC2ir283r+Vj0MkopUpVer0+S/4NzuLvRBqTx6dCPImhjDRllO0DHcdRwMZ56CsfTdKspXezuJAt4I/NzIzIm0dcHHpyPXpW/wCGdUgC6ddBw8sGEmQffUZ25AHUHg4qbxBINLm0/NlaTyX7+XO0yiQMqkbSvp97P1rilRoTgq/3+jtb59DdVKsZOl/V+px93pD/AGuNbM+Zbz7midj0UNjJx+HbvXR22irp/n6XMpnldC0rBTg9uB+mT6n1xVvwnONUhubk2VrbS20iopt1Eaqh+8SM8n5ePeq3ifU4Gt7+fcqT3TYij/jKkkZOeQAB09ainQoUqft++3p1/EqdWrOapdjiLiCC4judOuED20+UKsQfYcjj8a81t9GvtZvB4Xu72WODQt5iSKKW4klV2zlVLCNf4eSUHPc16OOMY4x6VzGoMln8ULO9EtrC0tlJIJJ4FlAZUYjYHIUOcBVZiACc16PCuLlDESo30auvVf8AAucme0IypRqdU/wf/BsVPBK3Oh+ItX8N3UbRyWsnmpFOUZlIIyG2krnBXIBPIIr1b4eXDaL8a7uzVXjtPE2mC5RTEIg0qfMCFBIA2l8e1eN2U9mfH2l3en3ouI7+03vH5MUTQEq37thF8m7ChuOfm55zXpVu32X4hfDe9jj8tpJprdmWEx7wyspO4n5/cjHpXs1o+xzqy/5eQu/ua/NJnBSl7TLv8ErL8P0bFuB9l+IPxIsZJPLaSeKcKZzGHDKjAbcfP7Dj1ryfXtP1a6+IrWujNMl9c7GieGQxso2Dcdw5AABz9K9x+IVudG+NdpeMXS08TaYbZ2WRY90sfykFmBAG0pk+ma8i+IiXuk6tp2v6fP5NzbMYvPiw211JKkdiPvUYefsM71/5eRsvuT/NNCrx9plv+CV3+P6NEng3T9Q0Hxzc6fq0qTT3lq0sdysvmrcKTkOGPJBweTzXc2zIlxE8mdiuC2PTNeRNf+Jvt1l401KK4nhWRIku3QKkgAI2LjAPAYfhXsGntaXn2W8WRWsrld/mFiqjPYkA/ljNeTxVhKkcVCv0kvldaflY7sirxdGVLt+T/pnT3OhxreDVNNuCtk+XDwgFoB3IB6gD8eatS28F5FbQy6vafabOQSwyMyoH3EZRlHIPAOfescanpcel3WmSwzTxvMJI2gKoBjoDkZPuas+HbrQcBbqwgEmAAksj4LZ5YHPHHAHrivHpzouXLGy5t9Xa/wDWqPQnGry8zvptoti5Fa2+m6dLb2+rQPJIxlkaMox+Xjaqnqepzmq9noka3Lavq0rC0UCT9/jfKccFgOmfT6VB4gu9D2bLOyhLYC+XFI+1WHOSc8jBxj1zUUmp6XPp9jpscU0EMLs8jXG1w2ewIGRj1xSnOipcrt7uyu7X+f3scY1XHmV9d9Fexgud8zFATuYkA8Z5rhPGllqGu+O4dK0p1SaO0IkkDlEijOd7MR0UKeevB71317LaWDXV48ii0tgX3b9w6cYOBn8q8TfW9Xj1yXxNZvLayySuiTquQuVwUyQRnaele1wphJyxM6/SKa8rv/gXPNz7ERjRjS7/AJf1Y1vDWi32k+PYNOv41Se3VpDsYMrKUJVgR1BBBH1r1q2iE/xE+HNlGB5izy3Lgb84VGbkNwOP7vFeffD0X+s6vqGv6jM1xdT7YBKyjk8Z4A7AKOBXrXw6t/7Z+NN3eRt5ln4a0wWyOsrSoJZOBtZucbQ5A7Zr1q8/b523/wA+42frZ/rJI4qMfZZal/PK6/D9Ezsvjj4ZuPEHgxrvTY9+raNIL60AHL7R86f8CXPHcgV5JrP2Pxn4Zj1JJdy6jEPNLOGeOZcfMVUDaucADvg19PV8+eO9Fk+HHiO51SCBpvBeuy5uoFZlSyuTnBbb/AWO4dgePTKzDCzxFNTpO1SDuvz+9br57tl4atGlNqesZaP+v66HhthDcCWXwvdpEt603lWjXcmILdn4kbHQMwCYfB6e+RseHNcn8JXr6bqWbzSGmkSK4RW2FkO12jyPmUHrXWePPCEOqRRXFrMrSsha0uyNouIwcfMMkgZzjP8AKuDk1i9Syi8MeI0Mdva/LDujH7rJwHbby4RS5VRwWbJzXpYXFYfOsM6VVe99qPVP+aPl29dd9fPr0K2W1lOD06Po/JnqtsYru3W5spluoGGQ8ZzQfQ15o+kahpdzd3vhLVmuLFbtbaEq+TO7FQFGBsYjegJ4ydxAwCang8c+KYbt9OmsYLy6VirRpEWYkdfuk56dq+WxPCeIUr4eSkvPR/jp+J7lHP6TVq0Wn96/r5HolFw0Fnbvc306WsUeCxk449q89Txr4t1BxBpumIskgZgIYGYkL94jtx39O9Z8mj67rc1pca7q0dtDeRTPFcXL/u43RWO18cITtPqfbtRhuE67lfESUV97/DT8fkwrZ/SStRi2/uRe1zVNT8b6h/Ynh62Z7WIGTb0LgH7zei5IHPcjOO1PVbqd7S08HaFd3k1tKVae1uYVjeCbJLRMwxuCtkncOD071BJeRzG20/wxZSx3Migyqrb/ACpQNhaN+CQy53ZypBHpXfeBfCUOlRyXV5MvnBC91clgPLjBG5Y9xG44OfU/SvqMVisNk2GVKkve+zHq3/NLy/4ZHiUKFbMaznN6dX0t2X9ebNPSEs/BnhZ9TlcrHYRHyDueNppz/GjAYJDEZBPQivW/gd4aufD/AIMF3qaFdX1qU395uHzKX+4h+i449Sa8+8B6E3xF8SwarNAY/Bmhy/6NGVKrqNyvG/aSRgYBbsTx64+hK8/L8LPD0nKr/Em7v+u73fyW6O7E1o1ZpQ+GOi/r+uoVW1GytNSsZ7C/to7q0uEMcsMq5V1PUEVZor0DnPnzxD4R174btPNpNrL4j8FyP5ktkSWns8ZxnHzOi5JBB47+pw5NM8O+L9NEunXEWpQqpOyRglxEFQM7f7IzkAZycdK+n6888YfCTwr4hun1K1WXQtWbk3mmsI959XT7rfkCfWvPxWX08RL2sHyVF1X/AANvVetmzpo4mdKPI1zR7P8Ar+u58433gPUdOuQ2lai8LxSCRbe8Qja2OCRjBOD3Xoay4dG8a6frMmsQQiW/cyE3CyIx3OCGbGevzHtXt994I+K2kgpaX+keK7UM5UXQ8mYll2ljuyucAYOeMVkyReNbeQC++E08hDAn7JcqykBNuPlboT8xPXPtRGvndH3U41F3dtvk0/vREqOW1NWpQfl/wzX4nmNpbePVhsYoYo7VrF5XhuCyCQNLnzCWySc5/QVbsvAuqapOkerapLcl5mdbW1Bb945y20dASfQV6FbReN5ZE+xfCmfepjOb24VVJUEHO5ujE5I9uK1rDwP8VdWjWC8v9J8LWm1EYW37+chCSp+XClgSec5pSr53W0fLTXdWv+cn9yGqOXU9VzT9b/5JficvBp3hvwhp63GpTRafbOFcxRuGuJ1O4HB5+YEcqfXpW14a8IeIPiMIJdXt5vD3g1GWRbNcpNfsABu2n7isAMnv29R6F4Q+Enhbw/drqd2s2vauDu+26kwkKt6on3V/U+9eh08Ll9PDy9rJ89T+Z9/19X9yepVbEzqx5EuWHZf1/XcradZWmm2MFhYW0draW6COKGJcKijoAKs0UV6BzH//2Q==" alt="Golden West Colleges logo"></span>
+    <div class="brand"><b>QR Shield</b><span>Student Violation Tracking System · Golden West Colleges</span></div>
+  </div>
+  <div class="tb-right">
+    <span class="netpill net-off" id="netPill"><span class="d"></span><span id="netTxt">Offline</span></span>
+    <button class="whochip" id="whoChip" onclick="switchUser()">
+      <span class="nm" id="chipTxt"></span>
+      <span class="sw"><svg class="ic" style="width:13px;height:13px;"><use href="#i-switch"/></svg>Switch</span>
+    </button>
+  </div>
+</div>
+
+<div class="steps">
+  <div class="stp on" id="stp1"><span class="n">1</span><span class="lbl">Setup</span></div>
+  <div class="sline" id="sl1"></div>
+  <div class="stp" id="stp2"><span class="n">2</span><span class="lbl">Duty</span></div>
+  <div class="sline" id="sl2"></div>
+  <div class="stp" id="stp3"><span class="n">3</span><span class="lbl">Scan</span></div>
+</div>
+
+<div class="wrap"><div class="card">
+
+  <!-- ============ STEP 1: SETUP / IMPORT (marshal, offline) ============ -->
+  <div class="screen active" id="scrSetup">
+    <div class="panel-card">
+      <h1>Set up this device</h1>
+      <p class="lead">Import the student-list file from the Head Marshal's USB, then it scans
+        <b>offline all day</b>. No internet and no login needed.</p>
+
+      <div class="alert err" id="setupErr"></div>
+
+      <!-- Already-provisioned status -->
+      <div id="provisioned" style="display:none;">
+        <div class="statusstrip">
+          <span class="si"><svg class="ic ic-lg"><use href="#i-check-c"/></svg></span>
+          <div class="st"><b id="provTitle">Device is ready</b><span id="provSub"></span></div>
+        </div>
+        <button class="btn btn-primary" onclick="goto('duty')">Continue <svg class="ic"><use href="#i-arrow"/></svg></button>
+        <button class="btn btn-quiet" onclick="showReimport()">Re-import / update students list</button>
+      </div>
+
+      <!-- Import form -->
+      <div id="importForm">
+
+        <!-- Two ways to set up: pick a file (fully offline), or connect to
+             the server on the same Wi-Fi (pulls the live student list, and
+             lets scans sync up automatically). Same marshal-only, no-login
+             trust model either way. -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <button type="button" class="btn btn-outline" id="modeFileBtn" style="flex:1;margin-top:0;">
+            <svg class="ic"><use href="#i-file"/></svg> Import file</button>
+          <button type="button" class="btn btn-outline" id="modeOnlineBtn" style="flex:1;margin-top:0;">
+            <svg class="ic"><use href="#i-cloud"/></svg> Connect online</button>
+        </div>
+
+        <!-- OFFLINE, FILE-BASED SETUP. No server, no internet, no login.
+             The Head Marshal hands over the student-list file (.vtsl or CSV)
+             on a USB; the marshal just picks it and it imports. -->
+        <div id="fileModeBox">
+          <div class="filebox">
+            <span class="fi"><svg class="ic ic-lg"><use href="#i-file"/></svg></span>
+            <div class="ft"><div class="name" id="impFileName">No student list chosen</div>
+              <div class="sub" id="impFileSub">Copy the student-list file (<b>.vtsl</b> or <b>Students.csv</b>) from the Head Marshal's USB, then choose it here.</div></div>
+          </div>
+          <button class="btn btn-outline" id="impFileBtn"><svg class="ic"><use href="#i-upload"/></svg> Choose student list file</button>
+          <label for="impFile" class="sr-only">Student list file (.vtsl, .csv or .xlsx)</label>
+          <input type="file" id="impFile" accept=".vtsl,.csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/json,.json" style="display:none;">
+
+          <button class="btn btn-primary" id="impVerifyBtn" style="margin-top:14px;"><svg class="ic"><use href="#i-check-c"/></svg> Import student list</button>
+          <p class="miniHint" style="margin-top:12px;">Works with no internet and no login. The file imports as soon as you pick it — the secure <b>.vtsl</b> is decrypted automatically.</p>
+        </div>
+
+        <!-- ONLINE SETUP: pulls the live student list from the server over
+             Wi-Fi, and lets recorded scans sync up automatically instead of
+             only leaving as a .vtsl at end of shift. -->
+        <div id="onlineModeBox" style="display:none;">
+          <!-- TWO WAYS ONLINE, AND ONLY ONE OF THEM NEEDS TYPING.
+
+               The address box used to be the first thing on this screen,
+               for every marshal, every time. That is backwards: when the
+               scanner is opened FROM the website the phone already knows
+               the address -- it just downloaded the page from it -- and
+               asking someone to type it is asking them to tell the device
+               something it knows better than they do. A typo there is also
+               indistinguishable from a network fault, which is why "it
+               won't connect" was so often a wrong character.
+
+               So the automatic route is the whole screen by default, with
+               no address in sight, and the manual one is a second choice
+               that reveals the field only when it is actually needed:
+               another device, on the same Wi-Fi, typing the laptop's IP.
+
+               When there is no serving origin at all -- the scanner copied
+               onto a phone as a standalone folder -- there is nothing to be
+               automatic about, so the manual field is opened from the start
+               and the automatic block is not offered. -->
+          <div id="srvAuto">
+            <button class="btn btn-primary" id="useThisServerBtn">
+              <svg class="ic"><use href="#i-cloud"/></svg> Use this server</button>
+            <p class="miniHint" style="margin-top:10px;">
+              This phone opened the scanner from <b id="useThisServerHost">the server</b>,
+              so it already knows where to send scans. Nothing to type.</p>
+            <button type="button" class="btn btn-quiet" id="srvManualLink" style="margin-top:10px;">
+              Connect to a different device instead</button>
+          </div>
+
+          <div id="srvManual" style="display:none;">
+            <div class="field"><label for="ipInput">Laptop or server address</label>
+              <!-- inputmode/autocapitalize/autocorrect off: a phone keyboard
+                   otherwise capitalises and autocorrects an IP address, which
+                   was a real and completely invisible cause of "wrong IP". -->
+              <input type="text" class="in" id="ipInput" placeholder="192.168.1.5/SAD"
+                     inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false"
+                     enterkeyhint="go" autocomplete="off">
+              <p class="miniHint" style="margin-top:7px;">
+                The IPv4 address shown by <code>ipconfig</code> on the laptop, plus the
+                folder if the site is not at the root.</p>
+            </div>
+            <button class="btn btn-primary" id="connectBtn"><svg class="ic"><use href="#i-cloud"/></svg> Connect &amp; load student list</button>
+            <button type="button" class="btn btn-quiet" id="srvAutoLink" style="margin-top:10px;display:none;">
+              Use this server instead</button>
+          </div>
+          <p class="miniHint" style="margin-top:12px;">
+            <b>Live sync.</b> Scans go to the server as you make them, and still export
+            as a .vtsl at the end as a backup.</p>
+          <details class="connHelp">
+            <summary>It won't connect</summary>
+            <ol>
+              <li><b>Same Wi-Fi.</b> The phone and the laptop must be on one network. Phone data will not reach it.</li>
+              <li><b>Current IP.</b> On the laptop run <code>ipconfig</code> and use the IPv4 address. It changes whenever the laptop rejoins Wi-Fi.</li>
+              <li><b>Include the folder.</b> If the site is not at the server root, add it: <code>192.168.1.5/SAD</code>.</li>
+              <li><b>Apache running.</b> Start Apache in the XAMPP control panel.</li>
+              <li><b>Windows Firewall.</b> Allow Apache on private networks, or the phone's request is dropped with no error.</li>
+            </ol>
+            <p>Can't sort it now? Use <b>Import file</b> instead — the shift is not blocked by this.</p>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STEP 2: ON DUTY (Marshal) ============ -->
+  <div class="screen" id="scrDuty">
+    <div class="panel-card">
+      <h1>Who is on duty?</h1>
+      <p class="lead">Enter your School ID. The phone will show whose record it is, and you confirm it is you.</p>
+
+      <div class="alert err" id="dutyErr"></div>
+
+      <!-- ID ONLY.
+           This asked for a name as well, and matching what somebody typed
+           against the spelling on their record was a losing game: the list
+           holds both name orders, people use initials, and a marshal who
+           typed their own name slightly differently was told they were not
+           on the list. The ID is the thing that identifies them, so it is
+           the only thing asked for -- the phone looks it up and shows WHOSE
+           record it is, and they confirm it is them. Nothing to spell. -->
+      <div id="marshallFields">
+        <div class="field"><label for="m_school">Your School ID</label>
+          <input type="text" class="in" id="m_school" placeholder="e.g. 1242500299"
+                 maxlength="20" autocomplete="off" inputmode="numeric" enterkeyhint="go"
+                 aria-describedby="m_school_note">
+          <p class="fieldnote" id="m_school_note" role="alert"></p></div>
+        <p class="miniHint">Every scan is recorded under whoever this ID belongs to, so use your OWN.</p>
+      </div>
+
+      <!-- Step 2: we found you — is this you? -->
+      <div id="dutyConfirm" style="display:none;">
+        <div class="whoFound">
+          <div class="whoFound-lbl">You are signing in as</div>
+          <div class="whoFound-name" id="dutyWhoName">—</div>
+          <div class="whoFound-sub" id="dutyWhoSub">—</div>
+        </div>
+        <p class="miniHint">Everything you scan this shift is filed under this record.</p>
+      </div>
+
+      <button class="btn btn-primary" id="dutyStartBtn" disabled>Continue <svg class="ic"><use href="#i-arrow"/></svg></button>
+      <button class="btn btn-quiet" id="dutyBackBtn" style="display:none;margin-top:8px;">Not me — use a different ID</button>
+    </div>
+  </div>
+
+  <!-- ============ STEP 3: SCAN & RECORD ============ -->
+  <div class="screen" id="scrScan">
+
+    <div class="bigok panel-card" id="bigOk">
+      <div class="circ"><svg class="ic" style="width:42px;height:42px;stroke-width:2.4;"><use href="#i-check"/></svg></div>
+      <div class="msg" id="bigOkMsg">Recorded.</div>
+      <div class="next" id="bigOkNext">Ready for the next student.</div>
+    </div>
+
+    <div id="scanUi">
+      <div class="panel-card">
+        <div class="whoLine">
+          <span class="av" id="whoAv"><svg class="ic ic-lg"><use href="#i-shield"/></svg></span>
+          <div><div class="n" id="whoShow"></div><div class="r" id="whoSub"></div></div>
+        </div>
+
+        <div class="alert err" id="scanErr"></div>
+
+        <!-- THE camera. There used to be a second live view inside the
+             violation sheet, so once a student was picked the marshal was
+             looking at two moving pictures of the same lens, a foot apart,
+             and had to work out which one the shutter belonged to. This box
+             is the only camera now; it changes JOB rather than multiplying.
+
+               scanning  - reading a QR code
+               proof     - aiming the evidence photo, once the violation is set
+
+             The stage is driven by camStage() and shown by the badge and the
+             hint below, so the phone always says which of the two it is
+             doing. -->
+        <div class="camStage" id="camStage" data-stage="scanning">
+          <div id="reader"></div>
+          <!-- The taken frame sits in the SAME box the camera was in, so the
+               photo appears where the marshal was already looking. -->
+          <img id="proofImg" alt="The proof photo attached to this violation" style="display:none;">
+          <span class="camBadge" id="camBadge" aria-hidden="true"><b></b><span id="camBadgeTxt">Scanning</span></span>
+        </div>
+
+        <!-- ONE instruction, always in the same place, saying what to do
+             now and nothing else. A new marshal should be able to work the
+             whole screen by reading this line and pressing the obvious
+             control under it. -->
+        <p class="camStep" id="camStep" role="status" aria-live="polite">
+          <span class="camStep-n" id="camStepN">1</span>
+          <span class="camStep-t" id="camHint"><b>Scan the student's QR code</b><br>Or search for them below.</span>
+        </p>
+
+        <!-- Proof controls, laid out like a camera app, because that is the
+             thing every marshal already knows how to use: one round shutter
+             while aiming, and after the shot the only two questions worth
+             asking — keep it, or take another.
+
+             The old version was a flat navy button reading "Retake" on a
+             navy panel, with no icon. It was there; it just could not be
+             seen, and nobody new to the app found it. -->
+        <div class="camBar" id="proofBar" style="display:none;">
+          <div class="camBar-aim" id="camAim">
+            <button type="button" class="shutter" id="shootBtn" aria-label="Take the proof photo">
+              <span class="shutter-in"><svg class="ic" style="width:26px;height:26px;stroke-width:2;"><use href="#i-camera"/></svg></span>
+            </button>
+          </div>
+          <div class="camBar-done" id="camDone">
+            <button type="button" class="btn btn-outline camBtn" id="retakeBtn">
+              <svg class="ic"><use href="#i-rotate"/></svg> Retake</button>
+            <button type="button" class="btn btn-accent camBtn" id="usePhotoBtn">
+              <svg class="ic"><use href="#i-check"/></svg> Use this photo</button>
+          </div>
+        </div>
+
+        <!-- Hidden once the camera is taking the proof: the student is
+             already chosen by then, so a "search a student" box under the
+             viewfinder is an invitation to undo the thing you are in the
+             middle of. -->
+        <div id="searchBlock">
+          <div class="divider">or search a student</div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="stuSearch" class="sr-only">Search for a student by ID, name, section, or course</label>
+            <input type="text" class="in" id="stuSearch" placeholder="Search by ID, name, section, or course"
+                   autocomplete="off" enterkeyhint="search">
+          </div>
+          <div class="results" id="stuResults"></div>
+        </div>
+
+        <!-- selected student + violation picker -->
+        <div class="sheet" id="sheet">
+          <div class="top">
+            <div class="init" id="shInit">?</div>
+            <div><div class="nm" id="shName"></div><div class="sub" id="shSub"></div></div>
+          </div>
+          <div class="offnote" id="offNote" style="display:none;"><svg class="ic"><use href="#i-list"/></svg><span id="offText"></span></div>
+          <label class="vlabel" for="vSearch">Violation &mdash; search or pick one</label>
+          <input type="text" class="vsearch" id="vSearch" placeholder="Type to search violations"
+                 autocomplete="off" enterkeyhint="search">
+          <div class="vlist" id="vList"></div>
+          <!-- "Others" is a category, not a violation: filed on its own it tells
+               the office a rule was broken and nothing about which. This box
+               appears only when Others is picked, and what is typed rides along
+               as the record's description -- so the violation TYPE stays one of
+               the known ones and the list never fills with one-off entries. -->
+          <div id="otherWrap" style="display:none;">
+            <label class="otherLbl" for="otherText">What happened?</label>
+            <textarea id="otherText" class="vsearch otherBox" rows="2" maxlength="200"
+              placeholder="Describe it in a few words — the office sees this"></textarea>
+            <div class="otherCount"><span id="otherLeft">200</span> characters left</div>
+          </div>
+          <!-- PROOF.
+               The camera takes this by itself a moment after the scan (see
+               the round shutter) so the marshal never has to aim twice, but it is
+               shown rather than filed silently: a blurred frame or a shot of
+               the pavement is worse than no photo, because the office cannot
+               tell it is useless until it is judging the record. -->
+          <!-- Proof STATUS, not a second viewfinder. The picture is taken
+               in the one camera at the top of the screen; this line only
+               says whether the violation about to be filed has one. -->
+          <div id="proofWrap" class="proofwrap">
+            <span class="proofChip wait" id="proofState" role="status" aria-live="polite">
+              <span class="dot" aria-hidden="true"></span><span id="proofStateTxt">Proof after the violation</span>
+            </span>
+          </div>
+          <button class="btn btn-accent" id="confirmBtn" disabled><svg class="ic"><use href="#i-check"/></svg> <span id="confirmLabel">Choose the violation first</span></button>
+          <button class="btn btn-cancel" id="dismissBtn">Cancel</button>
+        </div>
+      </div>
+
+      <!-- RECORDS -->
+      <div class="panel" id="recPanel">
+        <div class="panelHead" role="button" tabindex="0" aria-expanded="false"
+             aria-controls="recPanel" onclick="togglePanel('recPanel')">
+          <span class="lft"><svg class="ic"><use href="#i-list"/></svg> Recorded violations <span class="cnt" id="recCount">0</span></span>
+          <span class="chev"><svg class="ic"><use href="#i-arrow" transform="rotate(90 12 12)"/></svg></span>
+        </div>
+        <div class="panelBody">
+          <p class="miniHint" id="syncStatus"></p>
+          <!-- The # column needs one line, not three. -->
+          <p class="miniHint" id="recLegend" style="margin-top:0;"><b>#</b> is that student's own running total.</p>
+          <div id="recList"></div>
+          <p class="miniHint" id="recEmpty">No records yet on this phone.</p>
+
+          <!-- Sync only appears when there is something unsynced to sync, so
+               it is not a permanently-lit button that usually does nothing. -->
+          <button class="btn btn-outline" id="syncNowBtn" style="display:none;"><svg class="ic"><use href="#i-cloud"/></svg> Sync now</button>
+
+          <!-- ONE end-of-shift action. It used to sit beside a second,
+               equally-primary "Export as Excel/CSV instead" — two blue
+               buttons asking a marshal to pick a file format at the end of a
+               shift. The alternate format is a fallback, so it looks like
+               one now. -->
+          <button class="btn btn-primary" id="finishBtn"><svg class="ic"><use href="#i-check-c"/></svg> Finish session &amp; export</button>
+          <p class="miniHint" style="margin-top:8px;">Encrypted <b>.vtsl</b> saved to this phone — give it to the <b>Head Marshal</b> to import. No internet needed.<br>Student names never leave this phone in a readable file.</p>
+
+          <div class="quietRow">
+            <!-- Was "Export a copy (.vtsl)", which duplicated Finish session.
+                 Re-sync is what people actually need mid-shift: it refreshes the
+                 student/marshal lists AND retries everything still waiting,
+                 including rows an earlier attempt gave up on against the old
+                 lists. The hand-over file is still written by Finish session. -->
+            <button class="btn btn-quiet" id="resyncBtn"><svg class="ic"><use href="#i-cloud"/></svg> Re-sync</button>
+            <button class="btn btn-quiet" id="clearBtn"><svg class="ic"><use href="#i-trash"/></svg> Clear exported</button>
+          </div>
+        </div>
+      </div>
+
+      </div></div>
+
+</div></div><!-- .card / .wrap, opened just before STEP 1. These were never
+     closed: the browser recovered by closing them at </body>, which put every
+     <script> below inside the card. -->
+
+<!-- (Staff re-auth modal removed — the scanner is marshal-only and needs no
+     Admin/OSA login for setup or export.) -->
+
+<!-- QR: phone's built-in BarcodeDetector first (offline, no lib); html5-qrcode as fallback. -->
+<script src="html5-qrcode.min.js" onerror="(function(){var u=['https://cdn.jsdelivr.net/npm/html5-qrcode/html5-qrcode.min.js','https://unpkg.com/html5-qrcode'],i=0;(function load(){if(i>=u.length)return;var s=document.createElement('script');s.src=u[i++];s.onerror=load;document.head.appendChild(s);})();})()"></script>
+<!-- Excel (.xlsx) read/write: local copy first, then CDNs. -->
+<script src="xlsx.full.min.js" onerror="(function(){var u=['https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js','https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'],i=0;(function load(){if(i>=u.length)return;var s=document.createElement('script');s.src=u[i++];s.onerror=load;document.head.appendChild(s);})();})()"></script>
+<!-- bcrypt: verify Admin/OSA/Guard logins OFFLINE against the exported hashes. -->
+<script src="bcrypt.min.js" onerror="(function(){var u=['https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js','https://unpkg.com/bcryptjs@2.4.3/dist/bcrypt.min.js'],i=0;(function load(){if(i>=u.length)return;var s=document.createElement('script');s.src=u[i++];s.onerror=load;document.head.appendChild(s);})();})()"></script>
+<script>
+/* ============ tiny helpers ============ */
+const $=id=>document.getElementById(id);
+const saved=k=>{try{return localStorage.getItem(k)||'';}catch(e){return'';}};
+const save=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
+const del=k=>{try{localStorage.removeItem(k);}catch(e){}};
+const showAlert=(box,m,cls)=>{const b=$(box);if(!b)return;b.textContent=m;b.className='alert '+cls+' show';};
+const hideAlert=box=>{const b=$(box);if(b)b.classList.remove('show');};
+const clrAlerts=()=>document.querySelectorAll('.alert').forEach(a=>a.classList.remove('show'));
+const esc=s=>(s||'').toString().replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+const initials=n=>(n||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function apiUrl(path){ return (SERVER.url ? SERVER.url.replace(/\/+$/,'')+'/' : '') + path; }
+
+/* ---------- connectivity plumbing ----------
+   navigator.onLine is a HINT. It is never a gate, anywhere below.
+
+   It used to be one, and it broke the exact case this scanner exists for:
+   a laptop running XAMPP with NO INTERNET, handing out its own Wi-Fi (or
+   sharing an isolated switch) with the phone joined to it. The server is
+   one hop away and perfectly reachable — but the phone has no route to
+   the internet, so the browser reports itself "offline", and every check
+   written as `if (!navigator.onLine) give up` refused to even TRY the
+   address. The pill said Offline, "Connect online" refused to dial, and
+   queued scans sat on the phone for a whole shift next to a server that
+   would have taken every one of them.
+
+   Both directions of that reading are wrong for this app:
+     onLine === false  does NOT mean the LAN server is unreachable.
+                       (No internet. The server is not on the internet.)
+     onLine === true   does NOT mean it IS reachable — the old comment
+                       here already said so: wrong IP, firewall, Apache
+                       bound to 127.0.0.1, laptop asleep.
+
+   So it answers a question we never asked. The only thing that settles it
+   is asking the server, and every probe below is bounded by a timeout —
+   so trying when the browser says "offline" costs a few seconds at worst
+   and is the difference between a working shift and a dead one.
+
+   onLine keeps exactly one job: choosing the WORDING once a probe has
+   already failed ("Offline" vs "No server"), which is a nicety. */
+
+/* Is this a machine on the local network, or something out on the internet?
+   It decides which scheme to assume below, and the two cases genuinely
+   differ: a laptop running XAMPP on the school Wi-Fi speaks http and has
+   no certificate, while anything reached by a public name is behind TLS
+   and will usually refuse or redirect plain http. */
+function isLanHost(host){
+  host = (host||'').replace(/:\d+$/, '').toLowerCase();
+  return host === 'localhost' || host === '127.0.0.1'
+      || /\.local$/.test(host)
+      || /^10\./.test(host)
+      || /^192\.168\./.test(host)
+      || /^169\.254\./.test(host)
+      || /^172\.(1[6-9]|2\d|3[01])\./.test(host);
+}
+
+// Turn whatever was typed into a usable base URL. Accepts "192.168.1.5",
+// "192.168.1.5:8080", "192.168.1.5/SAD", a full http(s)://… URL, and
+// tolerates a pasted trailing "/api/scanner_data.php" or stray slashes.
+function normaliseServer(raw){
+  let v = (raw||'').trim().replace(/\s+/g,'');
+  if (!v) return '';
+  v = v.replace(/\/+$/,'');
+  v = v.replace(/\/(api\/)?[A-Za-z0-9_.-]+\.php$/i,'');   // strip an endpoint
+
+  /* WHY THIS NO LONGER ALWAYS ASSUMES http://.
+
+     It used to bolt "http://" onto anything without a scheme. That is
+     right for the address this box was written for -- a laptop on the
+     school Wi-Fi -- and wrong for the other way the scanner is meant to
+     reach the system: the web server itself, by name, from a device that
+     is not on that Wi-Fi at all. Those are served over https, and a
+     plain-http request to one is redirected or refused, so a perfectly
+     correct address failed with a network error that read as "wrong IP".
+
+     So the scheme is now inferred rather than assumed: an address the
+     page can tell is a LAN machine keeps http, anything public gets
+     https, and a page already served over https never downgrades -- the
+     browser would block that as mixed content anyway. Typing the scheme
+     yourself still overrides all of it. */
+  if (!/^https?:\/\//i.test(v)){
+    /* A LAN address stays http EVEN on an https page, deliberately. There
+       is no certificate on a laptop running XAMPP, so https to it cannot
+       work either way -- and leaving it as http is what lets the
+       mixed-content check in the connect handler recognise the situation
+       and explain it ("open this scanner over http instead"). Silently
+       upgrading it would trade that sentence for a bare TLS error. */
+    const host = v.split('/')[0];
+    v = (isLanHost(host) ? 'http://' : 'https://') + v;
+  }
+  return v.replace(/\/+$/,'');
+}
+
+// fetch that always gives up instead of hanging forever on a dead address.
+async function fetchT(url, opts, ms){
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), ms || 8000);
+  try{
+    return await fetch(url, Object.assign({cache:'no-store'}, opts||{}, {signal:ctrl.signal}));
+  } finally { clearTimeout(timer); }
+}
+
+/* Three states, not two: OFFLINE (no network at all), NO SERVER (network
+   but the server can't be reached — the case that used to lie and say
+   "Online"), and LIVE (reachable, syncing). */
+let NETSTATE = 'offline';
+let PROBING  = false;
+
+async function probeServer(){
+  if (PROBING) return NETSTATE;
+  /* No navigator.onLine gate here on purpose — see the note above. The
+     only address we could ask about is a LAN one, and the browser knows
+     nothing about it. We ask the server. */
+  // Nowhere to send anything yet — nothing to probe.
+  if (!SERVER.url && !SERVER.connected){
+    setNetState(navigator.onLine ? 'nosetup' : 'offline');
+    return NETSTATE;
+  }
+  PROBING = true;
+  try{
+    const r = await fetchT(apiUrl('api/scanner_data.php'), {method:'GET'}, 6000);
+    const d = r.ok ? await r.json() : null;
+    /* A real answer outranks anything the browser believes: if the server
+       replied, we are live even while navigator.onLine says false. That is
+       precisely the no-internet LAN shift this scanner is built for. */
+    setNetState(d && d.app === 'VTS-SCANNER' ? 'live'
+              : (navigator.onLine ? 'noserver' : 'offline'));
+  }catch(e){
+    // It genuinely did not answer. Only NOW is onLine worth consulting,
+    // and only to pick which of the two failures to name.
+    setNetState(navigator.onLine ? 'noserver' : 'offline');
+  }finally{ PROBING = false; }
+  return NETSTATE;
+}
+// 07/17/2026 4:17 PM — the date/time format the whole VTS site uses.
+function fmtDT(iso){
+  const d=new Date(iso); if(isNaN(d)) return '';
+  const p=n=>String(n).padStart(2,'0');
+  let h=d.getHours(); const ap=h>=12?'PM':'AM'; h=h%12||12;
+  return p(d.getMonth()+1)+'/'+p(d.getDate())+'/'+d.getFullYear()+' '+h+':'+p(d.getMinutes())+' '+ap;
+}
+
+/* ============ CSV helpers — READER ONLY ============
+   The csvCell/toCSV writer pair went with the plain spreadsheet export:
+   scan records leave as encrypted .vtsl now, and a spare serialiser left
+   lying here is how that quietly comes back. parseCSV stays — the student
+   list the Head Marshal hands out may still be a CSV. */
+function parseCSV(text){
+  const rows=[]; let row=[], cur='', q=false;
+  for(let i=0;i<text.length;i++){ const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else { if(c==='"') q=true;
+      else if(c===','){ row.push(cur); cur=''; }
+      else if(c==='\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+      else if(c==='\r'){ /* skip */ }
+      else cur+=c; } }
+  if(cur!==''||row.length){ row.push(cur); rows.push(row); }
+  return rows.filter(r=>!(r.length===1&&r[0].trim()===''));
+}
+
+/* ============ built-in violation list (works offline out of the box) ============ */
+const DEFAULT_TYPES=[
+  'No School ID','Improper Uniform','Improper Haircut','Improper Footwear (Slippers)','No ID Lace / Lanyard',
+  'Non-Neutral Nail Color','Untrimmed Nails','Wearing Cap/Hat Indoors','Late to Class / Tardiness',
+  'Loitering During Class Hours','Littering','Eating Inside the Computer Laboratory','Unauthorized Use of Phone in Class',
+  'Sleeping During Class','Multiple Earrings','Prohibited Accessories / Piercings','Disrespect to Authority / Faculty',
+  'Cutting Classes','Public Display of Affection (PDA)','Smoking / Vaping on Campus','Gambling on Campus',
+  'Rowdy / Disruptive Behavior','Insubordination','Unauthorized Entry to Restricted Area','Misuse of Computer Lab Equipment',
+  'Installing Unauthorized Software',"Using Another Student's Account",'Accessing Blocked / Inappropriate Sites',
+  'Vandalism','Cheating / Academic Dishonesty','Plagiarism','Theft / Stealing','Physical Assault / Fighting',
+  'Bullying / Harassment','Cyberbullying','Hacking / Unauthorized System Access','Data Theft / Privacy Violation',
+  'Forgery / Falsification of Documents','Possession of Alcohol / Intoxication','Possession / Use of Prohibited Drugs',
+  'Possession of Deadly Weapon','Threats / Intimidation','Gross Misconduct / Immoral Conduct','Others'
+].map(n=>({id:null,violation_name:n}));
+
+/* ============ state ============ */
+let WHO=null;                              // on-duty user {role,name,username,school,auth}
+let SERVER={url:'',token:'',display:'',connected:false};   // live online connection
+let ONLINE=navigator.onLine;
+let scanner=null, lockUntil=0;
+let students=[];                           // [{student_id, fullname, section, year_level, course, scanner_access}]
+let types=[];                              // [{id, violation_name}]
+let ACCOUNTS=[];                           // kept only for backward-compat with old imports; not used
+let guards=[];                             // [{student_id, fullname}] active marshals, from the server
+                                           // -- the Duty screen checks the typed name/ID against this
+let STAGE=null;                            // parsed-but-not-committed import {students,types,name}
+let selStudent=null, selType=null;
+
+const isProvisioned=()=>saved('vts_setup')==='1' && students.length>0;
+
+function loadState(){
+  try{ WHO=JSON.parse(saved('vts_who2')||'null'); }catch(e){ WHO=null; }
+  try{ SERVER=Object.assign({url:'',token:'',display:'',connected:false},JSON.parse(saved('vts_server2')||'{}')); }catch(e){ SERVER={url:'',token:'',display:'',connected:false}; }
+  try{ students=JSON.parse(saved('vts_students')||'[]'); }catch(e){ students=[]; }
+  try{ types=JSON.parse(saved('vts_types2')||'[]'); }catch(e){ types=[]; }
+  try{ ACCOUNTS=JSON.parse(saved('vts_accounts')||'[]'); }catch(e){ ACCOUNTS=[]; }
+  try{ guards=JSON.parse(saved('vts_guards')||'[]'); }catch(e){ guards=[]; }
+  if(!types.length) types=DEFAULT_TYPES.slice();
+}
+
+/* ============ records queue (auto-saved) ============ */
+const RKEY='vts_records';
+/* =====================================================================
+   PROOF PHOTO STORE  --  IndexedDB, because localStorage is too small
+   ---------------------------------------------------------------------
+   THE BUG THIS FIXES: an offline shift exported .vtsl files with the
+   proof missing.
+
+   Photos used to be kept inside the record, in localStorage, alongside
+   the student list. localStorage is ~5MB for the whole origin. A frame is
+   20-30KB, so somewhere around a hundred and fifty scans the write
+   started failing -- and the recovery was to THROW PHOTOS AWAY, oldest
+   unsynced first, to make the record fit. On a phone with a server that
+   is exactly right: the server already holds those frames. Offline, with
+   no server anywhere, it was silent data loss: the evidence was deleted
+   hours before the marshal ever got to Finish session, and the file
+   handed to the office had records with nothing attached.
+
+   IndexedDB is the right place for binary-ish data and is measured in
+   hundreds of megabytes rather than five, so the photos simply stay.
+   Records in localStorage are small again (a flag, not a frame), which is
+   also why the shedding logic in recSet() should now never fire.
+
+   The seam is deliberately narrow. recGet() is unchanged and still
+   synchronous -- every screen that only lists records keeps working the
+   way it did. Only the two places that actually need the bytes, the
+   export and the sync, call withPhotos() and await them.
+
+   FALLBACK: a browser with no IndexedDB (a locked-down WebView, private
+   mode on some phones) drops back to one localStorage key per photo.
+   That is no better than before, but it is no worse, and the record
+   itself is never risked either way. */
+const PHOTO_DB = 'vts_scanner_photos', PHOTO_STORE = 'photos', PHOTO_LS = 'vts_photo_';
+let photoDbPromise = null;
+
+function photoDb(){
+  if (photoDbPromise) return photoDbPromise;
+  photoDbPromise = new Promise((resolve, reject) => {
+    if (!window.indexedDB) return reject(new Error('no indexedDB'));
+    const rq = indexedDB.open(PHOTO_DB, 1);
+    rq.onupgradeneeded = () => {
+      const db = rq.result;
+      if (!db.objectStoreNames.contains(PHOTO_STORE)) db.createObjectStore(PHOTO_STORE);
+    };
+    rq.onsuccess = () => resolve(rq.result);
+    rq.onerror   = () => reject(rq.error || new Error('indexedDB unavailable'));
+    rq.onblocked = () => reject(new Error('indexedDB blocked'));
+  });
+  photoDbPromise.catch(() => { photoDbPromise = null; });   // let a later call retry
+  return photoDbPromise;
+}
+function idbReq(r){ return new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function photoStore(mode){
+  const db = await photoDb();
+  return db.transaction(PHOTO_STORE, mode).objectStore(PHOTO_STORE);
+}
+
+async function photoPut(id, dataUrl){
+  if (!id || !dataUrl) return false;
+  try { await idbReq((await photoStore('readwrite')).put(dataUrl, id)); return true; }
+  catch(e){
+    try { localStorage.setItem(PHOTO_LS + id, dataUrl); return true; }
+    catch(e2){ return false; }          // no room anywhere; the RECORD still saves
+  }
+}
+async function photoGet(id){
+  if (!id) return '';
+  try { const v = await idbReq((await photoStore('readonly')).get(id)); if (v) return v; }
+  catch(e){ /* fall through to the fallback store */ }
+  try { return localStorage.getItem(PHOTO_LS + id) || ''; } catch(e){ return ''; }
+}
+async function photoDel(id){
+  if (!id) return;
+  try { await idbReq((await photoStore('readwrite')).delete(id)); } catch(e){}
+  try { localStorage.removeItem(PHOTO_LS + id); } catch(e){}
+}
+/* Re-attach the frames for a list of records. Legacy records that still
+   carry an inline data: URL are left exactly as they are, so a phone
+   mid-shift when this shipped still exports everything it holds. */
+async function withPhotos(records){
+  const out = [];
+  for (const r of records){
+    if (r.photo) { out.push(r); continue; }
+    const photo = (r.has_photo || r.photo_id) ? await photoGet(r.photo_id || r._id) : '';
+    out.push(photo ? Object.assign({}, r, {photo}) : r);
+  }
+  return out;
+}
+/* Count what is actually on the device, for the pre-export summary. */
+async function countPhotos(records){
+  let n = 0;
+  for (const r of records){
+    if (r.photo) { n++; continue; }
+    if ((r.has_photo || r.photo_id) && await photoGet(r.photo_id || r._id)) n++;
+  }
+  return n;
+}
+
+function recGet(){ try{return JSON.parse(localStorage.getItem(RKEY)||'[]');}catch(e){return[];} }
+/* Write the records back, and do NOT lose one quietly if storage is full.
+
+   save() swallows its exception, which was survivable while a record was a
+   few hundred bytes of text. Proof photos changed that: at ~30KB each a
+   long shift can reach the 5MB localStorage quota, and the old behaviour
+   was to throw the scan away without a word — the marshal would see it in
+   the list, the list would not survive a reload, and nobody would know
+   until the office was short a violation.
+
+   Photos have since moved to IndexedDB (see the photo store above), so a
+   record is a few hundred bytes of text again and this path should now be
+   effectively unreachable. It is kept for two reasons: a phone that was
+   mid-shift when that change shipped still holds records with an inline
+   frame, and a localStorage that fills for any other reason must still
+   never lose a scan silently. Photos are dropped, records never are. */
+function recSet(a){
+  if(trySaveRecords(a)){ paintRecords(); return true; }
+
+  // 1. Photos whose record already reached the server.
+  let freed=false;
+  for(const r of a){ if(r.synced && r.photo){ r.photo=''; r.photo_dropped=true; freed=true; } }
+  if(freed && trySaveRecords(a)){ paintRecords(); return true; }
+
+  // 2. Oldest unsynced photos, one at a time — each retry is cheap and this
+  //    keeps as many of the newest photos as will fit.
+  for(const r of a){
+    if(!r.photo) continue;
+    r.photo=''; r.photo_dropped=true;
+    if(trySaveRecords(a)){
+      paintRecords();
+      alert('This phone’s storage is full, so some proof photos had to be dropped.\n\n'
+          + 'Every SCAN is safe and will still sync. Sync now if you can, or finish the '
+          + 'session to export them.');
+      return true;
+    }
+  }
+
+  // 3. Nothing left to shed.
+  paintRecords();
+  alert('This phone’s storage is FULL and the last scan could not be saved.\n\n'
+      + 'Sync now, or use Finish session to export what is here, then try again.');
+  return false;
+}
+function trySaveRecords(a){
+  try{ localStorage.setItem(RKEY, JSON.stringify(a)); return true; }
+  catch(e){ return false; }
+}
+function recAdd(r){ const a=recGet(); a.push(r); recSet(a); return r; }
+function recUpdate(id,patch){ const a=recGet(); const i=a.findIndex(x=>x._id===id); if(i>=0){ Object.assign(a[i],patch); recSet(a);} }
+function unsyncedCount(){ return recGet().filter(r=>!r.synced).length; }
+// How many records this device already holds for a student (for the running "Violation #N").
+function priorCountFor(sid){ sid=(sid||'').toLowerCase(); return recGet().filter(r=>(r.student_id||'').toLowerCase()===sid).length; }
+
+/* ============ navigation ============ */
+function goto(n){
+  ['scrSetup','scrDuty','scrScan'].forEach(s=>{ const el=$(s); if(el) el.classList.remove('active'); });
+  clrAlerts();
+  if(n==='setup'){ $('scrSetup').classList.add('active'); setStep(1); stopCamera(); paintSetup(); }
+  else if(n==='duty'){ $('scrDuty').classList.add('active'); setStep(2); stopCamera(); }
+  else if(n==='scan'){ $('scrScan').classList.add('active'); setStep(3);
+    /* The JS owns the camera's stage, not a hand-written attribute in the
+       markup: entering this screen is always the QR reader, whatever the
+       previous student left behind. */
+    camStage('scanning');
+    startCamera(); paintRecords(); paintListStatus(); }
+}
+function setStep(n){
+  $('stp1').className='stp '+(n>1?'done':(n===1?'on':''));
+  $('stp2').className='stp '+(n>2?'done':(n===2?'on':''));
+  $('stp3').className='stp '+(n===3?'on':'');
+  $('sl1').className='sline '+(n>1?'done':'');
+  $('sl2').className='sline '+(n>2?'done':'');
+}
+/* The panel headers were clickable <div>s: no keyboard focus, nothing
+   announced, and no way to know from the markup whether a panel was open.
+   They are buttons now in everything but tag name -- focusable, operable
+   with Enter/Space, and carrying aria-expanded so it is actually stated. */
+function togglePanel(id){
+  const open = $(id).classList.toggle('open');
+  const head = $(id).querySelector('.panelHead');
+  if (head) head.setAttribute('aria-expanded', open ? 'true' : 'false');
+  return open;
+}
+document.addEventListener('keydown', function(e){
+  const h = e.target && e.target.closest && e.target.closest('.panelHead');
+  if (!h) return;
+  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar'){
+    e.preventDefault();
+    h.click();
+  }
+});
+
+/* Context-aware back button:
+   scan -> duty ; duty -> setup ; setup -> exit to website login. */
+/* The Back arrow leaves the scanner entirely, which only means anything
+   when the scanner is served as part of the website. Copied onto a phone as
+   a standalone folder there is nowhere to go, so the arrow is hidden rather
+   than left there to 404 (the README used to just say "ignore it"). */
+(function(){
+  var back = document.getElementById('backBtn');
+  if (!back) return;
+  var servedBySite = /^https?:/i.test(location.protocol) &&
+                     !/(^|\/)phone_scanner\//i.test(location.pathname);
+  if (!servedBySite) back.style.display = 'none';
+})();
+
+function goBack(e){
+  if($('scrScan').classList.contains('active')){ if(e)e.preventDefault(); switchUser(); return false; }
+  if($('scrDuty').classList.contains('active')){ if(e)e.preventDefault(); goto('setup'); return false; }
+  return true;
+}
+/* =====================================================================
+   HANDING THE PHONE OVER
+   ---------------------------------------------------------------------
+   Switch used to be two statements: stop the camera, show the duty
+   screen. Two things were wrong with that.
+
+   1. THE SCANS WENT WITH IT, SILENTLY. Everything scanned this shift is
+      filed under whoever was on duty, and Switch is the moment that
+      changes. A marshal who hands the phone over with records still
+      queued has just made them somebody else's problem to explain --
+      and if the phone is then cleared, nobody's at all. So the queue is
+      dealt with FIRST: synced if there is a server, and said out loud if
+      there is not.
+
+   2. IT THREW AWAY WHAT WAS TYPED. The School ID box was left empty, so
+      a marshal who pressed Switch by accident -- it sits next to their
+      own name at the top of the scan screen -- had to find and retype
+      their ID to get back to where they were.
+
+      It is pre-filled now, and NOT a shortcut past identifying yourself:
+      the confirm step is untouched, so the next person still sees whose
+      record it is and has to press "Yes, start scanning". The text is
+      selected, so replacing it is one action for a marshal taking over.
+   ===================================================================== */
+async function switchUser(){
+  const un = unsyncedCount();
+
+  if (un > 0){
+    const word = un === 1 ? 'scan is' : 'scans are';
+
+    if (SERVER.connected){
+      /* Try to clear the queue before the shift changes hands, so the
+         records land under the marshal who actually made them.
+         navigator.onLine is not consulted: a hand-over on a no-internet
+         LAN is exactly when this flush matters most, and trySync() is
+         already safe to call when nothing answers. */
+      const btn = $('whoChip');
+      if (btn) btn.setAttribute('aria-busy', 'true');
+      await trySync();
+      if (btn) btn.removeAttribute('aria-busy');
+
+      const left = unsyncedCount();
+      if (left > 0 && !confirm(
+            left + ' ' + (left === 1 ? 'scan' : 'scans') + ' could not be sent to the server just now.\n\n'
+          + 'They are safe on this phone and will sync by themselves, and they are in the '
+          + 'end-of-shift export either way.\n\nSwitch marshal anyway?')) return;
+
+    } else if (!confirm(
+            un + ' ' + word + ' recorded on this phone and NOT sent to the server.\n\n'
+          + 'They stay on the device and still go out in the end-of-shift export, '
+          + 'but they are filed under the marshal who made them \u2014 so finish the session '
+          + 'and export before handing the phone over if the shift is ending.\n\n'
+          + 'Switch marshal anyway?')) return;
+  }
+
+  stopCamera();
+  /* Free the outgoing marshal's duty slot right away rather than letting it
+     sit reserved until the shift window closes — with only 2 slots
+     system-wide, a switch that doesn't release one is functionally the same
+     as blocking whoever needs that slot next. Best-effort and NOT awaited:
+     if there's no connection this can't succeed anyway, and the person
+     standing at the phone should not wait on it to hand the device over. */
+  if (SERVER.connected && WHO && WHO.school) {
+    scannerSession('release', WHO.school).catch(() => {});
+  }
+  /* Keep the ID that was already entered. The next screen still asks the
+     person to confirm whose record it is, so this saves typing without
+     letting anyone sign in as somebody else by pressing Continue twice. */
+  const box = $('m_school');
+  if (box && WHO && WHO.school) box.value = WHO.school;
+  goto('duty');
+  dutyShowLookup();
+  if (box){ try{ box.focus(); box.select(); }catch(e){} }
+}
+
+/* ============ STEP 1: setup / import (MARSHAL-ONLY, no login) ============ */
+function paintSetup(){
+  const prov=isProvisioned();
+  $('provisioned').style.display = prov ? 'block' : 'none';
+  $('importForm').style.display  = prov ? 'none' : 'block';
+  if(prov){
+    $('provTitle').textContent = SERVER.connected ? 'Device is ready — connected online' : 'Device is ready';
+    $('provSub').textContent = students.length+' student(s) loaded'
+      + (SERVER.connected ? (' · online via '+SERVER.display+' · scans sync automatically')
+                           : (saved('vts_importer')?(' · imported '+saved('vts_importer')):'')) + '.';
+  } else {
+    setSetupMode(SERVER.connected ? 'online' : 'file');
+    if ($('ipInput') && SERVER.url) $('ipInput').value = SERVER.url.replace(/^https?:\/\//i,'');
+  }
+}
+function showReimport(){ $('provisioned').style.display='none'; $('importForm').style.display='block'; }
+
+$('impFileBtn').onclick=()=>$('impFile').click();
+$('impFile').onchange=e=>{
+  const f=e.target.files[0]; e.target.value='';
+  if(!f) return;
+  hideAlert('setupErr');
+  $('impFileName').textContent='Reading '+f.name+'…';
+  parseListFile(f, data=>{
+    STAGE=Object.assign({name:f.name},data);
+    const nS=(data.students||[]).length;
+    $('impFileName').textContent=f.name;
+    $('impFileSub').textContent=nS+' student(s) found. Tap "Import student list".';
+    if(!nS) showAlert('setupErr','No students found in that file. Ask the Head Marshal for the latest student-list file.','err');
+  }, msg=>{
+    STAGE=null; $('impFileName').textContent='No student list chosen';
+    $('impFileSub').textContent='Copy the student-list file (.vtsl or Students.csv) from the Head Marshal’s USB, then choose it here.';
+    showAlert('setupErr',msg,'err');
+  });
+};
+
+/* No Admin/OSA login — the marshal just imports the student list and starts. */
+$('impVerifyBtn').onclick=()=>{
+  hideAlert('setupErr');
+  if(!STAGE) return showAlert('setupErr','Choose the student-list file to import first.','err');
+  if(!((STAGE.students||[]).length)) return showAlert('setupErr','That file has no students. Ask the Head Marshal for the latest student list.','err');
+
+  commitImport(STAGE);
+  SERVER={url:'',token:'',display:'',connected:false}; save('vts_server2',JSON.stringify(SERVER));
+  save('vts_setup','1');
+  save('vts_importer', STAGE.name || 'student list file');
+  STAGE=null;
+  goto('duty');
+};
+
+/* ---------- Online setup: connect + pull the live student list ---------- */
+function setSetupMode(mode){
+  $('fileModeBox').style.display   = mode==='file'   ? 'block' : 'none';
+  $('onlineModeBox').style.display = mode==='online' ? 'block' : 'none';
+  $('modeFileBtn').style.background   = mode==='file'   ? 'rgba(255,255,255,.14)' : '';
+  $('modeOnlineBtn').style.background = mode==='online' ? 'rgba(255,255,255,.14)' : '';
+}
+$('modeFileBtn').onclick   = ()=>setSetupMode('file');
+$('modeOnlineBtn').onclick = ()=>setSetupMode('online');
+
+/* The serving origin, offered as a button and pre-filled into the box, so
+   "online" means either address on the same Wi-Fi OR this web server --
+   and the second one needs nothing typed. */
+/* WHICH OF THE TWO ONLINE ROUTES THIS DEVICE GETS.
+
+   Automatic is the default and the address is not shown at all: the phone
+   downloaded this page from a server, so it knows the address better than
+   the person holding it does. Manual is a second choice, and the field
+   appears only when it is chosen -- another device, same Wi-Fi, typing the
+   laptop's IP.
+
+   With no serving origin (the scanner copied onto a phone as a standalone
+   folder) there is nothing to be automatic about, so manual IS the screen
+   and the automatic block is never offered. */
+(function offerServingOrigin(){
+  const auto   = $('srvAuto');
+  const manual = $('srvManual');
+  const btn    = $('useThisServerBtn');
+  const box    = $('ipInput');
+  if (!auto || !manual || !btn) return;
+
+  const base = (typeof siteBaseUrl === 'function') ? siteBaseUrl() : '';
+  const host = base ? base.replace(/^https?:\/\//i, '') : '';
+
+  /* `suggest` is false when the marshal has explicitly asked for a
+     DIFFERENT device: pre-filling this server's address there would be
+     answering a question they just told us they were not asking, and they
+     would have to clear it before typing. */
+  function showManual(suggest){
+    auto.style.display = 'none';
+    manual.style.display = '';
+    if (suggest && box && !box.value && host) box.value = host;
+    if (box) { try{ box.focus(); }catch(e){} }
+  }
+  function showAuto(){
+    manual.style.display = 'none';
+    auto.style.display = '';
+  }
+
+  if (!base){
+    /* Standalone copy: automatic is not a thing that exists here. There is
+       no origin to suggest either, so the box simply starts empty. */
+    showManual(false);
+    const backLink = $('srvAutoLink');
+    if (backLink) backLink.style.display = 'none';
+    return;
+  }
+
+  const hostEl = $('useThisServerHost');
+  if (hostEl) hostEl.textContent = host;
+  showAuto();
+
+  btn.onclick = function(){
+    /* The address is set behind the scenes -- the marshal never sees or
+       types it -- and the normal connect path runs, so every check and
+       every error message below stays exactly the same. */
+    if (box) box.value = host;
+    $('connectBtn').click();
+  };
+
+  const toManual = $('srvManualLink');
+  if (toManual) toManual.onclick = function(){
+    if (box) box.value = '';       // a different device means a different address
+    showManual(false);
+    const backLink = $('srvAutoLink');
+    if (backLink) backLink.style.display = '';
+  };
+  const toAuto = $('srvAutoLink');
+  if (toAuto) toAuto.onclick = showAuto;
+})();
+
+$('connectBtn').onclick = async () => {
+  hideAlert('setupErr');
+  const btn=$('connectBtn'); const old=btn.innerHTML;
+  btn.disabled=true; btn.innerHTML='Connecting…';
+
+  const typed = $('ipInput').value.trim();
+  const ip    = typed;                       // kept: used in the messages below
+  const url   = normaliseServer(typed);
+
+  // A phone browser silently blocks a plain http:// request made from a page
+  // opened over https:// ("mixed content") — the fetch below would just fail
+  // with no useful clue, and the address looks "correct" the whole time
+  // because the problem was never the IP. Catch it up front and say so.
+  if (location.protocol === 'https:' && /^http:\/\//i.test(url)) {
+    btn.disabled=false; btn.innerHTML=old;
+    return showAlert('setupErr',
+      'This scanner page was opened over https, so the phone blocks a plain http connection to '+ip+' (mixed content) — that\u2019s why it "doesn\u2019t connect" even though the address is correct. Open this scanner page itself via http:// on the same Wi-Fi instead.', 'err');
+  }
+
+  /* This used to refuse outright when navigator.onLine was false, telling
+     the marshal "this phone has no network at all" — while the phone was
+     sitting on the laptop's own Wi-Fi with the server answering happily.
+     A browser saying "offline" means "no INTERNET", and the laptop is not
+     the internet. The address gets dialled either way now; the attempt is
+     timeout-bounded, and if it really is dead the catch below says so with
+     the specific reason. The browser's guess only softens the wording. */
+  const browserSaysOffline = !navigator.onLine;
+
+  try{
+    const testUrl = (url ? url + '/' : '') + 'api/scanner_data.php';
+    const r = await fetchT(testUrl, {method:'GET'}, 9000);
+    if(!r.ok) throw new Error('status ' + r.status);
+    let d;
+    try { d = await r.json(); }
+    catch(pe){ throw new Error('not-json'); }
+    if(!d || d.app!=='VTS-SCANNER') throw new Error('not-vts');
+
+    students = d.students||[]; save('vts_students', JSON.stringify(students));
+    // The staff list the Duty screen verifies against. The server has always
+    // sent it; the page simply threw it away, which is why anyone could type
+    // any name at all and be believed.
+    if (d.guards) { guards = d.guards; save('vts_guards', JSON.stringify(guards)); }
+    if (d.types && d.types.length){ types=d.types; save('vts_types2', JSON.stringify(types)); }
+    SERVER = {url, token:'', display: ip || 'this device', connected:true};
+    save('vts_server2', JSON.stringify(SERVER));
+    save('vts_setup','1');
+    save('vts_last_addr', typed);         // so a reconnect isn't retyped
+    save('vts_importer', 'online: '+SERVER.display);
+    setNetState('live');
+    startSyncLoop();
+    showAlert('setupErr', students.length+' student(s) loaded — connected online.', 'ok');
+    btn.disabled=false; btn.innerHTML=old;
+    setTimeout(()=>goto('duty'), 700);
+  }catch(e){
+    btn.disabled=false; btn.innerHTML=old;
+    // Each failure mode gets its own instruction. One catch-all paragraph
+    // listing every possible cause left people re-typing an IP that was
+    // right the whole time, because it never said WHICH thing had failed.
+    let msg;
+    if (e && e.name === 'AbortError') {
+      msg = 'The server didn\u2019t answer within 9 seconds. That is almost always the phone being on a different Wi-Fi than the laptop, or Windows Firewall blocking Apache — not a wrong address.';
+    } else if (/not-vts|not-json/.test(e.message||'')) {
+      msg = 'Something answered at that address, but it isn\u2019t this system. Check the folder part — e.g. 192.168.1.5/SAD, not just 192.168.1.5.';
+    } else if (/status 40|status 30/.test(e.message||'')) {
+      msg = 'The server answered ' + e.message + '. The address is reachable but the path is wrong — add or fix the folder, e.g. 192.168.1.5/SAD.';
+    } else if (!ip) {
+      msg = 'Couldn\u2019t reach the server at this page\u2019s own address. Enter the laptop\u2019s IP instead, e.g. 192.168.1.5/SAD.';
+    } else if (browserSaysOffline) {
+      /* Worth separating: the address did not answer AND the phone reports
+         no network, so "join the Wi-Fi" is the likeliest first move. Note
+         this is said AFTER a real attempt, not instead of one \u2014 a laptop
+         hotspot with no internet reads as "no network" here and still
+         works perfectly, which is why it is no longer a refusal. */
+      msg = 'Couldn\u2019t connect to ' + (url||'the server') + ', and this phone also reports no network. Join the laptop\u2019s Wi-Fi \u2014 it does NOT need internet, the laptop\u2019s own hotspot is fine \u2014 then try again. If you are already on it, check the IP with ipconfig and that Windows Firewall allows Apache on private networks.';
+    } else {
+      msg = 'Couldn\u2019t connect to ' + (url||'the server') + '. Check, in this order: phone and laptop on the SAME Wi-Fi; Apache running in XAMPP; the IP is current (run ipconfig — it changes when the laptop rejoins Wi-Fi); Windows Firewall allows Apache on private networks.';
+    }
+    setNetState(navigator.onLine ? 'noserver' : 'offline');
+    showAlert('setupErr', msg, 'err');
+  }
+};
+
+/* ============ STEP 2: on-duty (Marshal only) ============ */
+
+/* The account a School ID belongs to, or null.
+
+   Searches the staff list AND the student list, because the marshals here
+   are students — there is no separate guard staff, so looking only at
+   `guards` locked out everybody actually holding a phone. The student list
+   is already on the device for scanning, so this costs no extra download.
+
+   Guard accounts created without a School ID are keyed by username, which
+   is what the server sends as their id — hence matching on whatever the
+   list carries rather than assuming a numeric ID. */
+function findGuard(schoolId){
+  const id = (schoolId||'').trim().toLowerCase();
+  if(!id) return null;
+  const hit = list => (list||[]).find(p =>
+        String(p.student_id||'').trim().toLowerCase() === id);
+  const g = hit(guards);
+  if(g) return {student_id:g.student_id, fullname:g.fullname, role:'Guard'};
+  const s = hit(students);
+  /* No scanner_access flag to check any more — ANY active student on the
+     downloaded roster may attempt to go on duty now. The server (api/
+     scanner_session.php) is what actually enforces "only 2 at once", and
+     it refuses (with a clear reason) rather than trusting this list. */
+  if(s) return {student_id:s.student_id, fullname:s.fullname, role:'Student',
+                course:s.course||'', year_level:s.year_level||''};
+  return null;
+}
+
+/* Two states on this screen: typing an ID, and confirming who it belongs to.
+   DUTY_FOUND holds the record between them. */
+let DUTY_FOUND = null;
+
+function dutyShowLookup(){
+  DUTY_FOUND = null;
+  $('marshallFields').style.display = '';
+  $('dutyConfirm').style.display    = 'none';
+  $('dutyBackBtn').style.display    = 'none';
+  $('dutyStartBtn').innerHTML       = 'Continue <svg class="ic"><use href="#i-arrow"/></svg>';
+  refreshDutyBtn();
+}
+
+function dutyShowConfirm(rec){
+  DUTY_FOUND = rec;
+  hideAlert('dutyErr');
+  $('dutyWhoName').textContent = rec.fullname;
+  $('dutyWhoSub').textContent  = (rec.role === 'Guard' ? 'Marshal' : 'Student marshal')
+                               + ' · ID ' + rec.student_id
+                               + (rec.course ? ' · ' + rec.course : '');
+  $('marshallFields').style.display = 'none';
+  $('dutyConfirm').style.display    = '';
+  $('dutyBackBtn').style.display    = '';
+  $('dutyStartBtn').disabled        = false;
+  $('dutyStartBtn').innerHTML       = 'Yes, start scanning <svg class="ic"><use href="#i-arrow"/></svg>';
+}
+
+/* Mark the field wrong, say why under it, and put the caret back in it.
+   Three things, because any one of them alone can be missed: colour for a
+   glance, words for the reason, focus so the fix is one keystroke away. */
+function dutyFieldError(msg){
+  const box = $('m_school'), note = $('m_school_note');
+  box.classList.add('bad','shake');
+  setTimeout(function(){ box.classList.remove('shake'); }, 320);
+  if (note){ note.innerHTML = '<span aria-hidden="true">\u26a0</span><span>' + msg + '</span>'; note.classList.add('show'); }
+  try{ box.focus(); box.select(); }catch(e){}
+}
+function dutyFieldClear(){
+  const box = $('m_school'), note = $('m_school_note');
+  if (box) box.classList.remove('bad');
+  if (note) note.classList.remove('show');
+}
+
+function refreshDutyBtn(){
+  if(DUTY_FOUND) return;                       // already confirmed-ready
+  $('dutyStartBtn').disabled = !$('m_school').value.trim();
+  /* Typing again is the person answering the complaint; stop making it. */
+  dutyFieldClear();
+}
+$('m_school').addEventListener('input', refreshDutyBtn);
+$('m_school').addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ e.preventDefault(); $('dutyStartBtn').click(); }
+});
+$('dutyBackBtn').onclick = () => { dutyShowLookup(); $('m_school').focus(); };
+
+$('dutyStartBtn').onclick = async () => {
+  hideAlert('dutyErr');
+
+  /* Second press: the record is on screen and they said it is them. */
+  if(DUTY_FOUND){
+    const btn = $('dutyStartBtn'), old = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = 'Starting scanner...';
+    let session;
+    try { session = await scannerSession('claim', DUTY_FOUND.student_id); }
+    catch(e){
+      btn.disabled = false; btn.innerHTML = old;
+      return showAlert('dutyErr', e.message || 'The scanner could not start. Check the connection and try again.', 'err');
+    }
+    WHO = {role:'Marshal', name:DUTY_FOUND.fullname, username:'',
+           school:String(DUTY_FOUND.student_id||''), auth:true, session_token:session.session_token};
+    save('vts_who2', JSON.stringify(WHO));
+    paintWho();
+    dutyShowLookup();                          // leave the screen ready for next time
+    goto('scan');
+    return;
+  }
+
+  const school = $('m_school').value.trim();
+  if(!school){ dutyFieldError('Enter your School ID to continue.'); return; }
+
+  if (!SERVER.connected) {
+    return showAlert('dutyErr', 'Connect this scanner to the VTS server before signing in. It refreshes your access and keeps this account active on only one device.', 'err');
+  }
+  $('dutyStartBtn').disabled = true;
+  const refreshed = await refreshLists();
+  if (!refreshed) {
+    refreshDutyBtn();
+    return showAlert('dutyErr', 'We could not refresh scanner access. Check the Wi-Fi or server connection, then try your School ID again.', 'err');
+  }
+
+  /* No lists on this device yet (set up from an old file): let them through
+     and let the server be the judge, rather than blocking a real marshal.
+     The server refuses unknown IDs either way. */
+  if(!guards.length && !students.length){
+    WHO = {role:'Marshal', name:'ID ' + school, username:'', school, auth:false};
+    save('vts_who2', JSON.stringify(WHO));
+    paintWho();
+    goto('scan');
+    return;
+  }
+
+  const rec = findGuard(school);
+  if(!rec){
+    /* Any active student or guard on the roster is a valid duty candidate
+       now — findGuard() no longer filters by a per-account flag — so
+       reaching here means the ID genuinely isn't on this phone's list.
+       Almost always a device holding an old copy of the lists: somebody who
+       registered after this phone last connected cannot be found on it. Say
+       how many people it knows, so "I am not in the system" is tellable from
+       "this phone is out of date". */
+    const known = guards.length + students.length;
+    dutyFieldError('That ID is not on this phone\u2019s list. Check it, or tap Re-sync on the scan screen.');
+    return showAlert('dutyErr',
+        'No one with ID "' + school + '" is on this phone’s list (it knows '
+      + known + ' ' + (known === 1 ? 'person' : 'people') + '). '
+      + 'If you registered recently, tap Re-sync on the scan screen to refresh it. '
+      + 'Otherwise check the ID — it must be the one on your own record.', 'err');
+  }
+  dutyShowConfirm(rec);
+};
+
+async function scannerSession(mode, schoolId){
+  const response = await fetchT(apiUrl('api/scanner_session.php'), {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({mode:mode, school_id:schoolId, session_token:(WHO&&WHO.session_token)||''})
+  }, 9000);
+  let data = {};
+  try { data = await response.json(); } catch(e) {}
+  if (!response.ok || !data.ok) throw new Error(data.error || 'The server could not confirm scanner access.');
+  return data;
+}
+
+async function checkScannerSession(){
+  if (!WHO || !WHO.school || !WHO.session_token) return true;
+  try {
+    await scannerSession('check', WHO.school);
+    return true;
+  } catch(e) {
+    forceScannerLogout(e.message || 'Your scanner session has ended. Enter your School ID again to continue.');
+    return false;
+  }
+}
+
+function paintWho(){
+  if(!WHO) return;
+  $('whoAv').innerHTML='<svg class="ic ic-lg"><use href="#i-user"/></svg>';
+  $('whoShow').textContent=WHO.name+' · Marshal';
+  $('whoSub').textContent='ID '+(WHO.school||'—')
+    + (WHO.auth ? ' — identified from the record on this phone' : ' — not yet checked against the records');
+  $('chipTxt').textContent=WHO.name+' · Marshal';
+  $('whoChip').style.display='inline-flex';
+}
+
+/* ============ STEP 3: student search (offline) ============ */
+function studentMatch(q){
+  q=q.trim().toLowerCase(); if(!q) return [];
+  return students.filter(s=>(
+       (s.student_id||'').toLowerCase().includes(q)
+    || (s.fullname||'').toLowerCase().includes(q)
+    || (s.section||'').toLowerCase().includes(q)
+    || (s.year_level||'').toLowerCase().includes(q)
+    || (s.course||'').toLowerCase().includes(q)
+  )).slice(0,25);
+}
+let lastStuHits=[];
+$('stuSearch').addEventListener('input',()=>{
+  const box=$('stuResults'), q=$('stuSearch').value;
+  if(!q.trim()){ box.innerHTML=''; lastStuHits=[]; return; }
+  if(!students.length){
+    box.innerHTML='<div class="empty">No student list loaded. Import the file from the Head Marshal — or scan a QR / type the exact ID.</div>';
+    return;
+  }
+  lastStuHits=studentMatch(q);
+  if(!lastStuHits.length){ box.innerHTML='<div class="empty">No match. You can still scan the QR or type the exact ID.</div>'; return; }
+  box.innerHTML=lastStuHits.map((s,i)=>`<div class="rItem" data-i="${i}">
+      <div class="rn">${esc(s.fullname||('ID '+s.student_id))}</div>
+      <div class="rs">${esc(s.student_id||'')}${s.section?(' · '+esc(s.section)):''}${s.year_level?(' · '+esc(s.year_level)):''}${s.course?(' · '+esc(s.course)):''}</div>
+    </div>`).join('');
+});
+$('stuResults').addEventListener('click',e=>{
+  const el=e.target.closest('.rItem'); if(!el) return;
+  const s=lastStuHits[+el.dataset.i]; if(s) selectStudent(s);
+});
+
+function selectStudent(s){
+  selStudent={
+    student_id: s.student_id||'',
+    fullname:   s.fullname||('ID '+(s.student_id||'')),
+    section:    s.section||s.set||'',
+    year:       s.year_level||s.year||'',
+    course:     s.course||''
+  };
+  selType=null;
+  $('shInit').textContent=initials(selStudent.fullname);
+  $('shName').textContent=selStudent.fullname;
+  $('shSub').textContent=[selStudent.student_id,selStudent.section,selStudent.year,selStudent.course].filter(Boolean).join(' · ')||'—';
+  // This student's OVERALL running total on this device (every violation, any type).
+  const prior=priorCountFor(selStudent.student_id);
+  $('offText').innerHTML = prior>0
+    ? 'This student already has <b>'+prior+'</b> violation'+(prior===1?'':'s')+' on this device — this will be their <b>Violation #'+(prior+1)+'</b>.'
+    : 'This will be their <b>Violation #1</b> on this device.';
+  $('offNote').style.display='flex';
+  $('vSearch').value=''; paintTypeList('');
+  $('confirmBtn').disabled=true;
+  $('sheet').classList.add('show');
+  $('stuResults').innerHTML=''; $('stuSearch').value='';
+  $('sheet').scrollIntoView({behavior:'smooth',block:'center'});
+  /* NOT beginProofCapture() any more. The camera stays on the QR reader
+     until the violation is actually chosen -- see the note on
+     beginProofCapture(). Picking a student is only half a record. */
+  setProofStatus('Proof after the violation', 'wait');
+  /* Step 2 is the violation list. Said in the same place as every
+     other instruction, so a new marshal has one line to read, not a
+     screen to decode. */
+  $('camStepN').textContent = '2';
+  $('camHint').innerHTML = '<b>Step 2 — choose the violation</b>Pick it from the list below. The camera then asks for the proof photo.';
+}
+
+/* =====================================================================
+   PROOF PHOTO  —  scan ▸ cooldown ▸ capture ▸ attach
+   ---------------------------------------------------------------------
+   The camera is ALREADY open and streaming for the QR read, so the photo
+   costs nothing extra: a frame is copied out of the running video. There
+   is no second getUserMedia, no second permission prompt, and no pause
+   while a camera warms up.
+
+   WHY THE COOLDOWN COMES FIRST
+   Two different jobs share the word. This one is short on purpose:
+
+     * it locks the ID that was just read, so a QR held in front of the
+       lens for two seconds cannot file the same violation twice, and
+     * it gives the student a moment to look up from the code they were
+       presenting, so the frame shows a face and not the top of a head.
+
+   It is NOT the duplicate guard for the system as a whole — the server
+   keeps its own 120-second window (import_scan_file), which catches the
+   same scan arriving twice by different routes. Keep this one measured in
+   seconds; stretched to a minute the photo would be of an empty gateway.
+   ===================================================================== */
+/* THESE WERE ONE CONSTANT, AND THAT WAS THE BUG.
+
+   COOLDOWN_MS = 2500 was both the shutter delay AND the per-ID rescan
+   lock, so the lock expired on the same tick the shutter fired. The
+   marshal is holding the phone at the student at that exact moment --
+   the code above asks them to -- so the QR is still in frame, and the
+   detector runs every 320ms while the whole-reader lock is only 900ms.
+   The very next frame therefore passed both gates, called selectStudent()
+   again, and beginProofCapture() wiped the photo just taken and armed
+   another shutter. Every 2.5 seconds, forever: the camera taking and
+   retaking a picture by itself.
+
+   Split, the shutter keeps its short delay and the lock comfortably
+   outlasts it, so no frame can land in the gap. */
+/* THE SHUTTER IS THE MARSHAL'S, AND ONLY THE MARSHAL'S.
+
+   There used to be an automatic one: the sheet armed a timer and the
+   camera fired on its own a couple of seconds later. It was well meant --
+   hands full, student waiting -- but a shutter that fires by itself
+   photographs whatever the lens happens to be pointed at when the clock
+   runs out, and that turned out to be the pavement more often than the
+   student. A photo nobody chose to take is not evidence anybody can use.
+
+   So there is no timer any more. The picture is taken when a person
+   presses the button and at no other moment. PHOTO_DELAY_MS is gone with
+   it; RESCAN_LOCK_MS below is unrelated and stays. */
+const RESCAN_LOCK_MS  = 8000;   // same student cannot be filed again this soon
+const PHOTO_MAX_PX = 480;       // longest edge — a face at a gate, not a portrait
+const PHOTO_QUALITY = 0.62;     // ~20-30KB a frame; see recSet() on why size matters
+
+let pendingPhoto = null;        // data: URL for the scan being filed
+/* No shutter timer and no countdown: the photo is taken by hand. */
+const idCooldown = Object.create(null);   // student id -> timestamp it frees up
+
+/* The <video> the camera is currently painting into, whichever of the two
+   scanner paths is running. The native path builds its own element; the
+   html5-qrcode fallback injects one into #reader. */
+function liveVideo(){
+  if (nativeVideo && nativeVideo.readyState >= 2) return nativeVideo;
+  const v = document.querySelector('#reader video');
+  return (v && v.readyState >= 2) ? v : null;
+}
+
+function capturePhoto(){
+  const v = liveVideo();
+  if(!v || !v.videoWidth) return null;
+  try{
+    const scale = Math.min(1, PHOTO_MAX_PX / Math.max(v.videoWidth, v.videoHeight));
+    const w = Math.max(1, Math.round(v.videoWidth  * scale));
+    const h = Math.max(1, Math.round(v.videoHeight * scale));
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    c.getContext('2d').drawImage(v, 0, 0, w, h);
+    /* JPEG, not PNG: a camera frame as PNG is several times larger, and it
+       has to survive being carried inside a .vtsl on a USB stick. */
+    return c.toDataURL('image/jpeg', PHOTO_QUALITY);
+  }catch(e){ return null; }     // tainted canvas / stream died mid-frame
+}
+
+/* =====================================================================
+   ONE CAMERA, THREE STAGES
+   ---------------------------------------------------------------------
+   There used to be two live views: the QR reader here, and a second
+   <video> inside the violation sheet fed from the same stream. Once a
+   student was picked, the marshal was looking at two moving pictures of
+   the same lens a few inches apart and had to work out which one the
+   shutter belonged to -- and the shutter was counting down against the
+   one further from their eye.
+
+   There is one camera now. It changes JOB, and says which job it is on:
+
+     scanning  the lens is reading QR codes. No shutter is offered,
+               because a shutter here photographs a QR code.
+     proof     a student AND a violation are settled, so the same lens is
+               now aiming the evidence photo.
+     shot      the frame is taken and is shown in the very box the live
+               view occupied, so the picture appears exactly where the
+               marshal was already looking.
+
+   The stage is never guessed from other state; camStage() is the only
+   thing that sets it, so the badge, the hint, the shutter and the outline
+   cannot disagree with each other.
+   ===================================================================== */
+function camStage(stage){
+  const box = $('camStage');
+  if (box) box.setAttribute('data-stage', stage);
+  const txt = $('camBadgeTxt');
+  if (txt) txt.textContent = stage === 'scanning' ? 'Scanning'
+                           : stage === 'proof'    ? 'Aiming' : 'Photo taken';
+
+  /* One control row, three shapes. The shutter exists only while the lens
+     is actually aiming a photo -- offered while it is still reading QR
+     codes, it is a shutter that photographs a QR code. */
+  const bar = $('proofBar');
+  bar.style.display = (stage === 'scanning') ? 'none' : 'block';
+  bar.classList.toggle('is-aim',  stage === 'proof');
+  bar.classList.toggle('is-done', stage === 'shot');
+
+  /* The student is already chosen by the time the camera wants a photo, so
+     a "search a student" box under the viewfinder is only an invitation to
+     undo the thing you are in the middle of. */
+  const sb = $('searchBlock');
+  if (sb) sb.style.display = (stage === 'scanning') ? '' : 'none';
+
+  // Where the marshal is, in three steps.
+  const n = $('camStepN'), strip = $('camStep');
+  if (n) n.textContent = stage === 'scanning' ? '1' : stage === 'proof' ? '3' : '\u2713';
+  if (strip) strip.classList.toggle('done', stage === 'shot');
+}
+
+/* The chip in the sheet REPORTS; it never instructs. The instruction lives
+   in exactly one place -- the hint under the camera. Three copies of "now
+   take the photo", each counting the same seconds down, is what made this
+   screen hard to read at a gate. */
+function setProofStatus(text, kind){
+  const el = $('proofState'), t = $('proofStateTxt');
+  if (!el || !t) return;
+  t.textContent = text;
+  el.className = 'proofChip ' + (kind || 'wait');
+}
+
+function showProof(dataUrl){
+  pendingPhoto = dataUrl || null;
+  const img = $('proofImg');
+
+  if (pendingPhoto){
+    img.src = pendingPhoto;
+    img.style.display = 'block';
+    camStage('shot');
+    $('camHint').innerHTML = '<b>Photo taken — that is everything.</b>Check the picture shows the student, then press <b>Use this photo</b> and Confirm below.';
+    setProofStatus('Proof attached', 'ok');
+  }else{
+    img.style.display = 'none'; img.removeAttribute('src');
+    camStage('proof');
+    /* Said plainly. A marshal who does not know the photo failed will file
+       the violation believing it is backed by one. */
+    $('camHint').innerHTML = '<b>No photo — the camera is not running.</b> The violation still records without one.';
+    setProofStatus('No proof — camera off', 'warn');
+  }
+  updateConfirmState();
+}
+
+/* ---- "NOW TAKE A PROOF" -------------------------------------------
+
+   This used to fire the moment a student was chosen, which was too early
+   in two ways: the marshal was still reading the violation list, so the
+   countdown ran out against the back of a phone pointed at the ground;
+   and the record had nothing decided about it yet, so a photo taken then
+   was proof of nothing in particular.
+
+   It is asked for when the violation is settled instead -- student known,
+   offence chosen, detail written if one is needed. That is the moment the
+   record is complete except for its evidence, and the moment the marshal
+   is ready to look up. The automatic shutter is kept as the fallback for
+   hands that are full; the button is there for everyone else. */
+function beginProofCapture(){
+  pendingPhoto = null;
+  const img = $('proofImg');
+  img.style.display = 'none'; img.removeAttribute('src');
+
+  if (!liveVideo()){
+    camStage('proof');
+    $('camHint').innerHTML = '<b>No photo — the camera is not running.</b> The violation still records without one.';
+    setProofStatus('No proof — camera off', 'warn');
+    updateConfirmState();
+    return;
+  }
+
+  camStage('proof');
+  $('camHint').innerHTML = '<b>Step 3 — take the proof photo</b>Point the camera at the student, then press the round button. The violation cannot be recorded without it.';
+  setProofStatus('Proof needed', 'warn');
+  updateConfirmState();
+}
+
+/* Back to the QR reader: the sheet closed, or the record was filed. */
+function endProofCapture(){
+  const img = $('proofImg');
+  if (img){ img.style.display = 'none'; img.removeAttribute('src'); }
+  camStage('scanning');
+  setProofStatus('Proof after the violation', 'wait');
+  $('camHint').innerHTML = "<b>Step 1 — scan the student</b>Point the camera at their QR code, or search for them below.";
+}
+
+/* The shutter. There is exactly one way to reach it: a person pressing
+   the round button. */
+function takeProof(){
+  showProof(capturePhoto());
+}
+
+$('shootBtn').onclick  = takeProof;
+/* "Use this photo" files nothing by itself -- the frame is attached the
+   moment it is taken. It is the button that says "I have looked at it",
+   and it puts Confirm in front of the marshal instead of leaving them to
+   scroll the sheet hunting for it. */
+$('usePhotoBtn').onclick = function(){
+  const c = $('confirmBtn');
+  if (!c) return;
+  try{ c.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){}
+  if (!c.disabled){ try{ c.focus(); }catch(e){} }
+};
+$('retakeBtn').onclick = beginProofCapture;   // back to aiming, never a blind re-grab
+
+/* ============ violation search / pick ============ */
+let lastTypeList=[];
+function paintTypeList(q){
+  q=(q||'').trim().toLowerCase();
+  lastTypeList = q ? types.filter(t=>t.violation_name.toLowerCase().includes(q)) : types.slice();
+  $('vList').innerHTML = lastTypeList.length
+    ? lastTypeList.map((t,i)=>`<div class="vRow" data-i="${i}">
+         <span>${esc(t.violation_name)}</span>
+         <span class="pick"><svg class="ic"><use href="#i-check"/></svg></span></div>`).join('')
+    : '<div class="empty" style="color:#5b6b83">No violation matches that search.</div>';
+}
+$('vSearch').addEventListener('input',()=>paintTypeList($('vSearch').value));
+/* Does this type need the marshal to say what actually happened?
+   "Others" and anything phrased like it ("Other offense", "Others —
+   specify") name a category rather than an act, so the record is useless to
+   the office without a line of detail. */
+function typeNeedsDetail(t){
+  return /^\s*other/i.test((t && t.violation_name) || '');
+}
+
+function syncOtherBox(){
+  const need = typeNeedsDetail(selType);
+  $('otherWrap').style.display = need ? '' : 'none';
+  if(!need){ $('otherText').value = ''; }
+  updateOtherCount();
+  updateConfirmState();
+}
+function updateOtherCount(){
+  const left = 200 - $('otherText').value.length;
+  $('otherLeft').textContent = left;
+}
+/* Confirm stays locked until there is a type AND, for an "Others", something
+   written in the box — an empty one would file a record saying nothing. */
+/* WHAT A COMPLETE RECORD IS NOW.
+
+   A violation needs three things before it can be filed, and the proof
+   photo is one of them. It used to be optional: a record could go to the
+   office backed by nothing, and there was no way for anyone downstream to
+   tell whether the photo was missing because the camera failed or because
+   nobody bothered. A record that cannot be checked is a record that cannot
+   be defended when the student disputes it.
+
+   CONSEQUENCE, STATED PLAINLY: if the camera cannot start -- permission
+   denied, no camera, a browser that blocks it -- then NOTHING can be
+   recorded on that device. That is the requirement working as asked, not a
+   fault, but it does mean a blocked camera now stops a shift rather than
+   degrading it. The camera-off message says exactly that, and offers the
+   one thing that fixes it. */
+function updateConfirmState(){
+  const typeOk   = !!selType && (!typeNeedsDetail(selType) || $('otherText').value.trim().length >= 3);
+  const proofOk  = !!pendingPhoto;
+  $('confirmBtn').disabled = !(typeOk && proofOk);
+
+  /* The button says WHY it is not available. A disabled control with no
+     reason is the single most common way an app looks broken. */
+  const label = $('confirmLabel');
+  if (label){
+    label.textContent = !typeOk  ? 'Choose the violation first'
+                      : !proofOk ? 'Take the proof photo first'
+                      : 'Confirm violation';
+  }
+}
+$('otherText').addEventListener('input', ()=>{
+  updateOtherCount(); updateConfirmState();
+  /* Once the description is real, the record is complete except for the
+     photo -- same moment as picking any other violation type. Only moves
+     the camera into the proof stage if it is not already there, so typing
+     on does not keep resetting the screen under the marshal. */
+  if(selType && typeNeedsDetail(selType)
+     && $('otherText').value.trim().length >= 3
+     && !pendingPhoto
+     && $('camStage').getAttribute('data-stage') !== 'proof'){
+    beginProofCapture();
+  }
+});
+
+$('vList').addEventListener('click',e=>{
+  const el=e.target.closest('.vRow'); if(!el) return;
+  selType=lastTypeList[+el.dataset.i]; if(!selType) return;
+  document.querySelectorAll('#vList .vRow').forEach(r=>r.classList.remove('sel'));
+  el.classList.add('sel');
+  syncOtherBox();
+  if(typeNeedsDetail(selType)) $('otherText').focus();
+  /* The record is complete except for its evidence, so now ask for it.
+     An "Others" still needs its sentence typed first, or the shutter would
+     count down while the marshal is looking at a keyboard. */
+  if(!typeNeedsDetail(selType)) beginProofCapture();
+  else setProofStatus('Describe it, then take the proof', 'wait');
+});
+
+$('confirmBtn').onclick=()=>{
+  if(!selStudent || !selType) return;
+  const num=priorCountFor(selStudent.student_id)+1;   // this student's OVERALL running total on this device
+  const rec=recAdd({
+    _id: uid(), synced:false,
+    student_id:   selStudent.student_id,
+    student_name: selStudent.fullname,
+    section:      selStudent.section,
+    year:         selStudent.year,
+    course:       selStudent.course,
+    violation_type: selType.id || null,
+    violation_name: selType.violation_name,
+    // What the marshal typed for an "Others". Empty for every other type.
+    violation_detail: typeNeedsDetail(selType) ? $('otherText').value.trim() : '',
+    scanner_name:      WHO.name,
+    scanner_role:      WHO.role,
+    scanner_school_id: WHO.school||'',
+    scanned_at:        new Date().toISOString(),
+    /* WHERE THE FRAME IS. Not here: the record in localStorage keeps a
+       flag, and the bytes go to IndexedDB under this record's id (see the
+       photo store above). Putting the data: URL in the record is what used
+       to blow the 5MB localStorage budget mid-shift and get the evidence
+       deleted before the offline export was ever written.
+
+       has_photo is what every screen reads to know proof exists. The bytes
+       are fetched only by the export and the sync, through withPhotos(),
+       so the proof still never gets separated from its violation. */
+    has_photo: !!pendingPhoto,
+    photo_id:  null
+  });
+  /* Write the frame under the id recAdd() just handed back.
+
+     THE SYNC MUST WAIT FOR THIS. Storing the photo is an IndexedDB
+     transaction, so it completes a tick or two later -- and trySync()
+     below used to fire immediately, read the record, find nothing in the
+     store yet and send the violation to the server WITHOUT its proof.
+     The record then came back marked synced and was never re-sent, so the
+     photo sat on the phone for the rest of the shift while the office saw
+     a violation with no evidence attached. That is why proof taken on the
+     scanner was not appearing in the admin.
+
+     The sheet still closes instantly -- showOkay() below is synchronous.
+     Only the upload waits, and only for as long as one local write. */
+  const rid = rec._id;
+  const photoReady = pendingPhoto
+    ? photoPut(rid, pendingPhoto).then(okPhoto => {
+        if (!okPhoto) recUpdate(rid, {has_photo:false, photo_failed:true});
+        else recUpdate(rid, {photo_id:rid});
+      }).catch(() => { recUpdate(rid, {has_photo:false, photo_failed:true}); })
+    : Promise.resolve();
+  const detail = typeNeedsDetail(selType) ? $('otherText').value.trim() : '';
+  const label = selStudent.fullname + '\nViolation #' + num + ' for this student\n'
+              + selType.violation_name + (detail ? ': ' + detail : '');
+  // If connected online, the scan syncs to the server right away (or queues
+  // silently and catches up once the connection is back). Either way it's
+  // also saved on this device and can still be exported as a .vtsl.
+  showOkay(label, SERVER.connected ? 'Saved — syncing…' : 'Saved on this device.');
+  // Only after the frame is actually in the store (see above).
+  photoReady.then(() => { if (SERVER.connected) trySync(); });
+};
+$('dismissBtn').onclick=resetSheet;
+
+function resetSheet(){
+  /* Re-arm the per-student lock HERE, not only at the scan. The sheet can
+     be open for a while, and the QR is often still in front of the lens
+     when it closes -- without this the same student is picked up again the
+     instant the sheet clears and the marshal files them twice. Measured
+     from the moment the record is actually dealt with. */
+  if(selStudent && selStudent.student_id){
+    idCooldown[selStudent.student_id.toLowerCase()] = Date.now() + RESCAN_LOCK_MS;
+  }
+  $('sheet').classList.remove('show');
+  selStudent=null; selType=null; $('confirmBtn').disabled=true;
+  $('otherText').value=''; $('otherWrap').style.display='none'; updateOtherCount();
+  /* Drop the photo with the sheet. A pending shutter left running would
+     otherwise fire into the NEXT student's record, and a kept frame would
+     attach one student's picture to another's violation. */
+  pendingPhoto=null;
+  /* The one camera goes back to reading QR codes, and any shutter still
+     counting down is cancelled with it -- left running it would fire into
+     the NEXT student's record. */
+  endProofCapture();
+}
+function showOkay(msg,next){
+  $('scanUi').style.display='none';
+  $('bigOkMsg').textContent=msg;
+  if(next) $('bigOkNext').textContent=next;
+  $('bigOk').classList.add('show');
+  clearTimeout(showOkay._t);
+  showOkay._t=setTimeout(()=>{ $('bigOk').classList.remove('show'); $('scanUi').style.display='block'; resetSheet(); },1700);
+}
+
+/* ============ camera / QR ============ */
+let nativeStream=null, nativeVideo=null, nativeTimer=null, nativeDetector=null;
+function secureOK(){
+  if(window.isSecureContext) return true;
+  return ['localhost','127.0.0.1'].includes(location.hostname);
+}
+async function startCamera(){
+  if(scanner || nativeStream) return;
+  if(!secureOK()){
+    $('camHint').innerHTML='<b>Camera needs a secure link.</b><br>Open this scanner from its <b>https://</b> web address. '
+      +'You can still search a student below or type the ID.';
+    return;
+  }
+  if('BarcodeDetector' in window && navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+    try{
+      const fmts = await window.BarcodeDetector.getSupportedFormats();
+      if(fmts.includes('qr_code')){ await startNative(); return; }
+    }catch(e){}
+  }
+  if(typeof Html5Qrcode==='undefined'){
+    $('camHint').innerHTML='<b>Camera scanner is loading…</b><br>If it doesn\'t start, search the student below or type the ID.';
+    return;
+  }
+  try{ scanner=new Html5Qrcode('reader'); }catch(e){ scanner=null; return; }
+  scanner.start({facingMode:'environment'},{fps:10,qrbox:200},onScan,()=>{})
+    .catch(err=>{ scanner=null;
+      const denied=(''+err).toLowerCase().includes('permission')||(''+err).toLowerCase().includes('notallowed');
+      $('camHint').innerHTML = denied
+        ? '<b>Camera permission was blocked.</b><br>Allow the camera for this site, then reopen. Or search below.'
+        : '<b>Camera is off.</b><br>No problem — search the student below or type the ID.'; });
+}
+async function startNative(){
+  try{
+    nativeDetector = new window.BarcodeDetector({formats:['qr_code']});
+    nativeStream   = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    const reader=$('reader'); reader.innerHTML='';
+    nativeVideo=document.createElement('video');
+    nativeVideo.setAttribute('playsinline',''); nativeVideo.muted=true;
+    nativeVideo.style.cssText='width:100%;height:100%;object-fit:cover;';
+    nativeVideo.srcObject=nativeStream; reader.appendChild(nativeVideo);
+    await nativeVideo.play();
+    $('camHint').innerHTML = "<b>Step 1 — scan the student</b>Point the camera at their QR code, or search for them below.";
+    const tick=async()=>{
+      if(!nativeVideo) return;
+      try{ const codes=await nativeDetector.detect(nativeVideo);
+           if(codes && codes.length && codes[0].rawValue) onScan(codes[0].rawValue); }catch(e){}
+      nativeTimer=setTimeout(tick, 320);
+    };
+    tick();
+  }catch(err){
+    stopNative();
+    const denied=(''+err).toLowerCase().includes('permission')||(''+err).toLowerCase().includes('notallowed');
+    $('camHint').innerHTML = denied
+      ? '<b>Camera permission was blocked.</b><br>Allow the camera for this site, then reopen. Or search below.'
+      : '<b>Camera couldn\'t start.</b><br>Search the student below or type the ID.';
+  }
+}
+function stopNative(){
+  if(nativeTimer){ clearTimeout(nativeTimer); nativeTimer=null; }
+  if(nativeStream){ nativeStream.getTracks().forEach(t=>t.stop()); nativeStream=null; }
+  if(nativeVideo){ nativeVideo.srcObject=null; nativeVideo=null; }
+}
+function stopCamera(){
+  stopNative();
+  if(scanner){ scanner.stop().then(()=>{scanner.clear();scanner=null;}).catch(()=>{scanner=null;}); }
+}
+function onScan(text){
+  /* Two locks, because they stop different things.
+
+     lockUntil is the WHOLE READER: the detector runs every 320ms, so one
+     QR held in the frame fires this handler five or six times a second.
+     Without it the sheet would be rebuilt underneath the marshal's finger.
+
+     idCooldown is PER STUDENT and outlasts the sheet: it is what stops the
+     same ID being filed twice in a row, whether by a code left in front of
+     the lens or by someone presenting it again a moment later. */
+  if(Date.now()<lockUntil) return; lockUntil=Date.now()+900;
+  const parts=(text||'').split('|').map(x=>x.trim());   // QR: ID|Name|Year|Course|Section
+  const sid=parts[0]||''; if(!sid) return;
+
+  const key = sid.toLowerCase();
+
+  /* THE SHEET IS A STEP THE MARSHAL IS IN THE MIDDLE OF, NOT A LIVE VIEW.
+
+     Nothing a camera sees may rebuild it. selectStudent() resets the
+     violation type, the note, the running total and the proof photo -- run
+     it again underneath someone who is half way through filing and their
+     work is gone, and the photo they were looking at is replaced by a new
+     one of whatever the lens happens to be pointed at.
+
+     This is the guard that actually holds: the timing fix above stops the
+     frames from lining up, but a lock can always be waited out, and a QR
+     left propped against the lens will wait out anything. Only the search
+     results below may switch student now, because tapping one is a
+     deliberate act. */
+  if($('sheet').classList.contains('show')){
+    const same = selStudent && (selStudent.student_id||'').toLowerCase() === key;
+    $('camHint').innerHTML = same
+      ? '<b>Already filing this student.</b><br>Finish below, or tap Dismiss to start again.'
+      : '<b>Finish this one first.</b><br>Confirm or dismiss the violation below, then scan '+esc(sid)+'.';
+    return;
+  }
+
+  const until = idCooldown[key] || 0;
+  if(Date.now() < until){
+    /* Say so rather than ignoring it. A scanner that does nothing looks
+       broken, and the marshal's next move is to scan harder. */
+    const left = Math.ceil((until - Date.now())/1000);
+    $('camHint').innerHTML = '<b>Just scanned.</b><br>Wait ' + left + 's before scanning ' + esc(sid) + ' again.';
+    return;
+  }
+  idCooldown[key] = Date.now() + RESCAN_LOCK_MS;
+  const found=students.find(s=>(s.student_id||'').toLowerCase()===sid.toLowerCase());
+  if(found) return selectStudent(found);
+
+  /* NOT ON THIS PHONE'S LIST.
+     This used to accept the scan anyway, taking the name straight off the
+     QR. It looked recorded, sat in the list all shift, and was then thrown
+     out at sync with "no active student for that ID" -- the marshal only
+     found out hours later, if at all. Nearly always the list is simply
+     out of date, which Re-sync fixes in a tap, so say so NOW while the
+     student is still standing there. */
+  if(students.length){
+    const go = confirm(
+        'ID ' + sid + ' is not on this phone\u2019s student list (' + students.length + ' students).\n\n'
+      + 'If they registered recently, tap Cancel, then Re-sync, and scan again.\n\n'
+      + 'Record it anyway? The office will have to match it up by hand, and it may be rejected.');
+    if(!go) return;
+  }
+  selectStudent({ student_id:sid, fullname:parts[1]||('ID '+sid), year_level:parts[2]||'', course:parts[3]||'', section:parts[4]||'', _unknown:true });
+}
+
+/* Whether this record is backed by a photo, stated in the list.
+
+   Without it a marshal could work a whole shift unable to tell which
+   violations went out with proof and which did not -- and the one moment
+   that can still be fixed is while the student is standing there. The
+   three states are deliberately different things: the frame is on this
+   phone, the server already has it, or there is none. */
+function proofBadge(r){
+  const has = !!(r.photo || r.has_photo || r.photo_id);
+  if (has)            return '<span class="pbadge pb-yes" title="A proof photo is attached and will go out with this record">photo</span>';
+  if (r.photo_synced) return '<span class="pbadge pb-yes" title="The proof photo is already on the server">photo sent</span>';
+  return '<span class="pbadge pb-no" title="No proof photo is attached to this record">no photo</span>';
+}
+
+/* ============ records list + Excel export ============ */
+function paintRecords(){
+  const a=recGet();
+  // The number shown is EACH STUDENT'S OWN running total of violations, in the
+  // order recorded (oldest first). Every violation counts — a repeat of the same
+  // one still adds to that student's total.
+  const counters={};
+  a.forEach(r=>{ const k=(r.student_id||'').toLowerCase(); counters[k]=(counters[k]||0)+1; r._pnum=counters[k]; });
+  const un=a.filter(r=>!r.synced).length;
+  $('recCount').textContent=a.length;
+  $('recEmpty').style.display=a.length?'none':'block';
+  $('recList').innerHTML=a.map(r=>`<div class="recRow">
+      <span class="rnum" title="This student's own violation count">#${r._pnum}</span>
+      <div class="mid">
+        <div class="rt">${esc(r.student_name)} — ${esc(r.violation_name)}
+          <span class="sbadge ${r.synced?'sb-synced':(r.rejected?'sb-held':'sb-queued')}"
+                title="${r.synced?'Stored on the server':(r.rejected?'The server would not take this one — it still goes out in the end-of-shift export':'Waiting to sync')}">${r.synced?'synced':(r.rejected?'held':'queued')}</span></div>
+        <div class="rd">${esc(r.student_id)}${r.section?(' · '+esc(r.section)):''} · ${fmtDT(r.scanned_at)}
+          ${proofBadge(r)}</div>
+      </div>
+      <button class="del" title="Remove" onclick="delRecord('${r._id}')"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>`).join('');
+  if($('syncNowBtn')) $('syncNowBtn').style.display = (SERVER.connected && un>0) ? 'block' : 'none';
+  // Say where the records actually ARE right now — a queued record is safe
+  // on the phone and still leaves in the .vtsl, which is the thing people
+  // most need to be sure of when the pill is not green.
+  $('syncStatus').textContent = !a.length ? ''
+    : !SERVER.connected
+      ? (a.length+' record(s) saved on this device. Finish the session to export the encrypted .vtsl file.')
+      : NETSTATE === 'live'
+        ? (un>0 ? (un+' of '+a.length+' record(s) still going up\u2026')
+                : ('All '+a.length+' record(s) synced to the server.'))
+        : (un+' of '+a.length+' record(s) waiting — the server isn\u2019t reachable. They are safe on this phone and will sync on their own, and they are in the end-of-shift export either way.');
+}
+function delRecord(id){
+  photoDel(id);                                  // the frame goes with the record
+  const a=recGet().filter(r=>r._id!==id); recSet(a);
+}
+
+/* Scan records leave this phone in ONE shape: the AES-GCM encrypted .vtsl
+   the office decrypts on import.
+
+   It used to write a real .xlsx (and a CSV when the Excel writer was
+   missing) -- a plain list of student names against what each was booked
+   for, sitting in the phone's Downloads folder and then on a USB passed
+   between people. Anyone who picked either up could read the lot. The
+   records are the same; only the wrapper changed.
+
+   The .xlsx reader is still loaded, because the student-list the Head
+   Marshal hands out may be a spreadsheet. Reading one is fine -- writing
+   one is what leaked. */
+function downloadBlob(blob, fname){
+  const el=document.createElement('a');
+  el.href=URL.createObjectURL(blob); el.download=fname;
+  document.body.appendChild(el); el.click(); el.remove();
+  setTimeout(()=>URL.revokeObjectURL(el.href),4000);
+}
+
+/* File name carries WHO exported it and WHEN, e.g.
+   VTS_Scans_R-Santos_2026-07-23_1405.vtsl — the Head Marshall receives files
+   from several marshals, so the name has to say whose day it is. */
+function exportBaseName(){
+  const who=(WHO && WHO.name ? WHO.name : 'Scanner')
+              .replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  const stamp=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes());
+  return 'VTS_Scans_'+who+'_'+stamp;
+}
+
+/* The payload the PHP importer reads, shared by both export buttons so a
+   mid-shift copy and the end-of-shift hand-over are the same file. */
+async function buildScanPayload(who, auth){
+  /* withPhotos() is the whole point of the export being async now: the
+     frames live in IndexedDB, and this is where they are put back into the
+     records so the .vtsl the office imports carries its proof. */
+  return {
+    app:'VTS-SCANNER', type:'violations', v:1,
+    exported_at:new Date().toISOString(),
+    exported_by:who,
+    authorised_by:auth || '',
+    scanner_name:who,
+    records: await withPhotos(recGet())
+  };
+}
+
+/* Why an export can be impossible: crypto.subtle is only handed to a page in
+   a SECURE CONTEXT (https://, or localhost). A phone opening this scanner at
+   http://192.168.x.x -- the ordinary school-Wi-Fi setup -- does not get it,
+   and that is precisely where the old code quietly wrote the records out in
+   the clear instead. Nothing is lost when this happens: the records stay on
+   the device, and Sync now sends them the moment the server is reachable. */
+function explainNoCrypto(){
+  return 'This phone cannot encrypt the file here, so the records were NOT written out — '
+       + 'saving them readable would put every student name on the USB.\n\n'
+       + 'Nothing is lost. Either:\n'
+       + '  • use "Sync now" while the server is reachable, or\n'
+       + '  • open this scanner from its https:// address and export again.\n\n'
+       + 'The records stay on this phone until then.';
+}
+
+async function doExport(){
+  const a=recGet();
+  if(!a.length) return alert('Nothing to export yet.');
+  const who = (WHO && WHO.name) ? WHO.name : (saved('vts_selfmarshal') || 'Marshal');
+  const base = exportBaseName();
+  try{
+    const env = await vtsEncryptEnvelope(await buildScanPayload(who, ''));
+    downloadBlob(new Blob([env],{type:'application/octet-stream'}), base+'.vtsl');
+    alert('Exported '+a.length+' record(s) as '+base+'.vtsl\n\n'
+        + 'Encrypted — hand it to the Head Marshal to import. This does NOT end your shift.');
+  }catch(e){
+    alert(explainNoCrypto());
+  }
+}
+
+/* The mid-shift "export a copy" button was replaced by Re-sync, so nothing
+   binds to it any more. doExport() stays because Finish session uses the
+   same encrypt-and-download path for the hand-over file. */
+
+/* ---------- END OF SESSION ----------
+   One button closes the shift: it writes Records.csv (the format Admin/OSA
+   import), marks everything exported, and tells the marshal what to do with
+   the file. CSV — not xlsx — because it has to survive a USB copy onto any
+   machine and be importable even with no Excel and no internet.
+
+   The authorise step is OPTIONAL: if a Head Marshal/Admin name+ID is on this
+   device it is stamped into the file as the person who released it. Nothing
+   blocks the export — the gate must never stop because nobody is around. */
+/* Standard filename: Exported_Violations_YYYY-MM-DD_HH-MM_RecorderName.vtsl */
+function violationsFileName(who){
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  const stamp=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'_'+p(d.getHours())+'-'+p(d.getMinutes());
+  const name=String(who||'Marshal').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'Marshal';
+  return 'Exported_Violations_'+stamp+'_'+name;
+}
+
+async function finishSession(){
+  const a = recGet();
+  if(!a.length) return alert('No records on this device yet — nothing to finish.');
+
+  // WHO is the marshal signed in on the duty screen (same identity every
+  // scanned row already carries).
+  const who = (WHO && WHO.name) ? WHO.name : (saved('vts_selfmarshal') || 'Marshal');
+  if(!confirm('Finish this session?\n\n'
+    + a.length + ' record(s) will be exported as an encrypted .vtsl file.\n'
+    + 'Marshal on duty: ' + who + '\n\n'
+    + 'Return the USB to the Head Marshal, who imports it into the system.')) return;
+
+  // Optional authorisation — leave blank to skip.
+  const auth = (prompt(
+      'OPTIONAL — who is authorising this hand-over?\n'
+    + 'Type the Head Marshal / Admin name, or leave blank and press OK to skip.', '') || '').trim();
+
+  const base = violationsFileName(who);
+  // The payload the PHP importer reads: a "records" array of scan objects,
+  // each already carrying student_id, violation_name, scanner_name/role and
+  // the real scanned_at time. Same builder the copy-export uses.
+  const payload = await buildScanPayload(who, auth);
+  /* Counted from what is actually in the file, not from what was intended.
+     The offline hand-over used to lose photos to the storage limit long
+     before this point, and nobody was ever told -- so the number is stated
+     out loud now and can be checked against the records list. */
+  const shotCount = payload.records.filter(r => !!r.photo).length;
+
+  try{
+    const env = await vtsEncryptEnvelope(payload);   // encrypted .vtsl
+    downloadBlob(new Blob([env],{type:'application/octet-stream'}), base+'.vtsl');
+  }catch(e){
+    /* There used to be a fallback here that wrote the whole shift out as
+       plain JSON whenever encryption was unavailable -- and it is unavailable
+       in exactly the ordinary case, a phone on http://192.168.x.x, because
+       crypto.subtle is only given to a secure context. So the "encrypted
+       hand-over" was routinely a readable file of student names and offences.
+
+       Refusing costs nothing: the records are still on the device, Sync now
+       still works, and the shift is NOT marked finished below -- so the
+       marshal can close it properly once they are on https or in range of
+       the server. */
+    alert(explainNoCrypto());
+    return;
+  }
+
+  // Mark exported, but DO NOT delete: the marshal clears only after the office
+  // confirms the import.
+  recSet(a.map(r => Object.assign({}, r, {exported:true})));
+
+  // Free this marshal's duty slot — the shift is genuinely over. Best-effort,
+  // not awaited: the export above already succeeded and must not wait on it.
+  if (SERVER.connected && WHO && WHO.school) {
+    scannerSession('release', WHO.school).catch(() => {});
+  }
+
+  alert('Session finished.\n\n'
+      + a.length + ' record(s) exported as ' + base + '.vtsl'
+      + '\n' + shotCount + ' of them carry a proof photo.'
+      + (auth ? ('\nAuthorised by: ' + auth) : '')
+      + '\n\nReturn the USB to the Head Marshal to import.\n'
+      + 'Keep the records on this device until the office confirms.');
+}
+if($('finishBtn')) $('finishBtn').onclick = finishSession;
+$('clearBtn').onclick=()=>{
+  const a=recGet(); if(!a.length) return;
+  const un=a.filter(r=>!r.synced).length;
+  const msg = un>0
+    ? un+' record(s) are NOT synced/exported yet. Clear ALL records anyway?'
+    : 'Clear all records on this phone? Make sure you exported or synced them first.';
+  if(confirm(msg)){
+    a.forEach(r => photoDel(r.photo_id || r._id));   // do not leave orphaned frames behind
+    recSet([]);
+  }
+};
+
+/* (Staff re-auth removed — marshal-only scanner, no Admin/OSA login needed.) */
+
+/* ---------- Online sync ----------
+   Same trust model as the rest of this scanner: no login required, the
+   marshal's self-declared name/School ID is stamped on the record exactly
+   like the offline .vtsl export already does. This can only add a
+   violation for a student who already exists on the server — it can't
+   create, edit or delete accounts. */
+/* Returns 'ok' (stored), 'rejected' (the server will never accept it, so
+   stop re-sending), or throws for a NETWORK failure (worth retrying).
+   Telling those apart matters: the old code treated every failure the
+   same and stopped at the first one, so a single unacceptable record sat
+   at the head of the queue and blocked every good record behind it for
+   the whole shift. */
+async function submitRecord(r){
+  let res;
+  try{
+    res = await fetchT(apiUrl('api/scan_submit.php'), {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        student_id: r.student_id,
+        violation_name: r.violation_name,
+        // What the marshal typed for an "Others". The server files it as the
+        // record's description, so the violation TYPE stays a known one and
+        // violation_types never fills up with one-off entries.
+        violation_detail: r.violation_detail || '',
+        severity: r.severity || '',
+        scanner_name: r.scanner_name,
+        scanner_school_id: r.scanner_school_id,
+        scanner_session_token: (WHO && WHO.session_token) || '',
+        scanned_at: r.scanned_at,
+        // The proof frame. The server decodes it, checks the bytes really
+        // are an image, and files it as the record's evidence.
+        photo: r.photo || ''
+      })
+    }, 12000);
+  }catch(e){ throw new Error('network'); }          // offline / timeout — retry later
+
+  if (res.status >= 500) throw new Error('network'); // server hiccup — retry later
+  if (!res.ok) return 'rejected';                    // 4xx — re-sending won't help
+
+  let d;
+  try { d = await res.json(); } catch(e){ throw new Error('network'); }
+  if (d && d.ok) return 'ok';
+  return 'rejected';
+}
+
+let SYNCING=false;
+async function trySync(){
+  /* No navigator.onLine gate. This was the worst place it appeared: on a
+     laptop-hotspot shift with no internet the browser reports "offline",
+     so this returned 0 immediately and a whole shift of scans stayed on
+     the phone — beside a server that would have accepted every one. The
+     sends below already fail fast and set 'noserver' on a real outage, so
+     attempting costs one timed-out request and nothing else. */
+  if(SYNCING || !SERVER.connected) return 0;
+  SYNCING=true;
+  let done=0, netFail=false;
+  for(const r of recGet().filter(r=>!r.synced && !r.rejected)){
+    try{
+      // The frame lives in IndexedDB now, so fetch it for this one record
+      // rather than loading a whole shift of images to send one.
+      const withPhoto = (await withPhotos([r]))[0];
+      const out = await submitRecord(withPhoto);
+      /* Drop the local copy of the photo once the server has it. The server
+         is now the record of it, and a phone holding a shift's worth of
+         frames it no longer needs is what fills the storage quota — see
+         recSet(). `photo_synced` keeps the list honest about why it is gone,
+         so a blank thumbnail never reads as a scan filed without proof. */
+      /* The photo is KEPT after a successful sync now. It used to be
+         deleted here to claw back localStorage, but that is what left a
+         hand-over file full of proofless records when a shift ran long,
+         and IndexedDB has the room. It goes when its record goes. */
+      if (out === 'ok'){ recUpdate(r._id, {synced:true, rejected:false, photo:'', photo_synced:!!withPhoto.photo}); done++; }
+      // Flagged, not deleted: it still leaves in the end-of-shift .vtsl, so
+      // nothing is lost — the office imports it with the rest of the file.
+      else { recUpdate(r._id, {rejected:true}); }
+    }catch(e){ netFail=true; break; }   // connection dropped — stop, retry later
+  }
+  SYNCING=false;
+  if (netFail) setNetState('noserver'); else if (done) setNetState('live');
+  paintRecords();
+  return done;
+}
+
+/* Retry on a timer as well as on the browser's online event. A phone that
+   walks out of Wi-Fi range and back often fires no event at all, which is
+   why queued records used to just sit there until someone noticed. */
+let SYNC_TIMER=null;
+function startSyncLoop(){
+  if (SYNC_TIMER) return;
+  SYNC_TIMER = setInterval(async ()=>{
+    if (!SERVER.connected) return;
+    // This also notices an office revoking the marshal's scanner slot.
+    if (!await refreshLists() || !WHO || !await checkScannerSession()) return;
+    if (unsyncedCount() > 0) { await trySync(); }
+    else { probeServer(); }             // keep the status pill honest
+  }, 20000);
+}
+// Re-check the moment the phone comes back to the foreground.
+document.addEventListener('visibilitychange', ()=>{
+  if (!document.hidden && SERVER.connected){ refreshLists().then(async ok=>{ if(ok && WHO && await checkScannerSession() && unsyncedCount()) trySync(); }); }
+});
+/* Pull fresh lists from the server.
+
+   A stale copy is the cause of most "it says I am not on the list" and most
+   "my scan was skipped": somebody who registered after this phone last
+   connected is on neither list, so the marshal cannot be identified and a
+   scan of that student is refused at sync with "no active student for that
+   ID". Refreshing is the fix, so it happens as part of Re-sync rather than
+   being a separate thing to know about. */
+async function refreshLists(){
+  if(!SERVER.connected) return false;
+  try{
+    const r = await fetchT(apiUrl('api/scanner_data.php'), {method:'GET'}, 9000);
+    if(!r.ok) return false;
+    const d = await r.json();
+    if(!d || d.app !== 'VTS-SCANNER') return false;
+    if(Array.isArray(d.students) && d.students.length){
+      students = d.students; save('vts_students', JSON.stringify(students));
+    }
+    if(Array.isArray(d.guards)){ guards = d.guards; save('vts_guards', JSON.stringify(guards)); }
+    if(Array.isArray(d.types) && d.types.length){ types = d.types; save('vts_types2', JSON.stringify(types)); }
+    if (enforceScannerAccess()) return false;
+    return true;
+  }catch(e){ return false; }
+}
+
+/* A scanner page has local state because it must work offline, but a connected
+   device must not keep signed in someone whose ACCOUNT no longer exists or was
+   deactivated on the roster — that's what this still catches. It used to also
+   catch a revoked `scanner_access` flag; that flag is gone now (see findGuard),
+   so the actual "your shift ended" cases — the 2-slot cap, or the office
+   signing you off — are caught by the session-token check (checkScannerSession,
+   called right alongside this), not by this roster lookup. */
+function forceScannerLogout(message){
+  if (!WHO) return;
+  stopCamera();
+  WHO = null;
+  del('vts_who2');
+  selStudent = null;
+  selType = null;
+  goto('duty');
+  dutyShowLookup();
+  showAlert('dutyErr', message, 'err');
+}
+
+function enforceScannerAccess(){
+  if (!WHO || !WHO.school) return false;
+  const id = String(WHO.school).trim().toLowerCase();
+  const isGuard = guards.some(g => String(g.student_id||'').trim().toLowerCase() === id);
+  if (isGuard) return false;
+  const student = students.find(s => String(s.student_id||'').trim().toLowerCase() === id);
+  if (student) return false;
+
+  stopCamera();
+  WHO = null;
+  del('vts_who2');
+  selStudent = null;
+  selType = null;
+  goto('duty');
+  dutyShowLookup();
+  showAlert('dutyErr', 'Your account is no longer on the active roster. Please check with OSA/Admin before signing in again.', 'err');
+  return true;
+}
+
+/* ONE button for "make this phone right again": refresh the lists, then push
+   everything still waiting — including rows a previous attempt gave up on,
+   since a refreshed list is exactly what makes those work. */
+async function resyncAll(btn){
+  const old = btn ? btn.innerHTML : '';
+  if(btn){ btn.disabled = true; btn.innerHTML = 'Re-syncing\u2026'; }
+
+  const state = await probeServer();
+  if(state !== 'live'){
+    if(btn){ btn.disabled = false; btn.innerHTML = old; }
+    alert(state === 'offline'
+      ? 'This phone has no network right now. Nothing is lost — the records stay on the device and go out in the end-of-shift file either way.'
+      : 'The server isn\u2019t answering at ' + (SERVER.display||'that address') + '. Check the laptop is on and the phone is on the same Wi-Fi.');
+    return;
+  }
+
+  const listsOk = await refreshLists();
+
+  /* Clear the rejected flag first: those rows were refused against the OLD
+     lists, so they deserve one more go now the lists are current. */
+  const a = recGet();
+  recSet(a.map(r => r.synced ? r : Object.assign({}, r, {rejected:false})));
+
+  const n = await trySync();
+  if(btn){ btn.disabled = false; btn.innerHTML = old; }
+
+  const still = unsyncedCount();
+  const stillRejected = recGet().filter(r => !r.synced && r.rejected).length;
+  alert(
+    (listsOk ? 'Lists refreshed: ' + students.length + ' student(s), ' + guards.length + ' marshal(s).\n\n'
+             : 'Could not refresh the lists, but the sync ran.\n\n')
+    + n + ' record(s) synced.'
+    + (still ? '\n' + still + ' still waiting'
+        + (stillRejected ? ' — ' + stillRejected + ' the server would not accept. Open the list to see which; they still leave in the end-of-shift file.' : '.')
+        : '\nAll caught up.')
+  );
+}
+
+if($('syncNowBtn')) $('syncNowBtn').onclick = () => resyncAll($('syncNowBtn'));
+if($('resyncBtn'))  $('resyncBtn').onclick  = () => resyncAll($('resyncBtn'));
+function unsyncedCountSafe(){ return unsyncedCount(); }
+
+/* ============ list parsing (students + types + accounts) ============ */
+/* ---- Secure students-list file (.vtsl): AES-256-GCM, app-key scheme. MUST stay
+   in sync with VTS_SCANNER_FILE_SECRET / vts_scanner_encrypt() in includes/functions.php.
+   crypto.subtle needs a secure context (https:// or localhost). ---- */
+const VTS_FILE_SECRET='GWC-VTS::students-list::v1::7Qm2Zx9Rk4Lp8Bn1Hs5Dy0Aa3Ce6Wu-tF';
+function b64ToBytes(s){ const bin=atob(String(s||'')); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i); return u; }
+async function vtsDecryptEnvelope(env){
+  if(!(window.crypto && window.crypto.subtle)){ const e=new Error('no-subtle'); e.noSubtle=true; throw e; }
+  const salt=b64ToBytes(env.salt), iv=b64ToBytes(env.iv), ct=b64ToBytes(env.ct);
+  const base=await crypto.subtle.importKey('raw', new TextEncoder().encode(VTS_FILE_SECRET), 'PBKDF2', false, ['deriveKey']);
+  const key=await crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt, iterations:env.iter||120000, hash:'SHA-256'},
+    base, {name:'AES-GCM', length:256}, false, ['decrypt']);
+  const plain=await crypto.subtle.decrypt({name:'AES-GCM', iv, tagLength:128}, key, ct);
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+function bytesToB64(u){ let s=''; for(let i=0;i<u.length;i++) s+=String.fromCharCode(u[i]); return btoa(s); }
+/* Encrypt an object into the SAME .vtsl envelope the PHP side reads
+   (vts_scanner_decrypt): PBKDF2-SHA256 120k, AES-256-GCM, ct = ciphertext||tag.
+   WebCrypto already appends the 16-byte GCM tag, so the formats line up. */
+async function vtsEncryptEnvelope(obj){
+  if(!(window.crypto && window.crypto.subtle)){ const e=new Error('no-subtle'); e.noSubtle=true; throw e; }
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+  const iv  =crypto.getRandomValues(new Uint8Array(12));
+  const base=await crypto.subtle.importKey('raw', new TextEncoder().encode(VTS_FILE_SECRET), 'PBKDF2', false, ['deriveKey']);
+  const key =await crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt, iterations:120000, hash:'SHA-256'},
+    base, {name:'AES-GCM', length:256}, false, ['encrypt']);
+  const pt  =new TextEncoder().encode(JSON.stringify(obj));
+  const ct  =new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM', iv, tagLength:128}, key, pt));
+  return JSON.stringify({app:'VTS-SCANNER', fmt:'vtsl', v:1, kdf:'PBKDF2-SHA256', iter:120000,
+    salt:bytesToB64(salt), iv:bytesToB64(iv), ct:bytesToB64(ct)});
+}
+function vtsFileErr(e){
+  if(e && e.noSubtle) return 'This device can’t open the secure file here. Open the scanner from its https:// web address, then load it again.';
+  return 'Could not read that file. Export a fresh Students List from Admin/OSA (or use an .xlsx / .csv / .json list).';
+}
+const isEnvelope=t=>!!(t && t[0]==='{' && /"ct"\s*:/.test(t) && /"iv"\s*:/.test(t) && /"salt"\s*:/.test(t));
+
+// Parse a file into {students, types, accounts} WITHOUT committing. Calls onData(data) or onErr(msg).
+function parseListFile(file,onData,onErr){
+  const name=(file.name||'').toLowerCase();
+  if(name.endsWith('.xlsx')){
+    if(typeof XLSX==='undefined'){ onErr&&onErr('Excel reader is still loading — try again in a moment, or use the secure .vtsl / CSV / JSON file.'); return; }
+    const reader=new FileReader();
+    reader.onload=()=>{
+      try{
+        const wb=XLSX.read(new Uint8Array(reader.result),{type:'array'});
+        const accName=wb.SheetNames.find(n=>String(n).trim().toLowerCase()==='accounts');
+        const accounts = accName ? accountsFromAOA(XLSX.utils.sheet_to_json(wb.Sheets[accName],{header:1})) : [];
+        const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
+        const data=studentsFromAOA(rows); data.accounts=accounts;
+        onData&&onData(data);
+      }catch(e){ onErr&&onErr('Could not read that Excel file. Use the secure .vtsl students list exported from Admin/OSA.'); }
+    };
+    reader.readAsArrayBuffer(file);
+    return;
+  }
+  const reader=new FileReader();
+  reader.onload=async()=>{
+    const text=String(reader.result||''); const t=text.trim();
+    try{
+      if(name.endsWith('.vtsl') || isEnvelope(t)){          // encrypted secure students-list
+        const data=await vtsDecryptEnvelope(JSON.parse(t));
+        return onData&&onData({
+          students:Array.isArray(data.students)?normStudents(data.students):[],
+          types:Array.isArray(data.types)?normTypes(data.types):[],
+          accounts:Array.isArray(data.accounts)?normAccounts(data.accounts):[]
+        });
+      }
+      if(name.endsWith('.csv') || (t[0]!=='{' && t[0]!=='[')){
+        const data=studentsFromAOA(parseCSV(text)); data.accounts=[]; return onData&&onData(data);
+      }
+      const j=JSON.parse(text);
+      onData&&onData({
+        students:Array.isArray(j.students)?normStudents(j.students):[],
+        types:Array.isArray(j.types)?normTypes(j.types):[],
+        accounts:Array.isArray(j.accounts)?normAccounts(j.accounts):[]
+      });
+    }catch(e){ onErr&&onErr(vtsFileErr(e)); }
+  };
+  reader.readAsText(file);
+}
+function normStudents(list){
+  return list.map(s=>({student_id:s.student_id||s.sid||'',fullname:s.fullname||s.name||'',
+    section:s.section||s.set||'',year_level:s.year_level||s.year||'',course:s.course||''}));
+}
+function normTypes(list){
+  return list.map(t=>({id:t.id||null,violation_name:t.violation_name||t.name||''})).filter(t=>t.violation_name);
+}
+function normAccounts(list){
+  return list.map(a=>({username:(a.username||'').trim(),fullname:(a.fullname||a.name||'').trim(),
+    role:(a.role||'').trim(),password:(a.password||a.hash||'').trim()})).filter(a=>a.username && a.password);
+}
+function accountsFromAOA(rows){
+  if(!rows || rows.length<2) return [];
+  const head=rows[0].map(h=>String(h||'').trim().toLowerCase());
+  const col=n=>head.indexOf(n);
+  const cu=col('username'), cf=col('fullname')>=0?col('fullname'):col('name'), cr=col('role'),
+        cp=col('password')>=0?col('password'):col('hash');
+  const out=[];
+  for(let i=1;i<rows.length;i++){ const r=rows[i]; if(!r) continue;
+    out.push({ username: cu>=0?String(r[cu]||'').trim():'',
+               fullname: cf>=0?String(r[cf]||'').trim():'',
+               role:     cr>=0?String(r[cr]||'').trim():'',
+               password: cp>=0?String(r[cp]||'').trim():'' }); }
+  return out.filter(a=>a.username && a.password);
+}
+function studentsFromAOA(rows){
+  if(!rows || rows.length<2) return {students:[]};
+  const head=rows[0].map(h=>String(h||'').trim().toLowerCase());
+  const col=n=>head.indexOf(n);
+  const ci=col('student_id')>=0?col('student_id'):col('sid');
+  const cn=col('fullname')>=0?col('fullname'):col('name');
+  const cse=col('section')>=0?col('section'):col('set');
+  const cy=col('year_level')>=0?col('year_level'):col('year');
+  const cc=col('course');
+  const stu=[];
+  for(let i=1;i<rows.length;i++){ const r=rows[i]; if(!r) continue;
+    stu.push({ student_id: ci>=0?String(r[ci]||'').trim():'',
+               fullname:   cn>=0?String(r[cn]||'').trim():'',
+               section:    cse>=0?String(r[cse]||'').trim():'',
+               year_level: cy>=0?String(r[cy]||'').trim():'',
+               course:     cc>=0?String(r[cc]||'').trim():'' }); }
+  return {students:stu.filter(s=>s.student_id||s.fullname)};
+}
+// Commit parsed data into storage + live state.
+function commitImport(data){
+  if(Array.isArray(data.students) && data.students.length){
+    students=data.students; save('vts_students',JSON.stringify(students));
+  }
+  if(Array.isArray(data.types) && data.types.length){
+    types=data.types; save('vts_types2',JSON.stringify(types));
+  }
+  if(Array.isArray(data.accounts) && data.accounts.length){
+    ACCOUNTS=data.accounts; save('vts_accounts',JSON.stringify(ACCOUNTS));
+  }
+  // A .vtsl/JSON export carries the staff list too, so a phone set up from a
+  // USB file can still check who is on duty without ever being online.
+  if(Array.isArray(data.guards) && data.guards.length){
+    guards=data.guards; save('vts_guards',JSON.stringify(guards));
+  }
+}
+/* ONLINE PROVISIONING REMOVED — the students list arrives as a FILE
+   (Students.csv) copied by USB or LAN. Nothing here talks to a server. */
+function paintListStatus(){
+  const msg='Loaded: '+students.length+' student(s) · '+types.length+' violation type(s).';
+  if($('listStatus')) $('listStatus').textContent=msg;
+}
+
+/* ============ connectivity watch ============ */
+/* 'offline'  — no network on this phone at all
+   'noserver' — there IS a network, but the VTS server can't be reached
+                (wrong/stale IP, firewall, Apache down, laptop asleep)
+   'live'     — reachable; queued scans are going up
+   The middle state is the one that used to be reported as "Online", which
+   is how a marshal could finish a whole shift believing every scan had
+   synced when not one of them had left the phone. */
+function setNetState(state){
+  NETSTATE = state;
+  /* "Not linked" still has a working network — the records queue and sync the
+     moment an address is set — so it must not be lumped in with offline. */
+  ONLINE   = (state !== 'offline');
+  const p=$('netPill'), t=$('netTxt');
+  if (!p || !t) return;
+  if (state === 'live'){
+    p.className='netpill net-on';   t.textContent='Connected';
+    p.title='Connected to ' + (SERVER.display||'the server') + ' — scans sync automatically.';
+  } else if (state === 'noserver'){
+    p.className='netpill net-warn'; t.textContent='No server';
+    p.title='This phone has a network, but ' + (SERVER.display||'the server') + " can't be reached. Scans are saved on the device and will sync when it is back.";
+  } else if (state === 'nosetup'){
+    /* THE CASE THAT USED TO SAY "OFFLINE" AND CAUSE THE MOST CONFUSION.
+       Wi-Fi is fine, ethernet is fine, everything is fine — this phone has
+       simply never been told the laptop's address, so there is nothing to
+       sync TO. Saying "Offline" sent people to check the router when the
+       fix was to tap Set up and type an IP. */
+    p.className='netpill net-warn'; t.textContent='Not linked';
+    p.title='This phone has a network but has not been given the server address yet. Tap to link it — until then scans are saved on the device and leave in the end-of-shift file.';
+  } else {
+    p.className='netpill net-off';  t.textContent='Offline';
+    p.title='No network on this phone. Scans are saved here and export at the end of the shift.';
+  }
+  paintRecords();
+}
+
+/* The pill is the thing people tap when the status looks wrong, so make it
+   actually do something: go to the screen that fixes whatever it is showing. */
+if ($('netPill')) {
+  $('netPill').style.cursor = 'pointer';
+  $('netPill').onclick = () => {
+    if (NETSTATE === 'live') { probeServer(); return; }
+    goto('setup');
+  };
+}
+
+// Kept for anything still calling the old two-state helper.
+function setNet(on){ setNetState(on ? (SERVER.connected ? 'live' : 'nosetup') : 'offline'); }
+
+window.addEventListener('online', ()=>{
+  setNetState((SERVER.connected || SERVER.url) ? 'noserver' : 'nosetup');
+  probeServer().then(()=>{ if (SERVER.connected && unsyncedCount()) trySync(); });
+});
+/* The browser losing its INTERNET route is not evidence that the LAN
+   server has gone anywhere — dropping from a hotspot that has WAN to one
+   that does not fires this event while the server stays reachable. So the
+   event is a prompt to re-check, never a verdict. probeServer() will settle
+   it and will say 'offline' itself if the server has genuinely gone. */
+window.addEventListener('offline', ()=>{
+  probeServer().then(()=>{ if (SERVER.connected && unsyncedCount()) trySync(); });
+});
+
+/* ============ served BY the site? then it already knows the address ============
+
+   If this page arrived over http(s) it came FROM the server, so asking the
+   marshal to type that same server's IP is asking them to tell the phone
+   something the phone already knows — and getting it wrong is how a device
+   ends up saying "Offline" on a perfectly good Wi-Fi.
+
+   So: work the address out from where the page was loaded, check it really
+   is this system answering, and adopt it. The typed-address setup screen
+   stays for the case it was written for — the scanner copied onto a phone
+   as a standalone folder (file://, or the phone_scanner/ copy on a machine
+   that is not the server). */
+function siteBaseUrl(){
+  if (!/^https?:/i.test(location.protocol)) return '';      // opened as a local file
+  var dir = location.pathname.replace(/\/[^\/]*$/, '');      // drop the filename
+  // The standalone copy lives one level below the app, and the API is up there.
+  dir = dir.replace(/\/phone_scanner$/i, '');
+  return (location.origin + dir).replace(/\/+$/, '');
+}
+
+/* Adopt the serving origin, but only once it has answered as this system —
+   a 200 from some other site on the same host would be worse than no
+   address at all. Returns true if the device is now pointed at a server. */
+async function autoAdoptServer(){
+  var base = siteBaseUrl();
+  if (!base) return false;
+  // Already pointed somewhere that works? Leave the marshal's choice alone.
+  if (SERVER.connected && SERVER.url) return false;
+  try{
+    var r = await fetchT(base + '/api/scanner_data.php', {method:'GET'}, 7000);
+    if (!r.ok) return false;
+    var d = await r.json();
+    if (!d || d.app !== 'VTS-SCANNER') return false;
+
+    if (Array.isArray(d.students) && d.students.length){
+      students = d.students; save('vts_students', JSON.stringify(students));
+    }
+    if (Array.isArray(d.guards)) { guards = d.guards; save('vts_guards', JSON.stringify(guards)); }
+    if (Array.isArray(d.types) && d.types.length){ types = d.types; save('vts_types2', JSON.stringify(types)); }
+
+    SERVER = {url: base, token:'', display: location.host, connected:true};
+    save('vts_server2', JSON.stringify(SERVER));
+    save('vts_setup', '1');
+    save('vts_importer', 'online: ' + location.host);
+    setNetState('live');
+    startSyncLoop();
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ============ boot ============ */
+(function(){
+  loadState();
+  // Start from what is actually knowable, then confirm with a live probe —
+  // never claim "Connected" before anything has answered.
+  /* An address we have not proven yet reads as 'noserver' even when the
+     browser claims to be offline — the probe a few lines down is what
+     decides, and starting at 'offline' made the pill flash a wrong answer
+     on every no-internet boot before correcting itself. */
+  setNetState((SERVER.connected || SERVER.url) ? 'noserver'      // has an address, unproven
+            : (navigator.onLine ? 'nosetup'                      // has a network, no address yet
+                                : 'offline'));                   // nothing to go on at all
+  if ($('ipInput') && !$('ipInput').value) $('ipInput').value = saved('vts_last_addr') || '';
+  if (SERVER.connected){
+    startSyncLoop();
+    probeServer().then(()=>{ if (unsyncedCount()) trySync(); });
+  }
+  paintRecords();
+
+  /* Decide the opening screen only AFTER trying to adopt the serving origin:
+     a phone that opened this page from the server should land on "who is on
+     duty", not on a setup screen asking for an address it already has. */
+  autoAdoptServer().then(function(adopted){
+    if (adopted){
+      paintSetup();
+      if (unsyncedCount()) trySync();
+    }
+    if(!isProvisioned()){
+      goto('setup');
+    } else if(WHO && WHO.name){
+      paintWho();
+      if(WHO.school) $('m_school').value = WHO.school;   // name field is gone — ID identifies them
+      if(typeof refreshDutyBtn === 'function') refreshDutyBtn();
+      goto('scan');
+    } else {
+      goto('duty');
+    }
+  });
+
+  if('serviceWorker' in navigator){
+    try{ navigator.serviceWorker.register('scanner-sw.js').catch(()=>{}); }catch(e){}
+  }
+})();
+</script>
+</body>
+</html>

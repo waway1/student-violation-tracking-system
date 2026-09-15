@@ -1,0 +1,51 @@
+/* =====================================================================
+   VTS AUTH BRAND — the GOLD + BLUE theme lives on the CARD itself.
+   The "GOLDEN WEST COLLEGES, INC." line above stays plain text (no bar).
+   Loaded last on the public pages (Register + Student Search).
+   ===================================================================== */
+
+/* School name: plain text again — no gradient box behind it */
+.auth-page .auth-header{
+  background:none !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+  padding:0 !important;
+  margin-bottom:18px !important;
+  display:block !important;
+  text-align:center;
+}
+/* Colour only. Weight, size and letter-spacing come from .auth-wordmark in
+   vts-forms.css, shared with the register page — this rule used to set its
+   own and, being more specific, silently won. */
+.auth-page .auth-header .auth-wordmark{
+  color:#fff;
+  text-shadow:0 2px 8px rgba(6,16,38,.55);
+}
+
+/* THE CARD carries the theme: a gold+blue gradient band across its top */
+.auth-page .auth-card{
+  position:relative !important;
+  overflow:hidden !important;
+  border-top:none !important;
+  padding-top:34px !important;          /* room for the band */
+}
+.auth-page .auth-card::before{
+  content:'';
+  position:absolute; top:0; left:0; right:0;
+  height:8px;
+  background:linear-gradient(90deg,#1a3a6b 0%,#2a5298 52%,#c9a227 100%);
+}
+
+/* Primary buttons on these pages follow the brand navy→blue */
+.auth-page .btn-primary{
+  background:linear-gradient(90deg,#1a3a6b,#2a5298) !important;
+  border:none !important; color:#fff !important;
+}
+.auth-page .btn-primary:hover{
+  background:linear-gradient(90deg,#16315b,#22467f) !important;
+}
+
+@media (max-width:560px){
+  .auth-page .auth-card{ padding-top:28px !important; }
+  .auth-page .auth-card::before{ height:6px; }
+}

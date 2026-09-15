@@ -1,0 +1,30 @@
+/* Email verify page — extracted from verify.php so all CSS lives in stylesheets.
+   NB: url() paths are relative to THIS file (assets/css/), hence ../images/. */
+
+/* Same campus photo + overlay as every other signed-out screen. */
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+       background:linear-gradient(165deg,rgba(8,22,46,.78) 0%,rgba(11,31,63,.70) 45%,rgba(6,17,38,.82) 100%),
+       url('../images/school.jpg') center / cover no-repeat fixed;position:relative;}
+  body > *{position:relative;z-index:1;}
+  .vbox{background:#fff;border-radius:16px;max-width:430px;width:100%;padding:34px 30px;text-align:center;}
+  .vbox .ic{width:64px;height:64px;border-radius:50%;background:#e8eef9;color:#1a3a6b;
+    display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 16px;}
+  .vbox h1{color:#1a3a6b;font-size:1.25rem;margin-bottom:6px;}
+  .vbox p{color:#6b7690;font-size:.88rem;margin-bottom:18px;line-height:1.5;}
+  .code-input{width:100%;padding:14px;font-size:1.5rem;text-align:center;letter-spacing:.5em;
+    border:2px solid #dbe2ee;border-radius:10px;margin-bottom:14px;font-weight:700;color:#1a3a6b;}
+  .code-input:focus{outline:none;border-color:#2563c9;}
+  .vbtn{width:100%;padding:13px;background:#1a3a6b;color:#fff;border:none;border-radius:10px;
+    font-size:.95rem;font-weight:700;cursor:pointer;}
+  .vbtn:hover{background:#142f57;}
+  .vlinks{margin-top:16px;font-size:.84rem;}
+  .vlinks a{color:#1c5aa8;font-weight:600;}
+
+/* "Send a new code" is a form button now (it was a GET link, which a
+   prefetcher could fire), but it should still read as the link it was. */
+.vlinks .vlink-btn{
+  background:none; border:0; padding:0; margin:0;
+  font:inherit; font-size:inherit; color:inherit;
+  text-decoration:underline; cursor:pointer;
+}
+.vlinks .vlink-btn:hover{ opacity:.8; }

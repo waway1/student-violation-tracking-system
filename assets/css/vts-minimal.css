@@ -1,0 +1,563 @@
+/* VTS minimal -- final style layer (loaded last): flat surfaces, one gold accent, bold type, quick color-fade motion only. Styles the app shell + data views. */
+
+:root{
+  --m-ink:  #16233a; --m-muted: #667892;
+  --m-line: #e7ecf4; --m-bg:    #f4f6fb; --m-surface: #ffffff;
+  --m-navy: #1a3a6b; --m-navy-d: #14305a;
+  --m-gold: #c9a227; --m-gold-2: #e2b83a;
+  --radius: 13px; --radius-sm: 9px;
+  --shadow: 0 2px 10px rgba(20,40,80,.06);
+}
+
+/* Flat soft canvas — no photo/blur behind content */
+body.has-bg-image{ background: var(--m-bg) !important; }
+.vts-main::before{ display: none !important; }
+.vts-main{ background: var(--m-bg); padding-top: 52px; }
+.vts-main-inner{ padding: 24px 26px 44px; }
+
+/* ---- Top bar: blue-and-gold theme gradient ---- */
+.vts-navbar{ background: linear-gradient(90deg, #1a3a6b 0%, #2a5298 52%, var(--m-gold) 100%) !important;
+  height: 52px; padding: 0 18px 0 14px; box-shadow: 0 2px 10px rgba(26,58,107,.22); border: none; }
+.vts-navbar .brand img{ width: 34px; height: 34px; border: 1px solid rgba(255,255,255,.55); }
+.vts-navbar .brand-name{ font-size: .95rem; letter-spacing: .01em; text-transform: none; font-weight: 800; color: #fff; text-shadow: 0 1px 3px rgba(10,25,55,.4); }
+.vts-navbar .user-role{ font-size: .82rem; font-weight: 700; text-shadow: 0 1px 3px rgba(10,25,55,.35); }
+.vts-navbar .user-desc{ font-size: .69rem; text-shadow: 0 1px 3px rgba(10,25,55,.3); }
+.vts-navbar .user-avatar{ width: 34px; height: 34px; border: 1.5px solid rgba(255,255,255,.7); }
+/* readable on the gold end of the gradient */
+.btn-logout{ background: rgba(255,255,255,.92); color: var(--m-navy); border: none;
+  border-radius: 8px; padding: 7px 16px; font-weight: 800; text-transform: none; letter-spacing: 0;
+  transition: background .12s ease; }
+.btn-logout:hover{ background: #fff; }
+
+/* ---- Sidebar: navy-blue with gold accents (same theme) ---- */
+.vts-sidebar{ top: 52px; height: calc(100vh - 52px);
+  background: linear-gradient(180deg, #1d4078 0%, #16315b 100%) !important;
+  border-right: none; border-top: 3px solid var(--m-gold); padding-top: 53px; }
+.sidebar-nav{ padding: 8px 0; }
+.sidebar-nav a{ margin: 2px 10px; padding: 11px 13px !important; border-radius: 10px; border-left: none !important;
+  font-size: .9rem; font-weight: 600; gap: 12px; color: rgba(255,255,255,.74) !important; transition: background .12s ease; }
+.sidebar-nav a i{ width: 18px; font-size: .92rem; color: rgba(255,255,255,.5); }
+.sidebar-nav a:hover{ background: rgba(255,255,255,.09) !important; color: #fff !important; }
+.sidebar-nav a.active{ background: rgba(255,255,255,.12) !important; color: #fff !important; font-weight: 800;
+  box-shadow: inset 3px 0 0 var(--m-gold-2) !important; }
+.sidebar-nav a.active i{ color: var(--m-gold-2); }
+.notif-badge{ margin-left: auto; background: #e04545; color:#fff; font-size:.66rem; font-weight:800; padding:2px 8px; border-radius:10px; }
+
+/* ---- Headings: bold, sentence case ---- */
+.page-head h2, .admin-welcome-row h1, .page-title{
+  font-size: 1.5rem !important; font-weight: 800 !important; color: var(--m-ink) !important;
+  letter-spacing: -.02em !important; text-transform: none !important; padding-bottom: 0 !important; }
+.page-head h2::after, .admin-welcome-row h1::after{ display: none !important; }
+.page-title i{ color: var(--m-gold); }
+.page-head, .admin-welcome-row{ margin-bottom: 18px; }
+.page-head p, .admin-welcome-row p{ font-size: .86rem; color: var(--m-muted); font-weight: 500; }
+
+/* ---- Cards / panels: soft, one shadow, no hover motion ---- */
+.vts-card, .panel, .recent-table-wrap, .kpi-card, .my-violations-list, .qr-mini-card{
+  background: var(--m-surface) !important; backdrop-filter: none !important;
+  border: 1px solid var(--m-line) !important; box-shadow: var(--shadow) !important; border-radius: var(--radius) !important; }
+.vts-card{ padding: 22px; } .panel{ padding: 18px 20px; } .recent-table-wrap{ padding: 18px 20px; }
+.panel-head{ margin-bottom: 14px; }
+.panel-head h3{ font-size: .78rem !important; font-weight: 800 !important; color: var(--m-ink) !important;
+  text-transform: uppercase; letter-spacing: .06em; border-left: none !important; padding-left: 0 !important; }
+
+/* ---- KPI cards: bold numbers ---- */
+.kpi-grid{ gap: 14px !important; margin-bottom: 18px !important; }
+.kpi-card{ padding: 18px !important; }
+.kpi-top{ gap: 11px !important; }
+.kpi-icon{ width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+.kpi-label{ font-size: .76rem !important; color: var(--m-muted) !important; font-weight: 600 !important; }
+.kpi-value{ font-size: 2rem !important; font-weight: 800 !important; color: var(--m-ink) !important; margin: 6px 0 4px !important; letter-spacing: -.02em; }
+.kpi-meta{ font-size: .73rem !important; color: var(--m-muted) !important; }
+
+/* ---- Tables: soft container, bold header, quick hover ---- */
+.data-table, .vts-table{ width: 100%; border-collapse: collapse; }
+.data-table th, .vts-table thead th{ background: #f5f8fd !important; color: var(--m-muted) !important;
+  text-transform: uppercase; letter-spacing: .05em; font-size: .69rem !important; font-weight: 800 !important;
+  text-align: left; padding: 11px 12px !important; border-bottom: 1px solid var(--m-line) !important; border-right: none !important;
+  position: sticky; top: 0; z-index: 2; }
+.data-table td, .vts-table tbody td{ padding: 12px !important; font-size: .85rem !important; color: var(--m-ink) !important; border-bottom: 1px solid var(--m-line) !important; }
+.data-table tbody tr:last-child td{ border-bottom: none !important; }
+.data-table tbody tr:hover td, .vts-table tbody tr:hover td{ background: #f2f7ff !important; }
+.row-link{ cursor: pointer; }
+
+/* ---- Buttons: bold, soft corners, color-only hover ---- */
+.btn-primary{ background: var(--m-navy) !important; border: none !important; color: #fff !important;
+  border-radius: 10px !important; padding: 10px 20px !important; font-weight: 800 !important; letter-spacing: .01em !important;
+  text-transform: none !important; box-shadow: none !important; transition: background .12s ease !important; }
+.btn-primary:hover{ background: var(--m-navy-d) !important; }
+.btn-outline{ background: #fff !important; border: 1.5px solid var(--m-line) !important; color: var(--m-ink) !important;
+  border-radius: 10px !important; padding: 9px 17px !important; font-weight: 700 !important; letter-spacing: 0 !important;
+  text-transform: none !important; transition: background .12s ease, border-color .12s ease !important; }
+.btn-outline:hover{ background: #f4f8ff !important; border-color: #c7d6ec !important; color: var(--m-navy) !important; }
+.btn-danger{ background: #e0402f !important; border: none !important; color:#fff !important; border-radius:10px !important;
+  text-transform: none !important; letter-spacing: 0 !important; font-weight:800 !important; box-shadow: none !important; transition: background .12s ease !important; }
+.btn-danger:hover{ background:#c8351f !important; }
+.btn-sm{ padding: 7px 13px !important; font-size: .8rem !important; }
+.btn-ghost{ text-transform: none !important; letter-spacing: 0 !important; border-radius: 10px !important; font-weight: 700 !important; }
+
+/* Login / staff submit: solid navy (overrides older white-outline look) */
+.auth-card .btn-primary.btn-full, .role-modal .btn-primary.btn-full{
+  background: var(--m-navy) !important; color: #fff !important; border: none !important; border-radius: 10px !important; box-shadow: none !important; }
+.auth-card .btn-primary.btn-full:hover, .role-modal .btn-primary.btn-full:hover{ background: var(--m-navy-d) !important; }
+
+/* ---- Forms: soft, bold labels ---- */
+.vts-input, .vts-select, .field .vts-input, .field .vts-select{
+  border: 1.5px solid var(--m-line) !important; border-radius: var(--radius-sm) !important; padding: 10px 13px !important;
+  font-size: .9rem !important; transition: border-color .12s ease, box-shadow .12s ease !important; }
+.vts-input:focus, .vts-select:focus, select:focus, textarea:focus{
+  border-color: var(--m-gold) !important; box-shadow: 0 0 0 3px rgba(201,162,39,.18) !important; outline: none !important; }
+.vts-form-group label, .field label{ font-size: .77rem !important; font-weight: 700 !important; color: var(--m-ink) !important;
+  text-transform: none !important; letter-spacing: 0 !important; margin-bottom: 6px !important; }
+
+/* ---- Filter bar: one aligned row, controls share a baseline ---- */
+.filter-bar{ display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 16px; }
+.filter-field{ display: flex; flex-direction: column; gap: 5px; }
+.filter-field.grow{ flex: 1 1 200px; min-width: 180px; }
+.filter-field label{ font-size: .69rem; font-weight: 700; color: var(--m-muted); text-transform: uppercase; letter-spacing: .05em; }
+.filter-field .vts-input, .filter-field .vts-select, .filter-actions .btn-sm{ height: 40px; box-sizing: border-box; }
+.filter-field .vts-input, .filter-field .vts-select{ min-width: 150px; }
+.filter-field input[type="time"]{ min-width: 120px; width: 120px; }
+.filter-field input[type="date"]{ min-width: 152px; width: 152px; }
+.filter-actions{ display: flex; gap: 8px; align-items: flex-end; }
+.filter-actions .btn-sm{ display: inline-flex; align-items: center; }
+
+/* ---- Pills / badges ---- */
+.pill{ padding: 3px 11px !important; font-size: .71rem !important; font-weight: 700 !important; border-radius: 999px !important; }
+.pill::before{ width: 5px; height: 5px; }
+.badge{ border-radius: 999px; font-weight: 800; letter-spacing: .02em; }
+
+/* ---- Menu button: white fill, navy text, clearly visible ---- */
+.menu-tab{ padding: 11px 22px; font-size: .9rem; font-weight: 800; letter-spacing: .02em;
+  background: #ffffff !important; color: var(--m-navy) !important; border: 1.5px solid var(--m-line) !important; border-radius: 11px;
+  box-shadow: 0 4px 14px rgba(26,58,107,.16) !important; transition: background .12s ease, border-color .12s ease !important; }
+.menu-tab i{ color: var(--m-gold); margin-right: 2px; }
+.menu-tab:hover{ background: #f4f7fd !important; border-color: #c7d6ec !important; }
+
+/* ---- Roster filter: compact so all controls sit on one line ---- */
+.roster-filter{ gap: 9px; }
+.roster-filter .filter-field{ gap: 4px; }
+.roster-filter .filter-field label{ font-size: .64rem; letter-spacing: .04em; }
+.roster-filter .filter-field.grow{ flex: 1 1 140px; min-width: 130px; }
+.roster-filter .vts-input, .roster-filter .vts-select{ height: 38px !important; min-width: 0 !important; padding: 7px 10px !important; font-size: .82rem !important; }
+.roster-filter select.vts-input{ min-width: 108px !important; }
+.roster-filter input[type="date"]{ width: 138px !important; min-width: 138px !important; }
+.roster-filter .time-range .tr-inputs{ display: flex; gap: 5px; }
+.roster-filter .time-range input[type="time"]{ width: 90px !important; min-width: 90px !important; padding: 7px 5px !important; }
+.roster-filter .filter-actions .btn-sm{ height: 38px; }
+
+/* ---- Login: clean labeled fields (no in-field icons) ---- */
+.auth-card .vts-form-group{ text-align: left; margin-bottom: 14px; }
+.auth-label{ display: block; font-size: .8rem; font-weight: 700; color: #33415c; margin-bottom: 6px; }
+.pwd-wrap{ position: relative; }
+.pwd-wrap .vts-input{ padding-right: 44px !important; }
+.pwd-wrap .eye-toggle{ position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: #8894ab; cursor: pointer; font-size: 1rem; padding: 6px; line-height: 1; }
+.pwd-wrap .eye-toggle:hover{ color: var(--m-navy); }
+/* Safety: any remaining icon-input keeps room for its leading icon */
+.vts-input-icon .vts-input{ padding-left: 40px !important; }
+
+/* ---- Alerts ---- */
+.alert{ border-radius: 10px; font-weight: 600; padding: 12px 15px; border: 1px solid transparent; }
+.alert-success{ background:#eaf7ef; color:#116339; border-color:#cdead9; }
+.alert-error, .alert-danger{ background:#fdecec; color:#a0251d; border-color:#f4cdcd; }
+.alert-info{ background:#eef4ff; color:#1f4f8f; border-color:#d2e1f7; }
+
+/* ---- New-user friendly cues ---- */
+.btn-primary, .btn-outline, .btn-danger, .btn-ghost{ display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+a:focus-visible, button:focus-visible, .vts-input:focus-visible, .vts-select:focus-visible, .role-option:focus-visible{
+  outline: 3px solid rgba(201,162,39,.55) !important; outline-offset: 2px !important; }
+.row-link:hover td{ background: #f2f7ff !important; }
+.empty-state{ text-align: center; padding: 40px 20px; color: var(--m-muted); }
+.empty-state .es-icon{ width: 60px; height: 60px; margin: 0 auto 14px; border-radius: 50%; background: #eef3fb; color: var(--m-navy);
+  display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+.empty-state .es-title{ font-size: 1rem; font-weight: 800; color: var(--m-ink); margin-bottom: 4px; }
+.empty-state .es-sub{ font-size: .85rem; color: var(--m-muted); }
+.field-hint, small.hint, .hint{ display: block; color: var(--m-muted); font-size: .76rem; margin-top: 5px; line-height: 1.45; font-weight: 500; }
+.req{ color: #e0402f; font-weight: 800; }
+
+/* ---- Misc ---- */
+hr{ border: none; border-top: 1px solid var(--m-line); }
+::-webkit-scrollbar{ width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb{ background: #cdd8ea; border-radius: 8px; }
+::-webkit-scrollbar-track{ background: transparent; }
+@media (prefers-reduced-motion: reduce){ *{ transition: none !important; animation: none !important; } }
+@media (max-width: 900px){
+  .vts-main-inner{ padding: 18px 15px 36px; }
+  .kpi-grid{ gap: 11px !important; }
+  .page-head h2, .admin-welcome-row h1, .page-title{ font-size: 1.32rem !important; }
+}
+
+/* ============================================================
+   MINIMAL POLISH (appended; this layer loads last)
+   · Drop the decorative GOLD borders — keep gold as one small accent.
+   · Give "Meet the Team" a clean, professional white/navy look.
+   Palette stays gold + blue + white, just used with restraint.
+   ============================================================ */
+
+/* No gold hairline borders in the shell */
+.vts-sidebar{ border-top: none !important; }
+.sidebar-brand img{ border-color: rgba(255,255,255,.35) !important; }
+.notif-item.unread{ border-left-color: var(--m-navy) !important; }
+
+/* ---- Meet the Team — minimal white cards on a calm navy backdrop ---- */
+#teamModal.modal-overlay{
+  background: rgba(16, 34, 63, .82) !important;
+  backdrop-filter: blur(3px) saturate(105%) !important;
+  -webkit-backdrop-filter: blur(3px) saturate(105%) !important;
+}
+#teamModal .team-modal{
+  background: #ffffff !important;
+  border: 1px solid #e6eaf2 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 24px 64px rgba(8,18,40,.45) !important;
+}
+#teamModal .tm-title{
+  color: #17233a !important;
+  font-family: var(--font-ui) !important;
+  font-weight: 800 !important;
+  font-size: 1.6rem !important;
+  letter-spacing: .01em !important;
+  text-transform: none !important;
+  text-shadow: none !important;
+}
+#teamModal .tm-subtitle{ color: #5b6473 !important; }
+#teamModal .tm-card{
+  background: #f7f9fc !important;
+  border: 1px solid #e6eaf2 !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  transition: border-color .12s ease, box-shadow .12s ease !important;
+}
+#teamModal .tm-card:hover{
+  background: #ffffff !important;
+  border-color: #d5dcea !important;
+  box-shadow: 0 10px 24px rgba(8,18,40,.12) !important;
+  transform: none !important;
+}
+#teamModal .tm-photo{
+  border: 1px solid #e6eaf2 !important;      /* was a 3px gold ring */
+  background: #eef2f8 !important;
+  border-radius: 10px !important;
+}
+#teamModal .tm-initials{ color: #9aa6bd !important; }
+#teamModal .tm-name{
+  color: #17233a !important;
+  font-family: var(--font-ui) !important;
+  font-weight: 700 !important;
+  font-size: 1.02rem !important;
+}
+#teamModal .tm-role{
+  background: #eef2fb !important;
+  color: #1a3a6b !important;
+  border: 1px solid #dbe2ee !important;      /* was gold */
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .04em !important;
+}
+#teamModal .tm-age{ color: #6b7690 !important; }
+#teamModal .tm-motto{ color: #55617a !important; font-style: normal !important; }
+#teamModal .tm-close{
+  background: #eef2f8 !important; color: #1a3a6b !important;
+  border: 1px solid #dbe2ee !important;
+}
+#teamModal .tm-close:hover{ background: #e2e8f2 !important; border-color: #cdd8ea !important; }
+
+/* ============================================================
+   TOAST NOTIFICATIONS (pop-ups) — navy/gold, top-right, stacked.
+   Injected by includes/footer.php; call window.vtsToast(msg,type).
+   ============================================================ */
+.vts-toast-wrap{ position: fixed; top: 70px; right: 18px; z-index: 5000;
+  display: flex; flex-direction: column; gap: 10px; width: min(360px, calc(100vw - 36px)); pointer-events: none; }
+.vts-toast{ position: relative; overflow: hidden; pointer-events: auto;
+  display: flex; align-items: flex-start; gap: 11px;
+  background: #fff; border: 1px solid var(--m-line); border-left: 4px solid var(--m-navy);
+  border-radius: 12px; padding: 13px 12px 13px 13px; box-shadow: 0 14px 34px rgba(16,34,63,.20);
+  transform: translateX(125%); opacity: 0;
+  transition: transform .34s cubic-bezier(.2,.85,.25,1), opacity .34s ease; }
+.vts-toast.show{ transform: translateX(0); opacity: 1; }
+.vts-toast.hide{ transform: translateX(125%); opacity: 0; }
+.vts-toast .vt-ic{ flex-shrink: 0; width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; font-size: .95rem; color: #fff; }
+.vts-toast .vt-body{ flex: 1 1 auto; min-width: 0; }
+.vts-toast .vt-title{ font-size: .8rem; font-weight: 800; color: var(--m-ink); margin-bottom: 1px; }
+.vts-toast .vt-msg{ font-size: .82rem; color: var(--m-muted); font-weight: 600; line-height: 1.42; overflow-wrap: anywhere; }
+.vts-toast .vt-bar{ position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; opacity: .3; }
+.vts-toast.t-success{ border-left-color: #1a9552; } .vts-toast.t-success .vt-ic,
+.vts-toast.t-success .vt-bar{ background: #1a9552; }
+.vts-toast.t-error{ border-left-color: #d63a2b; } .vts-toast.t-error .vt-ic,
+.vts-toast.t-error .vt-bar{ background: #d63a2b; }
+.vts-toast.t-info{ border-left-color: var(--m-navy); } .vts-toast.t-info .vt-ic,
+.vts-toast.t-info .vt-bar{ background: var(--m-navy); }
+.vts-toast.t-warn{ border-left-color: var(--m-gold); } .vts-toast.t-warn .vt-ic,
+.vts-toast.t-warn .vt-bar{ background: var(--m-gold); }
+@media (max-width: 560px){ .vts-toast-wrap{ top: 64px; right: 10px; left: 10px; width: auto; } }
+
+/* ============================================================
+   PROFESSIONAL POLISH (additive, respects the minimal theme):
+   clean borderless surfaces + a calm content fade-in.
+   ============================================================ */
+/* THE KEYFRAMES MUST NOT MENTION `transform`.
+
+   They used to: `from{ opacity:0; transform: translateY(6px) }` — a 6px
+   rise — with `animation-fill-mode: both`. The `forwards` half of `both`
+   leaves the element FILLING the animation once it has ended, so long
+   after the 0.34s was over .vts-main-inner still computed
+   `transform: matrix(1,0,0,1,0,0)` instead of `transform: none`.
+
+   An identity matrix is still a transform, and a transform makes the
+   element the containing block for every `position: fixed` descendant
+   inside it. That broke every row Print menu in the app. Those menus are
+   fixed precisely so they can escape the table's horizontal scroller (see
+   vtsPlaceMenu in assets/js/vts-ui.js); instead of being placed against
+   the window they were placed against THIS box, shifted right by the
+   sidebar margin and the page gutter. For a menu that already sits in the
+   last column of the table that put it clean off the right-hand edge of
+   the screen: pressing Print appeared to do nothing, and the page grew a
+   sideways scrollbar for the part of the panel hanging past the edge.
+
+   So the rise is gone and only the fade remains. Opacity creates no
+   containing block, `both` is kept exactly as it was so the fade itself is
+   unchanged, and there is now no way for this animation to leave a
+   transform behind. The 6px was never the point of the effect.
+
+   (vtsPlaceMenu also corrects itself against a transformed ancestor now,
+   because .vts-card carries a backdrop-filter and .panel a will-change and
+   either could do this again — but a fix in the stylesheet that removes
+   the cause is worth more than a fix in the script that survives it.) */
+.vts-main-inner{ animation: vtsFadeIn .34s ease both; }
+@keyframes vtsFadeIn{ from{ opacity: 0; } to{ opacity: 1; } }
+
+/* Clean look — drop the redundant card outlines; separation comes from a
+   soft shadow, not a hairline border. */
+.vts-card, .panel, .recent-table-wrap, .kpi-card, .my-violations-list, .qr-mini-card{
+  border: none !important;
+  box-shadow: 0 1px 2px rgba(20,40,80,.05), 0 10px 26px rgba(20,40,80,.055) !important;
+}
+/* Softer inner table rules so rows read cleanly without heavy lines */
+.data-table td, .vts-table tbody td{ border-bottom-color: #f0f3f9 !important; }
+.data-table th, .vts-table thead th{ border-bottom-color: #e9eef6 !important; }
+/* Lighter form-control outlines */
+.vts-input, .vts-select{ border-color: #eef1f7 !important; }
+.vts-input:focus, .vts-select:focus, select:focus, textarea:focus{ border-color: var(--m-gold) !important; }
+
+/* Primary actions read as the clear call-to-action for a first-time user */
+.admin-welcome-row .btn-primary, .page-head .btn-primary{ box-shadow: 0 6px 16px rgba(26,58,107,.18) !important; }
+.admin-welcome-row .btn-primary:hover, .page-head .btn-primary:hover{ box-shadow: 0 8px 20px rgba(20,48,90,.24) !important; }
+
+@media (prefers-reduced-motion: reduce){
+  .vts-main-inner{ animation: none !important; }
+  .vts-toast{ transition: opacity .2s ease !important; transform: none !important; }
+  .vts-toast.show{ transform: none !important; } .vts-toast.hide{ transform: none !important; }
+}
+
+/* ============================================================
+   DESIGN-SYSTEM ALIGNMENT — "less is more": Inter type, blue & white,
+   one gold accent, soft shadows, generous white space, zebra tables.
+   ============================================================ */
+:root{ --radius: 12px; }
+
+/* Typography — Inter, with a robust system fallback stack */
+body, .vts-navbar, .vts-sidebar, .vts-input, .vts-select, textarea, button,
+.btn-primary, .btn-outline, .btn-danger, .btn-ghost, .btn-logout, .menu-tab{
+  font-family: var(--font-ui) !important;
+  -webkit-font-smoothing: antialiased;
+}
+body{ letter-spacing: -.006em; }
+
+/* White space — consistent card/section rhythm (cards ~20px apart, sections ~32px) */
+.kpi-grid{ gap: 20px !important; margin-bottom: 24px !important; }
+.recent-table-wrap, .vts-card, .panel{ margin-bottom: 20px; }
+.vts-main-inner{ padding: 28px 30px 48px; }
+/* On phones the sidebar collapses and the "Menu" toggle floats over the top-
+   left, so keep enough top padding that it never covers the page heading. */
+@media (max-width: 900px){ .vts-main-inner{ padding: 58px 16px 36px; } }
+
+/* Cards — 12px radius, consistent padding, soft shadow (border already dropped above) */
+.vts-card{ padding: 22px !important; } .recent-table-wrap{ padding: 20px 22px !important; }
+.kpi-card{ padding: 20px !important; }
+
+/* Tables — zebra rows + a clear hover, sticky header kept from the base */
+.data-table tbody tr:nth-child(even) td, .vts-table tbody tr:nth-child(even) td{ background: #fafbfe; }
+.data-table tbody tr:hover td, .vts-table tbody tr:hover td{ background: #f1f6ff !important; }
+
+/* Buttons — rounded, one consistent hover (gentle lift + soft shadow) */
+.btn-primary, .btn-outline, .btn-danger{ transition: background .14s ease, border-color .14s ease, box-shadow .14s ease, transform .14s ease !important; }
+.btn-primary:hover, .btn-outline:hover, .btn-danger:hover{ transform: translateY(-1px); }
+
+/* Toasts — softer, outline removed (keep only the semantic left accent) */
+.vts-toast{ border: none; border-left: 4px solid var(--m-navy); box-shadow: 0 10px 30px rgba(16,34,63,.14); }
+
+@media (prefers-reduced-motion: reduce){
+  .btn-primary:hover, .btn-outline:hover, .btn-danger:hover{ transform: none; }
+}
+
+/* ============================================================
+   FORMAL LOGIN / AUTH — crisp solid-white card (no frosted glass),
+   solid inputs, calmer navy backdrop. Blue & white, less is more.
+   ============================================================ */
+.auth-card, .register-card, .vts-auth-card{
+  background: #ffffff !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 24px 64px rgba(9,23,48,.34) !important;
+  padding: 34px 34px !important;
+}
+.auth-card .vts-input, .auth-card .vts-select,
+.register-card .vts-input, .register-card .vts-select{
+  background: #ffffff !important; border: 1.5px solid #e4e9f2 !important;
+}
+.auth-card .vts-input:focus, .register-card .vts-input:focus{
+  border-color: var(--m-gold) !important; box-shadow: 0 0 0 3px rgba(201,162,39,.16) !important;
+}
+/* The background used to be re-declared here with !important, adding a second
+   wash on top of the one in vts-theme.css. It is defined in exactly one place
+   now (vts-theme.css, .auth-page) — do not re-add it here. */
+.auth-page::before{ content: none !important; }   /* no third layer */
+.auth-header .school-name{ letter-spacing: .01em; }
+
+/* ============================================================
+   RESPONSIVE — optimized for every device. Action rows stack and
+   buttons go full-width on phones; dashboard cards reflow; tables
+   scroll inside their card instead of overflowing the page.
+   ============================================================ */
+/* Tables always scroll rather than break the layout on small screens */
+.recent-table-wrap [style*="overflow-x"]{ -webkit-overflow-scrolling: touch; }
+
+@media (max-width: 720px){
+  .admin-welcome-row{ flex-direction: column; align-items: stretch; gap: 14px; }
+  .admin-welcome-row > div:last-child{ display: flex; flex-wrap: wrap; gap: 8px; }
+  .admin-welcome-row .btn-primary, .admin-welcome-row .btn-outline,
+  .admin-welcome-row a[class*="btn-"], .admin-welcome-row label[class*="btn-"]{
+    flex: 1 1 140px; justify-content: center; }
+  .kpi-grid{ grid-template-columns: repeat(2, 1fr) !important; gap: 14px !important; }
+  .filter-actions{ width: 100%; }
+  .filter-actions .btn-sm{ flex: 1 1 auto; justify-content: center; }
+}
+@media (max-width: 440px){
+  .kpi-grid{ grid-template-columns: 1fr !important; }
+  .kpi-value{ font-size: 1.7rem !important; }
+  .page-head h2, .admin-welcome-row h1, .page-title{ font-size: 1.2rem !important; }
+  .vts-toast-wrap{ top: 62px; }
+}
+
+/* Touch targets stay comfortable on phones (formal, tap-friendly) */
+@media (max-width: 720px){
+  .btn-primary, .btn-outline, .btn-danger{ min-height: 42px; }
+  .data-table th, .vts-table thead th, .data-table td, .vts-table tbody td{ padding: 10px !important; }
+}
+
+/* ============================================================
+   CLEAN & MINIMAL REFINEMENT  ·  final word (this file loads last)
+   Goal: "less is more" on the GWC GOLD + BLUE theme — navy/blue as
+   the base, GOLD as the single accent, white space, one calm button
+   + table language. Drops the old muddy blue→gold navbar gradient for
+   a clean navy bar carrying one thin gold accent hairline.
+   ============================================================ */
+
+/* ---- Header (navbar): THE gold + blue brand bar — gold lives HERE, in the
+   head, not on borders or buttons. Same brand gradient as the scanner and the
+   QR card, so the whole system reads as one. No colour hairline border. ---- */
+.vts-navbar{
+  background: linear-gradient(90deg, #1a3a6b 0%, #2a5298 52%, var(--m-gold) 100%) !important;
+  box-shadow: 0 2px 12px rgba(12,26,56,.20) !important;
+  border-bottom: none !important;
+}
+/* Subtle shadows keep white text readable over the gold end of the header */
+.vts-navbar .brand-name{ text-shadow: 0 1px 3px rgba(10,25,55,.40) !important; letter-spacing: .01em; }
+.vts-navbar .user-role{ text-shadow: 0 1px 3px rgba(10,25,55,.35) !important; }
+.vts-navbar .user-desc{ text-shadow: 0 1px 3px rgba(10,25,55,.30) !important; color: rgba(255,255,255,.72) !important; }
+.vts-navbar .user-avatar{ border-color: rgba(255,255,255,.6) !important; }
+/* Logout: crisp white pill, no border noise */
+.btn-logout{ border: none !important; box-shadow: 0 1px 3px rgba(9,23,48,.18) !important; }
+
+/* ---- White space: calmer page rhythm (24px cards · 32px sections) ---- */
+.vts-main-inner{ padding: 32px 34px 56px !important; }
+.admin-welcome-row, .page-head{ margin-bottom: 26px !important; }
+.recent-table-wrap, .vts-card, .panel{ margin-bottom: 22px !important; }
+.recent-table-wrap{ padding: 22px 24px !important; }
+.vts-card{ padding: 24px !important; }
+.filter-bar{ margin-bottom: 20px !important; }
+
+/* ---- Tables: a touch more air per row, quiet zebra + hover ---- */
+.data-table thead th, .vts-table thead th{ padding: 13px 15px !important; }
+.data-table tbody td, .vts-table tbody td{ padding: 15px 15px !important; }
+
+/* ---- Row action buttons: equal-size, clean icon squares ---- */
+.data-table td .btn-sm,
+.data-table td .inline-form .btn-sm{
+  min-width: 34px; height: 34px; padding: 0 10px !important;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 9px !important;
+}
+.data-table td a.btn-sm.btn-outline{ color: var(--m-navy) !important; }
+
+/* ---- Menu button: clean white pill, navy text + navy icon (no gold on buttons) ---- */
+.menu-tab{
+  position:static !important;
+  top:auto !important;
+  left:auto !important;
+  transform:none !important;
+  background: #ffffff !important;
+  color: #1a3a6b !important;                 /* navy text */
+  border: 1px solid #d7e0ef !important;      /* one clean, light border */
+  border-radius: 10px !important;
+  box-shadow: 0 2px 7px rgba(2, 25, 71, 0.729) !important;   /* soft, visible */
+  font-weight: 700 !important; letter-spacing: .01em !important;
+  padding: 10px 18px !important;
+  flex: 0 0 auto !important;
+}
+.vts-navbar .nav-start{ display:flex; align-items:center; gap:10px; flex:0 0 auto; min-width:0; }
+.vts-navbar .nav-start .brand{ display:flex; align-items:center; gap:12px; min-width:0; }
+.vts-navbar .nav-start .brand-name{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.menu-tab i{ color: #1a3a6b !important; margin-right: 2px !important; }   /* navy icon */
+.menu-tab:hover{
+  background: #f4f8ff !important;
+  border-color: #c3d3ec !important;
+  box-shadow: 0 3px 11px rgba(20,40,80,.16) !important;
+}
+
+/* ---- Sidebar menu buttons: blue & white accents (no gold on borders), lined up ---- */
+.sidebar-nav a{
+  padding: 12px 14px !important;
+  margin: 4px 12px !important;                /* equal vertical rhythm between items */
+  gap: 13px !important;                       /* even icon → label spacing */
+  transition: background .15s ease, color .15s ease !important;
+}
+.sidebar-nav a i{
+  width: 20px !important; text-align: center !important;   /* icons share a column so labels line up */
+  color: rgba(255,255,255,.58) !important;
+  transition: color .15s ease;
+}
+.sidebar-nav a:hover{ background: rgba(255,255,255,.10) !important; color:#fff !important; }
+.sidebar-nav a:hover i{ color:#ffffff !important; }         /* white on hover */
+.sidebar-nav a.active{
+  background: #ffffff !important;                           /* white pill: unmistakable current page */
+  color:#16315b !important; font-weight: 800 !important;
+  box-shadow: 0 4px 14px rgba(6,16,36,.25) !important;
+}
+.sidebar-nav a.active i{ color:#1a3a6b !important; }        /* navy active icon on white */
+
+/* ---- Everything else stays blue/white — gold only in the header ---- */
+.page-title i{ color: #1a3a6b !important; }                 /* heading icon: navy */
+.vts-input:focus, .vts-select:focus, select:focus, textarea:focus,
+.filter-field .vts-input:focus, .filter-field .vts-select:focus{
+  border-color: #2f6fd0 !important;                         /* blue focus */
+  box-shadow: 0 0 0 3px rgba(47,111,208,.16) !important;
+}
+a:focus-visible, button:focus-visible,
+.vts-input:focus-visible, .vts-select:focus-visible, .role-option:focus-visible{
+  outline: 3px solid rgba(47,111,208,.5) !important;        /* blue focus ring */
+  outline-offset: 2px !important;
+}
+
+@media (max-width: 900px){
+  .vts-main-inner{ padding: 60px 16px 40px !important; }
+  /* Filter bar stacks cleanly — fields keep their natural height (no
+     200px vertical flex-basis) so the search icon lines up inside its
+     field instead of floating below it. */
+  .filter-bar{ flex-direction: column; align-items: stretch; }
+  .filter-bar .filter-field{ flex: 0 0 auto !important; width: 100%; min-width: 0; }
+  .filter-bar .search-wrap{ width: 100%; max-width: none; }
+}

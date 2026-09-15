@@ -1,0 +1,748 @@
+/* VTS polish -- minimal design layer (loaded last): calm, readable, flat navy header, soft borders, one badge/table/form language for all roles. */
+
+:root{
+  --pl-bg:      #f5f7fb;
+  --pl-line:    #e6eaf2;
+  --pl-radius:  12px;
+  --pl-shadow:  0 1px 3px rgba(20,33,61,.06);
+  --pl-navy:    #1a3a6b;
+  --pl-text:    #232b3e;
+  --pl-muted:   #6b7690;
+}
+
+/* ---- 1. Calm the canvas: kill the photo bg on logged-in pages ---- */
+body.has-bg-image{
+  background-image: none !important;
+  background: var(--pl-bg) !important;
+}
+
+/* ---- 2. Flat, quiet navbar ---- */
+.vts-navbar{
+  background: var(--pl-navy) !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,.08);
+}
+.vts-navbar .brand-name{ font-weight: 700; letter-spacing: .01em; }
+
+/* ---- 3. Consistent motion, subtle ---- */
+@media (prefers-reduced-motion: no-preference){
+  a, button, .btn, .vts-card, input, select, textarea, tr{
+    transition: background-color .15s ease, color .15s ease,
+                border-color .15s ease, box-shadow .15s ease;
+  }
+}
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible{
+  outline: 3px solid rgba(37,99,201,.35);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ---- 4. Page rhythm ---- */
+.vts-main-inner{ max-width: 1180px; margin: 0 auto; padding: 26px 22px 60px; }
+.vts-main-inner.narrow{ max-width: 760px; }
+
+.page-head{ margin-bottom: 22px; }
+.page-head h2{
+  font-size: 1.3rem; font-weight: 750; color: var(--pl-text);
+  letter-spacing: -.01em; margin-bottom: 3px;
+}
+.page-head p{ color: var(--pl-muted); font-size: .88rem; }
+.page-head.with-back{ display: flex; align-items: flex-start; gap: 12px; }
+.back-btn{
+  width: 36px; height: 36px; flex: 0 0 36px; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #fff; border: 1px solid var(--pl-line); color: var(--pl-muted);
+}
+.back-btn:hover{ color: var(--pl-navy); border-color: #cbd6ea; }
+
+/* ---- 5. Cards: soft, flat ---- */
+.vts-card, .content, .cards .card{
+  background: #fff;
+  border: 1px solid var(--pl-line);
+  border-radius: var(--pl-radius);
+  box-shadow: var(--pl-shadow);
+  padding: 20px 22px;
+  margin-bottom: 18px;
+}
+.card-head{
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.card-head h3{ font-size: .98rem; font-weight: 700; color: var(--pl-text); }
+.card-label{
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--pl-muted); margin-bottom: 10px;
+}
+
+/* ---- 6. KPI cards ---- */
+.kpi-grid{
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px; margin-bottom: 20px;
+}
+.kpi-grid.slim{ grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+.kpi-card{
+  display: flex; align-items: center; gap: 14px;
+  background: #fff; border: 1px solid var(--pl-line);
+  border-radius: var(--pl-radius); box-shadow: var(--pl-shadow);
+  padding: 16px 18px; color: inherit;
+}
+a.kpi-card:hover{ border-color: #c9d6ee; }
+.kpi-icon{
+  width: 42px; height: 42px; border-radius: 11px; flex: 0 0 42px;
+  display: flex; align-items: center; justify-content: center; font-size: 1rem;
+}
+.kpi-icon.navy  { background: #e8eef9; color: #1a3a6b; }
+.kpi-icon.green { background: #e5f5ec; color: #1b7f46; }
+.kpi-icon.amber { background: #fdf3dd; color: #96660b; }
+.kpi-icon.orange{ background: #fdeade; color: #b35309; }
+.kpi-icon.red   { background: #fdeaea; color: #b02a2a; }
+.kpi-icon.blue  { background: #e7f0fc; color: #1c5aa8; }
+.kpi-value{ font-size: 1.55rem; font-weight: 800; color: var(--pl-text); line-height: 1.1; }
+.kpi-label{ font-size: .78rem; color: var(--pl-muted); font-weight: 600; }
+
+/* ---- 7. Tables: one language everywhere ---- */
+.table-wrap, .vts-table-wrap{ overflow-x: auto; }
+.data-table, .vts-table, .content table{
+  width: 100%; border-collapse: collapse; font-size: .88rem;
+}
+.data-table th, .vts-table th, .content table th{
+  text-align: left; font-size: .7rem; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--pl-muted); font-weight: 700;
+  padding: 10px 13px; border-bottom: 1px solid var(--pl-line);
+  background: #fafbfe; white-space: nowrap;
+}
+.data-table td, .vts-table td, .content table td{
+  padding: 13px; border-bottom: 1px solid #f0f3f9;
+  color: var(--pl-text); vertical-align: middle;
+}
+.data-table tr:last-child td, .vts-table tr:last-child td{ border-bottom: none; }
+.data-table tbody tr:hover, .vts-table tbody tr:hover{ background: #f7faff; }
+tr.row-link{ cursor: pointer; }
+.cell-title{ font-weight: 650; color: var(--pl-text); }
+.cell-sub{ font-size: .78rem; color: var(--pl-muted); margin-top: 1px; }
+.th-actions, .td-actions{ white-space: nowrap; }
+.td-actions{ display: flex; gap: 6px; align-items: center; }
+
+/* ---- 8. Badges: soft, consistent ---- */
+.badge{
+  display: inline-block; padding: 3px 10px; border-radius: 999px;
+  font-size: .72rem; font-weight: 700; letter-spacing: .02em;
+  white-space: nowrap;
+}
+.badge-green,  .badge-success { background:#e5f5ec; color:#1b7f46; }
+.badge-amber,  .badge-warning, .badge-pending { background:#fdf3dd; color:#96660b; }
+.badge-orange, .badge-at-risk { background:#fdeade; color:#b35309; }
+.badge-red,    .badge-danger  { background:#fdeaea; color:#b02a2a; }
+.badge-blue,   .badge-for-osa, .badge-info { background:#e7f0fc; color:#1c5aa8; }
+.badge-gray   { background:#eef1f6; color:#5c677d; }
+
+/* ---- 9. Buttons ---- */
+.btn-primary, .btn-success, .btn-danger, .btn-ghost, .content .btn, a.btn, button.btn{
+  display: inline-flex; align-items: center; gap: 7px;
+  border: none; border-radius: 9px; font-weight: 650; font-size: .86rem;
+  padding: 10px 16px; cursor: pointer; text-decoration: none;
+}
+.btn-sm{ padding: 7px 12px !important; font-size: .8rem !important; }
+.btn-primary{ background: var(--pl-navy); color: #fff; }
+.btn-primary:hover{ background: #142f57; }
+.btn-success{ background: #1b7f46; color: #fff; }
+.btn-success:hover{ background: #156a3a; }
+.btn-danger{ background: #c33; color: #fff; }
+.btn-danger:hover{ background: #a82626; }
+.btn-ghost{
+  background: #fff; color: var(--pl-navy);
+  border: 1px solid var(--pl-line) !important;
+}
+.btn-ghost:hover{ border-color: #c9d6ee !important; background: #f7faff; }
+button:active{ transform: translateY(1px); }
+button[disabled]{ opacity: .55; cursor: not-allowed; transform: none !important; }
+
+/* ---- 10. Forms ---- */
+.vts-form-group{ margin-bottom: 16px; }
+.vts-form-group label{
+  display: block; font-size: .82rem; font-weight: 650;
+  color: var(--pl-text); margin-bottom: 6px;
+}
+.vts-form-group .req{ color: #c33; }
+.vts-input, .vts-select,
+.content input[type="text"], .content input[type="date"], .content select, .content textarea{
+  width: 100%; padding: 10px 13px; font-size: .9rem; font-family: inherit;
+  color: var(--pl-text); background: #fff;
+  border: 1.5px solid #dbe2ee; border-radius: 9px; outline: none;
+}
+.vts-input:focus, .vts-select:focus{
+  border-color: #2563c9; box-shadow: 0 0 0 3px rgba(37,99,201,.12);
+}
+.hint{ display: block; margin-top: 5px; font-size: .76rem; color: var(--pl-muted); }
+.form-grid-2{ display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid-2 .span-2{ grid-column: 1 / -1; }
+@media (max-width: 640px){ .form-grid-2{ grid-template-columns: 1fr; } }
+
+.inline-form{ display: inline-flex; gap: 8px; align-items: center; margin: 0; }
+.action-row{ display: flex; gap: 10px; }
+
+/* ---- 11. Filter bars ---- */
+.filter-bar{
+  display: flex; gap: 10px; align-items: center;
+  margin-bottom: 16px; flex-wrap: wrap;
+}
+.filter-bar.wrap{ align-items: flex-end; }
+.search-wrap{ position: relative; flex: 1; min-width: 220px; max-width: 420px; }
+.search-wrap i{
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  color: #9aa6bd; font-size: .82rem;
+}
+.search-wrap .vts-input{ padding-left: 36px; }
+.filter-field{ display: flex; flex-direction: column; gap: 5px; min-width: 140px; }
+.filter-field.grow{ flex: 1; }
+.filter-field label{ font-size: .74rem; font-weight: 650; color: var(--pl-muted); }
+.filter-actions{ display: flex; gap: 8px; }
+
+.filter-panel{
+  display: none; flex-wrap: wrap; gap: 10px;
+  width: 100%; margin-top: 4px; padding-top: 14px;
+  border-top: 1px dashed var(--pl-line);
+}
+.filter-panel.open{ display: flex; }
+#filterToggleBtn.active{ background: var(--pl-navy); color: #fff; }
+.filter-badge{
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: #c33; margin-left: 4px; vertical-align: middle;
+}
+
+/* ---- 12. Alerts ---- */
+.alert, .alert-danger, .alert-success, .alert-info, .alert-warning, .alert-error{
+  border-radius: 10px; padding: 12px 15px; font-size: .87rem; font-weight: 500;
+  margin-bottom: 16px; display: flex; align-items: flex-start; gap: 9px;
+  border: 1px solid transparent;
+}
+.alert-danger, .alert-error{ background:#fdecec; color:#b02a2a; border-color:#f5c9c9; }
+.alert-success{ background:#e6f6ec; color:#1b6e3c; border-color:#bce4ca; }
+.alert-info   { background:#e7f0fc; color:#1c5aa8; border-color:#c3daf5; }
+.alert-warning{ background:#fff6e0; color:#95680c; border-color:#f3dfaa; }
+
+/* ---- 13. Detail views ---- */
+.detail-grid{
+  display: grid; grid-template-columns: 320px 1fr; gap: 18px;
+  align-items: start;
+}
+@media (max-width: 860px){ .detail-grid{ grid-template-columns: 1fr; } }
+.detail-list div{
+  display: flex; justify-content: space-between; gap: 14px;
+  padding: 8px 0; border-bottom: 1px solid #f0f3f9;
+}
+.detail-list div:last-child{ border-bottom: none; }
+.detail-list dt{ font-size: .82rem; color: var(--pl-muted); font-weight: 600; }
+.detail-list dd{ font-size: .87rem; color: var(--pl-text); font-weight: 550; text-align: right; }
+.detail-text{ font-size: .88rem; color: var(--pl-text); line-height: 1.6; }
+
+/* ---- 14. Empty states ---- */
+.empty-state{ text-align: center; padding: 44px 20px; color: #9aa6bd; }
+.empty-state .es-icon{ font-size: 2.2rem; opacity: .45; margin-bottom: 10px; }
+.empty-state .es-title{ font-size: .96rem; font-weight: 700; color: #6b7894; margin-bottom: 3px; }
+.empty-state .es-sub{ font-size: .84rem; }
+
+/* ---- 15. Guard "issue violation" student strip ---- */
+.student-strip{ display: flex; align-items: center; gap: 14px; }
+.avatar-circle{
+  width: 46px; height: 46px; border-radius: 50%; flex: 0 0 46px;
+  background: #e8eef9; color: var(--pl-navy);
+  display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
+}
+
+/* ---- 16. Modal overlay fix (blocking clicks when closed) ---- */
+.modal-overlay{
+  pointer-events: none !important; opacity: 0 !important; visibility: hidden !important;
+}
+.modal-overlay.open{
+  pointer-events: auto !important; opacity: 1 !important; visibility: visible !important;
+}
+
+/* ---- 17. Sidebar toggle (desktop collapse + mobile slide) ---- */
+.vts-sidebar{ transition: transform .28s ease, margin-left .28s ease; }
+@media (min-width: 901px){
+  .vts-sidebar.collapsed{ margin-left: calc(-1 * var(--sidebar-w, 260px)); }
+  .vts-main.expanded{ margin-left: 0 !important; }
+}
+@media (max-width: 900px){
+  .vts-navbar .brand{ display:flex !important; }
+  .vts-sidebar{
+    position: fixed; top: var(--navbar-h, 68px); left: 0; bottom: 0;
+    z-index: 1050; transform: translateX(-100%);
+    box-shadow: 0 0 0 100vmax rgba(0,0,0,0);
+  }
+  .vts-sidebar.open{
+    transform: translateX(0);
+    box-shadow: 0 0 0 100vmax rgba(0,0,0,.35);
+  }
+}
+
+/* ---- 18. Back-to-top ---- */
+#toTopBtn{
+  position: fixed; right: 22px; bottom: 22px; z-index: 1200;
+  width: 42px; height: 42px; border-radius: 50%; border: none;
+  background: var(--pl-navy); color: #fff; font-size: 1rem; cursor: pointer;
+  box-shadow: 0 4px 14px rgba(26,58,107,.3);
+  opacity: 0; visibility: hidden; transform: translateY(8px);
+  transition: opacity .2s, transform .2s, visibility .2s;
+}
+#toTopBtn.show{ opacity: 1; visibility: visible; transform: translateY(0); }
+
+/* ---- 19. Legacy .content pages that remain (admin/etc.) ---- */
+.content > h2:first-child{ font-size: 1.25rem; font-weight: 750; color: var(--pl-text); margin-bottom: 12px; }
+.content a:not(.btn){ color: #ffffff; font-weight: 600; text-decoration: none; }
+.content a:not(.btn):hover{ text-decoration: underline; }
+
+/* ---- 20. Old KPI ".cards" grid (admin pages) ---- */
+.cards{
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px; margin-bottom: 20px;
+}
+.cards .card h3{
+  font-size: .74rem; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--pl-muted); font-weight: 700; margin-bottom: 8px;
+}
+.cards .card h1{ font-size: 1.7rem; font-weight: 800; color: var(--pl-text); line-height: 1; }
+
+/* ---- 21. Show/hide password toggle (login & register) ---- */
+.vts-input-icon { position: relative; }
+.vts-input-icon .eye-toggle,
+.password-wrap .eye {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px; height: 34px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer;
+  color: #8a94a8; font-size: .95rem;
+  border-radius: 8px;
+  z-index: 3;
+}
+.vts-input-icon .eye-toggle:hover,
+.password-wrap .eye:hover { color: var(--pl-navy); background: #eef2f8; }
+/* The icon INSIDE the toggle stays inside the button (never absolute-left) */
+.vts-input-icon .eye-toggle i,
+.password-wrap .eye i {
+  position: static !important;
+  transform: none !important;
+  left: auto !important;
+}
+/* Room for the button so text doesn't slide under it */
+.vts-input-icon input[type="password"],
+.vts-input-icon input[type="text"] { padding-right: 44px; }
+
+/* ---- 22. Chart containers: kills the infinite-grow bug ---- */
+.chart-box { position: relative; width: 100%; }
+.chart-box canvas { max-height: 100%; }
+.donut-canvas-box { position: relative; }
+
+/* =====================================================================
+   23. MOBILE / PHONE FIT — the whole app on small screens
+   ===================================================================== */
+@media (max-width: 640px){
+
+  /* Page rhythm: tighter padding so the card fills the phone width */
+  .vts-main-inner{ padding: 16px 12px 48px; }
+  .vts-card, .content{ padding: 16px 14px; border-radius: 11px; }
+  .page-head h2{ font-size: 1.12rem; }
+  .page-head p{ font-size: .82rem; }
+
+  /* Navbar: shrink brand, keep hamburger + avatar reachable */
+  .vts-navbar{ padding: 0 10px !important; }
+  .vts-navbar .brand-name{ font-size: .86rem !important; letter-spacing: 0 !important; }
+  .vts-navbar .user-info{ display: none !important; }   /* name/role hidden; avatar stays */
+  .btn-logout{ padding: 7px 11px !important; font-size: .78rem !important; }
+
+  /* KPI cards: two per row */
+  .kpi-grid{ grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .kpi-card{ padding: 12px 13px; gap: 10px; }
+  .kpi-icon{ width: 36px; height: 36px; flex-basis: 36px; font-size: .9rem; }
+  .kpi-value{ font-size: 1.25rem; }
+  .kpi-label{ font-size: .7rem; }
+
+  /* Tables: horizontal scroll instead of squishing */
+  .table-wrap, .vts-table-wrap, .recent-table-wrap{
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    margin: 0 -14px; padding: 0 14px;
+  }
+  .data-table, .vts-table, .content table{ min-width: 560px; font-size: .82rem; }
+  .data-table th, .data-table td{ padding: 9px 10px; }
+
+  /* Forms & filters stack vertically */
+  .filter-bar{ flex-direction: column; align-items: stretch; }
+  .search-wrap{ max-width: none; }
+  .filter-field{ min-width: 0; }
+  .form-grid-2{ grid-template-columns: 1fr; }
+  .detail-grid{ grid-template-columns: 1fr; }
+  .td-actions{ flex-wrap: wrap; }
+  .action-row{ flex-direction: column; }
+  .action-row .inline-form, .action-row button{ width: 100%; }
+
+  /* Buttons big enough for thumbs */
+  .btn-primary, .btn-success, .btn-danger, .btn-ghost{ padding: 12px 16px; }
+  .btn-sm{ padding: 9px 12px !important; }
+
+  /* Chart boxes shorter on phones */
+  .chart-box{ height: 220px !important; }
+
+  /* Auth pages: card hugs the screen */
+  .auth-card, .register-card, .vts-auth-card{
+    width: 100% !important; max-width: 100% !important;
+    padding: 22px 16px !important; border-radius: 12px !important;
+  }
+  .modal-box, .role-modal{
+    width: calc(100vw - 24px) !important; max-width: 420px !important;
+    padding: 20px 16px !important;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 380px){
+  .kpi-grid{ grid-template-columns: 1fr; }
+  .vts-navbar img{ display: none; }
+}
+
+/* ---- 24. STRONGER CONTRAST + WHITE ACTION BUTTONS ---- */
+:root{
+  --pl-text:  #17202f;      /* darker body text */
+  --pl-muted: #55617a;      /* darker secondary text */
+  --pl-line:  #d5dcea;      /* clearer card borders */
+}
+body{ color: var(--pl-text); }
+.vts-card, .content{ border-width: 1.5px; }
+.data-table th{ color:#44506a; background:#eef2f9; border-bottom:2px solid #c9d3e6; }
+.data-table td{ border-bottom:1px solid #e3e9f4; }
+.page-head h2{ color:#122036; }
+.kpi-value{ color:#122036; }
+.badge{ font-weight:800; }
+
+/* LOGIN buttons: navy -> white with navy text (strong on the blue bg) */
+.auth-card .btn-primary.btn-full,
+.role-modal .btn-primary.btn-full{
+  background:#fff !important;
+  color:#1a3a6b !important;
+  border:2px solid #1a3a6b !important;
+  font-weight:800;
+  letter-spacing:.04em;
+}
+.auth-card .btn-primary.btn-full:hover,
+.role-modal .btn-primary.btn-full:hover{
+  background:#f2f6fd !important;
+  box-shadow:0 3px 12px rgba(26,58,107,.25);
+}
+
+/* Team / Meet-the-Team buttons -> white */
+.team-btn, .meet-team-btn, .btn-team,
+.team-card .btn-primary, #teamModal .btn-primary{
+  background:#fff !important;
+  color:#1a3a6b !important;
+  border:2px solid #1a3a6b !important;
+}
+.team-btn:hover, .btn-team:hover, .team-card .btn-primary:hover{
+  background:#eef3fb !important;
+}
+
+/* =====================================================================
+   25. HEADER GRADIENT · WHITE LOGOUT · PROFESSIONAL "MENU" SIDEBAR
+   ===================================================================== */
+
+/* Navbar: blue -> gold gradient (matches the school colors) */
+.vts-navbar{
+  background: linear-gradient(90deg, #0f2f5c 0%, #1a3a6b 55%, #8a6f1c 85%, #c9a227 100%) !important;
+  box-shadow: 0 2px 10px rgba(14,32,60,.25);
+}
+
+/* Logout: clean WHITE fill */
+.btn-logout{
+  background: #ffffff !important;
+  color: #1a3a6b !important;
+  border: 1.5px solid rgba(255,255,255,.9) !important;
+  font-weight: 800 !important;
+}
+.btn-logout:hover{
+  background: #eef3fb !important;
+  color: #12294d !important;
+}
+
+/* ---- Sidebar: professional, layered navy with a clear hierarchy ---- */
+.vts-sidebar{
+  background: linear-gradient(180deg, #16325e 0%, #122a50 100%) !important;
+  border-right: 1px solid rgba(255,255,255,.08);
+}
+.sidebar-title{
+  padding: 16px 22px 12px;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .18em;
+  color: rgba(255,255,255,.45);
+  text-transform: uppercase;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  margin-bottom: 6px;
+}
+.sidebar-title i{ font-size: .8rem; }
+
+.sidebar-nav a{
+  margin: 2px 10px;
+  padding: 12px 14px !important;
+  border-radius: 9px;
+  border-left: none !important;
+  color: rgba(255,255,255,.78) !important;
+  font-weight: 550;
+  transition: background .15s ease, color .15s ease;
+}
+.sidebar-nav a i{
+  color: rgba(255,255,255,.55);
+  transition: color .15s ease;
+}
+.sidebar-nav a:hover{
+  background: rgba(255,255,255,.10) !important;
+  color: #fff !important;
+}
+.sidebar-nav a:hover i{ color: #e8c85a; }
+
+/* Active page: gold accent pill — clear at a glance */
+.sidebar-nav a.active{
+  background: rgba(201,162,39,.18) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 #c9a227;
+}
+.sidebar-nav a.active i{ color: #e8c85a; }
+
+/* Notification badge inside the sidebar stays readable */
+.notif-badge{
+  background: #e05252; color: #fff;
+  border-radius: 999px; font-size: .68rem; font-weight: 800;
+  padding: 2px 8px; margin-left: auto;
+}
+
+/* ---- 26. Navbar notification bell ---- */
+.nav-bell{
+  position: relative;
+  width: 40px; height: 40px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 1.05rem;
+  border-radius: 10px;
+  background: rgba(255,255,255,.14);
+  text-decoration: none;
+  margin-right: 10px;
+  transition: background .15s ease;
+}
+.nav-bell:hover{ background: rgba(255,255,255,.26); }
+.nav-bell-badge{
+  position: absolute; top: -5px; right: -5px;
+  background: #e04545; color: #fff;
+  font-size: .62rem; font-weight: 800;
+  padding: 2px 6px; border-radius: 999px;
+  border: 2px solid #1a3a6b;
+}
+
+/* ---- 26b. Student connectivity pill (in the navbar, next to the bell) ---- */
+.vts-netpill{
+  display: inline-flex; align-items: center; gap: 6px;
+  border-radius: 999px; padding: 5px 11px;
+  font-size: .7rem; font-weight: 700; letter-spacing: .02em;
+  border: 1px solid rgba(255,255,255,.3); background: rgba(0,0,0,.14);
+  color: #eaf1fb; white-space: nowrap; margin-right: 10px;
+}
+.vts-net-dot{ width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.vts-net-on{ color: #bff3d6; border-color: rgba(27,127,70,.5); }
+.vts-net-off{ color: #ffe2a6; border-color: rgba(224,122,16,.5); }
+@media (max-width: 640px){
+  .vts-netpill span:not(.vts-net-dot){ display: none; } /* dot only on small screens */
+  .vts-netpill{ padding: 7px; }
+}
+.kpi-icon.gray{ background:#eef1f6; color:#5c677d; }
+
+/* ---- 27. Admin sidebar: desktop collapse like the other roles ---- */
+@media (min-width: 901px){
+  .admin-sidebar{ transition: transform .28s ease; }
+  .admin-sidebar.collapsed{ transform: translateX(-100%); }
+  body.admin-collapsed .admin-main{ margin-left: 0 !important; }
+  .admin-main{ transition: margin-left .28s ease; }
+}
+.tb-bell{ cursor: pointer; }
+.tb-bell:hover i{ color: #ffd75e; }
+
+/* ---- 28. "Menu" tab under the header (single consistent toggle) ---- */
+.menu-tab{
+  position: fixed;
+  top: calc(var(--navbar-h, 64px) + 10px);
+  left: 14px;
+  z-index: 1100;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px;
+  background: #ffffff;
+  color: #1a3a6b;
+  border: 1.5px solid #d5dcea;
+  border-radius: 999px;
+  font-weight: 800; font-size: .82rem; letter-spacing: .03em;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(14,32,60,.12);
+  transition: background .15s ease, box-shadow .15s ease;
+}
+.menu-tab:hover{ background: #f2f6fd; box-shadow: 0 3px 12px rgba(14,32,60,.18); }
+.menu-tab:active{ transform: translateY(1px); }
+/* Give page content room so the tab never covers headings */
+.vts-main-inner{ padding-top: 58px; }
+
+/* ---- 29. Notification bell: WHITE ---- */
+.nav-bell{
+  background: #ffffff !important;
+  color: #1a3a6b !important;
+  border: 1.5px solid rgba(255,255,255,.9);
+}
+.nav-bell:hover{ background: #eef3fb !important; }
+.nav-bell-badge{ border-color: #ffffff !important; }
+
+
+/* ---- 30. Menu pill never covers the sidebar links ---- */
+.vts-sidebar{ padding-top: 60px; }          /* pill floats in this reserved space */
+.vts-sidebar .sidebar-nav{ padding-top: 4px; }
+
+/* ---- 31. MINIMALIST sidebar: flat, quiet, readable ---- */
+.vts-sidebar{
+  background: #14335f !important;            /* flat navy — no gradients */
+  border-right: 1px solid rgba(255,255,255,.07);
+}
+.sidebar-nav a{
+  margin: 1px 12px;
+  padding: 11px 13px !important;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: .92rem;
+  color: rgba(255,255,255,.72) !important;
+  white-space: nowrap;                       /* text never wraps or spills */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: none;
+}
+.sidebar-nav a i{
+  width: 18px; text-align: center;
+  font-size: .88rem;
+  color: rgba(255,255,255,.45);
+}
+.sidebar-nav a:hover{ background: rgba(255,255,255,.07) !important; }
+.sidebar-nav a.active{
+  background: rgba(255,255,255,.12) !important;
+  color: #fff !important;
+  font-weight: 650;
+  box-shadow: inset 3px 0 0 #e8c85a;
+}
+.sidebar-nav a.active i{ color: #e8c85a; }
+.notif-badge{ margin-left: auto; }
+
+/* =====================================================================
+   33. MOBILE COMPATIBILITY — comprehensive phone layer
+   ===================================================================== */
+@media (max-width: 768px){
+  /* Sidebar becomes an off-canvas drawer on phones */
+  .vts-sidebar{
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 60;
+    transform: translateX(-100%); transition: transform .25s ease;
+    width: 76vw; max-width: 300px;
+  }
+  .vts-sidebar.open{ transform: translateX(0); box-shadow: 0 0 40px rgba(0,0,0,.4); }
+  .vts-main{ margin-left: 0 !important; }
+
+  /* Menu pill sits top-left, always tappable */
+  .menu-tab{ top: calc(var(--navbar-h,60px) + 8px); left: 10px; }
+
+  /* Navbar: compact */
+  .vts-navbar{ padding: 0 10px !important; }
+  .vts-navbar .brand-name{ font-size: .82rem !important; }
+  .vts-navbar .user-info{ display: none !important; }
+  .btn-logout{ padding: 7px 11px !important; font-size: .78rem !important; }
+
+  /* Forms & auth cards fill the screen */
+  .auth-card, .register-card, .vts-auth-card{
+    width: 100% !important; max-width: 100% !important;
+    padding: 22px 16px !important; margin: 0 !important; border-radius: 12px !important;
+  }
+  .role-modal, .modal-box{ width: calc(100vw - 24px) !important; max-width: 400px !important; }
+  .form-grid-2, .form-grid, .register-grid{ grid-template-columns: 1fr !important; }
+
+  /* KPI cards 2-per-row, wrap text */
+  .kpi-grid{ grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+  .kpi-label, .kpi-meta, .kpi-sub{ white-space: normal !important; overflow-wrap: break-word !important; }
+
+  /* Tables scroll sideways instead of squishing */
+  .table-wrap, .vts-table-wrap, .data-table-wrap{ overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .data-table, .vts-table{ min-width: 560px; font-size: .82rem; }
+
+  /* Filter bars stack */
+  .filter-bar{ flex-direction: column; align-items: stretch; }
+  .search-wrap{ max-width: none; }
+
+  /* Buttons big enough for thumbs */
+  .btn-primary, .btn-ghost, .btn-danger, .btn-success{ padding: 12px 16px; }
+
+  /* Charts shorter */
+  .chart-box{ height: 220px !important; }
+}
+
+@media (max-width: 400px){
+  .kpi-grid{ grid-template-columns: 1fr !important; }
+  .page-head h2{ font-size: 1.2rem; }
+}
+
+/* Touch targets everywhere */
+@media (hover: none){
+  .sidebar-nav a, .btn, .vts-input, select, .menu-tab{ min-height: 42px; }
+}
+
+/* Field hint helper (used by the new username field) */
+.field-hint{ display:block; color:#6b7280; font-size:.76rem; margin-top:4px; }
+
+/* =====================================================================
+   34. MENU PILL — centers itself over the menu whenever it is shown
+   (body.sb-shown is kept in sync by includes/footer.php)
+   ===================================================================== */
+/* Centered over the menu when open — no slide (motion kept minimal). */
+@media (min-width: 901px){
+  body.sb-shown .menu-tab{ left: calc(var(--sidebar-w, 260px) / 2); transform: translateX(-50%); }
+}
+@media (max-width: 900px){
+  body.sb-shown .menu-tab{ left: calc(min(76vw, 300px) / 2); transform: translateX(-50%); z-index: 70; }
+}
+
+/* =====================================================================
+   35. AUTO-UPPERCASE data-entry fields (paired with the .js-upper JS)
+   ===================================================================== */
+.js-upper{ text-transform: uppercase; }
+.js-upper::placeholder{ text-transform: none; }
+
+/* Visual styling lives in vts-minimal.css (loaded last). */
+
+/* =====================================================================
+   TABLE-RESPONSIVE — the conventional name for "this scrolls sideways".
+
+   The app already had four names doing this job (.table-wrap,
+   .recent-table-wrap, .table-scroll, .bk-table-wrap), which is three too
+   many: nothing reading the markup — a person, a linter, an audit tool —
+   can tell that they all mean the same thing. Every wrapper now also
+   carries the name the rest of the world uses for it, and this is the rule
+   that guarantees the behaviour regardless of which of the four it is.
+   ===================================================================== */
+.table-responsive{
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+/* Row-count line under a listing (was an inline style on each page). */
+.vo-count{ margin-top: 12px; color: var(--text-soft, #55617a); font-size: .82rem; }
+
+/* Type-to-filter box above a rendered listing. */
+.vts-filter-row{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.vts-filter-row .vts-table-filter{
+  flex: 1 1 240px; min-width: 0; max-width: 340px;
+  padding: 8px 12px; font-size: .86rem;
+  border: 1.5px solid var(--border, #dde4f0); border-radius: 9px;
+  color: var(--text, #1a2340); background: #fff;
+}
+.vts-filter-row .vts-table-filter:focus{ outline: none; border-color: var(--navy, #1a3a6b); }
+.vts-filter-row .filter-status{ font-size: .78rem; color: var(--text-muted, #5a6a8a); font-weight: 600; }

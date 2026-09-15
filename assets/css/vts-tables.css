@@ -1,0 +1,183 @@
+/* =====================================================================
+   LISTING TABLES — stack into cards instead of scrolling sideways
+   ---------------------------------------------------------------------
+   Every admin/OSA listing used to answer a narrow screen the same way:
+   force the table to 560px and let it scroll left-to-right
+   (vts-theme.css, vts-polish.css — "horizontal scroll instead of
+   squishing"). That kept each column readable, but it hid the one column
+   people reach for most. Action sits last, so on a narrow screen the Edit
+   / Print / Served / Delete controls were off-screen until you swiped,
+   and the header scrolled away with them so you could not tell which
+   column you had landed on.
+
+   A row is now a CARD once its table no longer fits: the head row is
+   dropped and every cell states its own column name. Nothing is off-
+   screen, nothing needs swiping, and the action buttons sit in the card
+   they belong to.
+
+   WHY A CLASS AND NOT A MEDIA QUERY
+   The sidebar is 260px and can be collapsed by hand, so the same viewport
+   width gives two very different content widths and no `@media` value is
+   right for both. WHY NOT AN `@container` QUERY: `container-type` brings
+   layout containment with it, which makes the container the containing
+   block for `position:fixed` descendants — and the row Print menus are
+   fixed precisely so they can escape this wrapper (see vtsPlaceMenu in
+   assets/js/vts-ui.js). A container query here would pull every one of
+   those menus back inside the scroller it was written to escape.
+
+   So the decision is measured, not declared: vts-ui.js watches each
+   wrapper and toggles `.is-stacked` when the table actually overflows it.
+   This file is only what that class looks like.
+
+   Loaded LAST in includes/header.php so it lands after the rules it
+   overrides.
+   ===================================================================== */
+
+/* The old forced width is what MADE these tables overflow below 900px.
+   Without it a table shrinks and wraps on its own, and the measurement in
+   vts-ui.js sees real overflow rather than this declaration's. Three
+   separate rules set it, two of them inside media queries, so this is one
+   of the few places `!important` is the honest tool.
+
+   .official-sheet is exempt for the same reason the script skips it: its
+   1180px is not a scroll workaround but the width of the paper form it
+   reproduces, and it carries `data-table` as well, so an unqualified
+   reset here would flatten it. */
+table.data-table:not(.official-sheet),
+table.vts-table{ min-width: 0 !important; }
+
+/* Scanner access is a binary permission, so it is a switch rather than an
+   ambiguous action button. The label remains the click target for touch use. */
+.scanner-access-form{ margin:0; }
+.scanner-switch{ display:inline-flex; align-items:center; gap:7px; cursor:pointer; white-space:nowrap; }
+.scanner-switch input{ position:absolute; opacity:0; pointer-events:none; }
+.scanner-switch-track{ width:34px; height:20px; border-radius:10px; background:#94a3b8; position:relative; transition:background .15s ease; }
+.scanner-switch-track::after{ content:""; position:absolute; width:14px; height:14px; top:3px; left:3px; border-radius:50%; background:#fff; box-shadow:0 1px 2px rgba(15,23,42,.25); transition:transform .15s ease; }
+.scanner-switch input:checked + .scanner-switch-track{ background:#16835d; }
+.scanner-switch input:checked + .scanner-switch-track::after{ transform:translateX(14px); }
+.scanner-switch input:focus-visible + .scanner-switch-track{ outline:3px solid rgba(22,131,93,.28); outline-offset:2px; }
+.scanner-switch-text{ min-width:20px; font-size:.78rem; font-weight:700; color:var(--text-muted, #5a6a8a); }
+
+/* =====================================================================
+   CARD MODE
+   ===================================================================== */
+table.is-stacked,
+table.is-stacked > tbody,
+table.is-stacked > tbody > tr,
+table.is-stacked > tbody > tr > td{
+  display: block;
+  width: auto;
+}
+
+/* Column names live on each cell now, so the head row has nothing to say.
+   `display:none` and not `visibility` — it must give up its space too. */
+table.is-stacked > thead{ display: none; }
+
+table.is-stacked > tbody > tr{
+  background: #fff;
+  border: 1px solid var(--border, #dde4f0);
+  border-radius: 12px;
+  padding: 4px 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 2px rgba(16, 33, 66, .04);
+}
+table.is-stacked > tbody > tr:last-child{ margin-bottom: 0; }
+
+/* The row-level hover tint is a table affordance — it told you which row
+   your eye was on across a wide sweep. A card is already one block, so it
+   would only be noise. */
+table.is-stacked > tbody > tr:hover > td{ background: transparent; }
+
+table.is-stacked > tbody > tr > td{
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid #f1f4f9;
+  font-size: .84rem;
+}
+table.is-stacked > tbody > tr > td:last-child{ border-bottom: 0; }
+
+/* The column name, taken from the matching <th> by vts-ui.js. */
+table.is-stacked > tbody > tr > td::before{
+  content: attr(data-label);
+  flex: 0 0 38%;
+  max-width: 130px;
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text-muted, #5a6a8a);
+  line-height: 1.5;
+  padding-top: 1px;
+}
+
+/* A cell that carries no column name (the action cell, an empty-state
+   message) should not reserve the label gutter. */
+table.is-stacked > tbody > tr > td[data-label=""]::before,
+table.is-stacked > tbody > tr > td[data-vts-full]::before{ content: none; }
+
+/* ── The action cell ────────────────────────────────────────────────
+   The reason for the whole change: these controls are what was hidden
+   off the right edge. They get the full width of the card and a rule
+   above them, so they read as the row's controls rather than one more
+   field. */
+table.is-stacked > tbody > tr > td[data-vts-actions]{
+  display: block;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border, #dde4f0);
+  border-bottom: 0;
+}
+
+/* Four controls on one line is a table constraint — it kept the column
+   a predictable width so the button under the cursor never moved. In a
+   card there is no column to keep steady, and wrapping beats overflow. */
+table.is-stacked .row-actions{ flex-wrap: wrap; gap: 6px; }
+
+/* `nowrap` exists to stop a date or a button strip splitting across
+   lines in a narrow column. In a card the cell has the full width, and
+   holding this would push the card itself wide again. */
+table.is-stacked > tbody > tr > td.nowrap{ white-space: normal; }
+
+/* Long unbroken values (an e-mail, a filename, a student number) must
+   break rather than widen the card. */
+table.is-stacked > tbody > tr > td{ overflow-wrap: anywhere; min-width: 0; }
+
+/* ── Empty state ────────────────────────────────────────────────────
+   "No violation records found." is one cell spanning every column. As a
+   card it would be a single labelled field, which reads as data. */
+table.is-stacked > tbody > tr > td[data-vts-full]{
+  display: block;
+  text-align: center;
+  border-bottom: 0;
+  padding: 10px 0;
+}
+table.is-stacked > tbody > tr:has(> td[data-vts-full]){
+  background: transparent;
+  border-style: dashed;
+}
+
+/* =====================================================================
+   PRINT — always a table
+   ---------------------------------------------------------------------
+   Paper has a fixed, generous width and no scrolling to avoid, so the
+   reason for cards does not apply. `.is-stacked` is applied by script and
+   is still on the element when the print dialog opens, so it is undone
+   here rather than left to produce a column of cards on A4.
+   ===================================================================== */
+@media print{
+  table.is-stacked{ display: table; }
+  table.is-stacked > thead{ display: table-header-group; }
+  table.is-stacked > tbody{ display: table-row-group; }
+  table.is-stacked > tbody > tr{
+    display: table-row;
+    border: 0; border-radius: 0; padding: 0; margin: 0; box-shadow: none;
+  }
+  table.is-stacked > tbody > tr > td{
+    display: table-cell;
+    border-top: 0;
+    border-bottom: 1px solid #f1f4f9;
+  }
+  table.is-stacked > tbody > tr > td::before{ content: none; }
+}

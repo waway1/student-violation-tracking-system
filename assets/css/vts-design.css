@@ -1,0 +1,790 @@
+/* =====================================================================
+   VTS DESIGN SYSTEM  —  "Academic Guard Precision"
+
+   One place that decides what this app looks like. Loaded LAST so it settles
+   anything the older stylesheets disagree about, and written as tokens first
+   so the next change is a value here rather than a hunt through nine files.
+
+   WHY THIS EXISTS. The interface had drifted to hundreds of hand-typed
+   colours and a set of dashboard cards that were full-bleed orange, yellow
+   and green gradients with heavy drop shadows — every tile shouting at the
+   same volume, so nothing read as more important than anything else. The
+   palette below is four families and their scales; everything on screen is
+   drawn from it.
+
+   THE RULE FOR COLOUR ON A CARD: a card is white. Colour appears in the
+   small things — an icon chip, a number, a status pill, a 3px rule — never
+   as the whole surface. That is what makes a dashboard scannable: the eye
+   lands on the one coloured thing, not on four competing rectangles.
+   ===================================================================== */
+
+:root{
+  /* ── Primary — slate. Chrome, headings, primary actions ── */
+  --p-900:#0B1220; --p-800:#131C2E; --p-700:#1E293B; --p-600:#2B3950;
+  --p-500:#3E4D68; --p-400:#5B6B87; --p-300:#8593AB; --p-200:#B6C0D0;
+  --p-100:#DCE2EB; --p-50:#EEF1F6;
+  --primary:var(--p-700);
+
+  /* ── Secondary — emerald. Success, "good standing", positive counts ── */
+  --s-700:#047857; --s-600:#059669; --s-500:#10B981; --s-400:#34D399;
+  --s-200:#A7F3D0; --s-100:#D1FAE5; --s-50:#ECFDF5;
+  --secondary:var(--s-600);
+
+  /* ── Tertiary — #3323CC, the accent the college picked. Links, focus,
+     and the "informational" state. The rest of the scale is that hex
+     mixed toward white (tints) and toward near-black (the 700 shade). ── */
+  --t-700:#2A1DA8; --t-600:#3323CC; --t-500:#5446D4; --t-400:#8177DF;
+  --t-200:#CAC6F2; --t-100:#E4E2F8; --t-50:#F4F3FC;
+  --tertiary:var(--t-600);
+
+  /* ── Neutral — the page itself ── */
+  --n-900:#0F172A; --n-700:#334155; --n-600:#475569; --n-500:#64748B;
+  --n-400:#94A3B8; --n-300:#CBD5E1; --n-200:#E2E8F0; --n-100:#F1F5F9;
+  --n-50:#F8FAFC; --n-0:#FFFFFF;
+
+  /* ── Status. Amber and rose are for meaning only, never decoration ── */
+  --ok:var(--s-600); --ok-bg:var(--s-50); --ok-line:var(--s-200);
+  --warn:#D97706;   --warn-bg:#FFFBEB;   --warn-line:#FDE68A;
+  --bad:#E11D48;    --bad-bg:#FFF1F2;    --bad-line:#FECDD3;
+  --info:var(--t-600); --info-bg:var(--t-50); --info-line:var(--t-200);
+
+  /* ── The older semantic names, re-pointed at the palette above. Every
+        rule in the legacy stylesheets keeps working and inherits the new
+        colours, which is what made this change affordable at all. ── */
+  --navy:var(--p-700);  --navy-dark:var(--p-800); --navy-light:var(--p-600);
+  --bg:var(--n-50);     --surface:var(--n-0);
+  --text:var(--n-900);  --text-muted:var(--n-500);
+  --text-soft:var(--n-600); --text-faint:var(--n-400);
+  --border:var(--n-200);    --border-soft:var(--n-100);
+  --surface-alt:var(--n-100); --surface-tint:var(--t-50);
+  --danger:var(--bad); --warning:var(--warn); --success:var(--ok);
+
+  /* Gold is retained for ONE thing: the institutional seal's ring. It is
+     the school's identity, not a UI colour, and it appears nowhere else. */
+  --gold:#C9A227;
+
+  /* ── Type. Plus Jakarta Sans carries headings, Inter everything else ── */
+  --font-display:'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --font-ui:'Inter', system-ui, sans-serif;
+
+  /* ── Elevation. Low and tight: a card is lifted, not floating ── */
+  --shadow-sm:0 1px 2px rgba(15,23,42,.06);
+  --shadow-md:0 1px 3px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+  --shadow-lg:0 10px 24px rgba(15,23,42,.10);
+
+  --radius:12px; --radius-sm:8px; --radius-lg:16px;
+  --navbar-h:56px; --sidebar-w:248px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   TYPE
+   ───────────────────────────────────────────────────────────────────── */
+/* The default canvas — and only a DEFAULT, which is why it is wrapped in
+   :where(). This sheet loads last, so a plain `body{}` here beat the bare
+   `body{}` rules in auth-pages.css and auth-verify.css and painted flat grey
+   over the campus photo on forgot_password.php, verify.php and login_otp.php.
+   :where() drops this to zero specificity, so any page that deliberately
+   paints its own background wins no matter what order it loads in, while
+   pages that claim nothing still land on the palette neutral. */
+:where(body){ background:var(--n-50); color:var(--n-900); font-family:var(--font-ui); }
+h1,h2,h3,h4,.auth-heading,.page-title,.admin-welcome-row h1,.page-head h1{
+  font-family:var(--font-display);
+  letter-spacing:-.018em;
+  color:var(--n-900);
+}
+.page-title,.admin-welcome-row h1,.page-head h1{ font-weight:800; }
+
+/* One password control everywhere: auth pages use .password-wrap while the
+   staff modal uses .pwd-wrap. Keep the field and eye in the same containing
+   block so the icon stays visible inside the input on every viewport. */
+.password-wrap, .pwd-wrap{ position:relative; width:100%; }
+.password-wrap > input, .pwd-wrap > input{ width:100%; padding-right:48px; }
+.password-wrap .eye, .pwd-wrap .eye-toggle{
+  position:absolute; top:50%; right:6px; z-index:3;
+  display:inline-flex; align-items:center; justify-content:center;
+  width:36px; height:36px; padding:0; transform:translateY(-50%);
+  color:var(--n-500); background:transparent; border:0; border-radius:8px;
+  cursor:pointer; line-height:1; font-size:.95rem;
+}
+.password-wrap .eye:hover, .pwd-wrap .eye-toggle:hover{
+  color:var(--p-700); background:var(--n-100);
+}
+.password-wrap .eye:focus-visible, .pwd-wrap .eye-toggle:focus-visible{
+  outline:2px solid var(--t-500); outline-offset:2px;
+}
+.password-wrap .eye i, .pwd-wrap .eye-toggle i{
+  position:static !important; transform:none !important; left:auto !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   HEADER — one flat slate bar. It was a navy-to-gold gradient, which put a
+   second focal point in the corner of every page.
+   ───────────────────────────────────────────────────────────────────── */
+.vts-navbar{
+  background:var(--c-600) !important;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  box-shadow:none !important;
+  padding:0 18px 0 14px;
+}
+.vts-navbar .brand-name{ font-family:var(--font-display); font-weight:800; letter-spacing:-.01em; }
+.vts-navbar .brand-sub{ color:var(--p-300) !important; font-weight:500; }
+.vts-navbar .brand img{ border-radius:var(--radius-sm); }
+
+.nav-search input{
+  background:rgba(255,255,255,.07) !important;
+  border:1px solid rgba(255,255,255,.10) !important;
+  color:#fff !important; border-radius:var(--radius-sm) !important;
+}
+.nav-search input::placeholder{ color:var(--p-300) !important; }
+.nav-search input:focus{
+  background:rgba(255,255,255,.11) !important;
+  border-color:var(--t-400) !important; outline:none !important;
+}
+
+/* Round icon buttons in the bar, per the reference sheet. */
+.nav-bell,.nav-search-go{
+  width:34px; height:34px; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  color:var(--p-200) !important; background:transparent; border:0;
+  transition:background .15s ease, color .15s ease;
+}
+.nav-bell:hover,.nav-search-go:hover{ background:rgba(255,255,255,.10); color:#fff !important; }
+.nav-bell-badge{
+  background:var(--bad) !important; color:#fff !important;
+  min-width:17px; height:17px; border-radius:9px;
+  font-size:.62rem; font-weight:800; border:2px solid var(--p-800);
+}
+.nav-profile-btn{ border-radius:999px; padding:3px 10px 3px 3px; }
+.nav-profile-btn:hover{ background:rgba(255,255,255,.08); }
+.nav-profile-btn .user-role{ color:#fff; font-weight:700; }
+.nav-profile-btn .user-desc{ color:var(--p-300); }
+
+/* ─────────────────────────────────────────────────────────────────────
+   SIDEBAR — same slate family, one shade darker than the page.
+   ───────────────────────────────────────────────────────────────────── */
+.vts-sidebar{
+  background:var(--c-600) !important;
+  border-right:1px solid rgba(255,255,255,.06);
+  padding-top:10px;
+}
+.vts-sidebar a{
+  color:var(--p-200) !important;
+  border-radius:var(--radius-sm);
+  margin:2px 10px; padding:9px 12px !important;
+  font-weight:600; font-size:.86rem;
+  border-left:0 !important;
+  transition:background .14s ease, color .14s ease;
+}
+.vts-sidebar a i{ color:var(--p-300); width:18px; text-align:center; transition:color .14s ease; }
+.vts-sidebar a:hover{ background:rgba(255,255,255,.07) !important; color:#fff !important; }
+.vts-sidebar a:hover i{ color:#fff; }
+/* The active item is stated with a filled block, not a coloured left edge —
+   it reads at a glance without adding another accent colour to the page. */
+.vts-sidebar a.active{
+  background:var(--t-600) !important; color:#fff !important;
+  box-shadow:0 1px 2px rgba(79,70,229,.4);
+}
+.vts-sidebar a.active i{ color:#fff; }
+.vts-sidebar .menu-tab,.vts-sidebar .sidebar-head{ color:var(--p-300); }
+
+/* ─────────────────────────────────────────────────────────────────────
+   CARDS — white, hairline border, barely-there lift.
+   ───────────────────────────────────────────────────────────────────── */
+.vts-card,.panel,.recent-table-wrap,.register-card,.auth-card{
+  background:var(--n-0);
+  border:1px solid var(--n-200);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-md);
+}
+.panel-head,.card-head{
+  border-bottom:1px solid var(--n-100);
+  padding-bottom:12px; margin-bottom:14px;
+}
+.panel-head h3,.card-head h3{
+  font-family:var(--font-display); font-weight:800;
+  font-size:.74rem; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--n-500) !important;
+}
+
+/* ── STAT TILES ──
+   These were four saturated gradient blocks. A white tile with one coloured
+   icon chip and a coloured number says the same thing and lets the page
+   have a hierarchy. The colour still carries the meaning — it is just no
+   longer the entire surface. */
+.stat-card,
+.stat-card.red,.stat-card.teal,.stat-card.amber,
+.stat-card.status-good,.stat-card.status-risk,.stat-card.status-critical{
+  background:var(--n-0) !important;
+  color:var(--n-900) !important;
+  border:1px solid var(--n-200) !important;
+  border-radius:var(--radius-lg) !important;
+  box-shadow:var(--shadow-md) !important;
+  padding:18px 18px 16px !important;
+  position:relative; overflow:hidden;
+  transition:box-shadow .16s ease, border-color .16s ease;
+}
+.stat-card:hover,
+.stat-card.red:hover,.stat-card.teal:hover,.stat-card.status-good:hover{
+  box-shadow:var(--shadow-lg) !important;
+  border-color:var(--n-300) !important;
+}
+/* A 3px rule along the top is the whole of the tile's colour. */
+.stat-card::after{
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:var(--p-300);
+}
+.stat-card.red::after{ background:var(--warn); }
+.stat-card.teal::after{ background:var(--t-500); }
+.stat-card.status-good::after{ background:var(--ok); }
+.stat-card.status-risk::after{ background:var(--warn); }
+.stat-card.status-critical::after{ background:var(--bad); }
+
+.stat-card .stat-label{
+  color:var(--n-500) !important;
+  font-size:.7rem !important; font-weight:700 !important;
+  letter-spacing:.07em; text-transform:uppercase;
+}
+.stat-card .stat-value{
+  font-family:var(--font-display);
+  color:var(--n-900) !important;
+  font-size:1.9rem !important; font-weight:800 !important;
+  line-height:1.1; margin-top:2px;
+}
+.stat-card.red   .stat-value{ color:var(--warn) !important; }
+.stat-card.teal  .stat-value{ color:var(--t-600) !important; }
+.stat-card.status-good     .stat-value{ color:var(--ok) !important; }
+.stat-card.status-risk     .stat-value{ color:var(--warn) !important; }
+.stat-card.status-critical .stat-value{ color:var(--bad) !important; }
+
+/* The icon sits in a tinted circle, the reference sheet's icon treatment. */
+.stat-card i,.stat-card .stat-icon{
+  color:var(--p-500) !important;
+  background:var(--n-100);
+  width:34px; height:34px; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:.9rem !important;
+}
+.stat-card.red i{   color:var(--warn) !important;  background:var(--warn-bg); }
+.stat-card.teal i{  color:var(--t-600) !important; background:var(--t-50); }
+.stat-card.status-good i{     color:var(--ok) !important;   background:var(--ok-bg); }
+.stat-card.status-risk i{     color:var(--warn) !important; background:var(--warn-bg); }
+.stat-card.status-critical i{ color:var(--bad) !important;  background:var(--bad-bg); }
+.stat-card a,.stat-card .stat-link{ color:var(--t-600) !important; font-weight:700; }
+
+/* ─────────────────────────────────────────────────────────────────────
+   BUTTONS — the four the reference sheet names.
+   ───────────────────────────────────────────────────────────────────── */
+.btn-primary,.register-submit,.auth-submit{
+  background:var(--p-700) !important;
+  border:1px solid var(--p-700) !important;
+  color:#fff !important;
+  border-radius:var(--radius-sm) !important;
+  font-weight:700;
+  box-shadow:none !important;
+  transition:background .15s ease, border-color .15s ease;
+}
+.btn-primary:hover,.register-submit:hover,.auth-submit:hover{
+  background:var(--p-800) !important; border-color:var(--p-800) !important;
+}
+.btn-secondary{
+  background:var(--n-100) !important; border:1px solid var(--n-200) !important;
+  color:var(--n-900) !important; border-radius:var(--radius-sm) !important; font-weight:700;
+}
+.btn-secondary:hover{ background:var(--n-200) !important; }
+.btn-outline,.slp-register-btn{
+  background:var(--n-0) !important;
+  border:1px solid var(--n-300) !important;
+  color:var(--n-700) !important;
+  border-radius:var(--radius-sm) !important; font-weight:700;
+  box-shadow:none !important;
+}
+.btn-outline:hover,.slp-register-btn:hover{
+  background:var(--n-50) !important; border-color:var(--p-400) !important;
+  color:var(--p-700) !important; transform:none !important;
+}
+.btn-danger{
+  background:var(--bad) !important; border:1px solid var(--bad) !important;
+  color:#fff !important; border-radius:var(--radius-sm) !important; font-weight:700;
+}
+.btn-ghost{ background:transparent !important; border:0 !important; color:var(--t-600) !important; font-weight:700; }
+
+/* A round icon-only button, as on the reference sheet. */
+.btn-icon{
+  width:36px; height:36px; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  border:1px solid var(--n-200); background:var(--n-0); color:var(--n-600);
+  cursor:pointer; transition:background .15s ease, color .15s ease, border-color .15s ease;
+}
+.btn-icon:hover{ background:var(--n-100); color:var(--p-700); border-color:var(--n-300); }
+.btn-icon.is-primary{ background:var(--p-700); border-color:var(--p-700); color:#fff; }
+.btn-icon.is-ok{ background:var(--s-600); border-color:var(--s-600); color:#fff; }
+.btn-icon.is-info{ background:var(--t-600); border-color:var(--t-600); color:#fff; }
+.btn-icon.is-bad{ background:var(--bad); border-color:var(--bad); color:#fff; }
+
+/* ─────────────────────────────────────────────────────────────────────
+   FORMS
+   ───────────────────────────────────────────────────────────────────── */
+.vts-input,.vts-select,.register-card .vts-input,.register-card .vts-select{
+  border:1px solid var(--n-300) !important;
+  border-radius:var(--radius-sm) !important;
+  background:var(--n-0) !important;
+  color:var(--n-900) !important;
+}
+.vts-input:focus,.vts-select:focus{
+  border-color:var(--t-500) !important;
+  box-shadow:0 0 0 3px var(--t-100) !important;
+  outline:none !important;
+}
+.vts-input::placeholder{ color:var(--n-400) !important; }
+.field label,.auth-label,.vts-form-group label{
+  color:var(--n-600) !important; font-weight:700;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   TABLES, PILLS, ALERTS
+   ───────────────────────────────────────────────────────────────────── */
+.data-table th,.vts-table th{
+  background:var(--n-50) !important; color:var(--n-500) !important;
+  font-size:.7rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+  border-bottom:1px solid var(--n-200) !important;
+}
+.data-table td,.vts-table td{ border-bottom:1px solid var(--n-100); color:var(--n-700); }
+.data-table tbody tr:hover,.vts-table tbody tr:hover{ background:var(--n-50); }
+
+.pill,.badge,.kind-chip{
+  border-radius:999px; font-weight:700; font-size:.7rem;
+  padding:3px 10px; letter-spacing:.02em; border:1px solid transparent;
+}
+.pill.resolved,.badge-green,.kind-chip.minor{ background:var(--ok-bg); color:var(--s-700); border-color:var(--ok-line); }
+.pill.warning,.kind-chip.major{ background:var(--warn-bg); color:var(--warn); border-color:var(--warn-line); }
+.pill.danger,.badge-red{ background:var(--bad-bg); color:var(--bad); border-color:var(--bad-line); }
+.badge-blue,.badge-gray{ background:var(--t-50); color:var(--t-700); border-color:var(--t-200); }
+
+.alert{ border-radius:var(--radius); border:1px solid transparent; font-size:.86rem; }
+.alert-success{ background:var(--ok-bg); color:var(--s-700); border-color:var(--ok-line); }
+.alert-error,.alert-danger{ background:var(--bad-bg); color:var(--bad); border-color:var(--bad-line); }
+.alert-warning{ background:var(--warn-bg); color:var(--warn); border-color:var(--warn-line); }
+.alert-info{ background:var(--info-bg); color:var(--t-700); border-color:var(--info-line); }
+
+/* Links pick up the tertiary, the one accent the sheet reserves for them. */
+a{ color:var(--t-600); }
+.vts-main a:not(.btn-primary):not(.btn-outline):not(.btn-danger):not(.btn-ghost):not(.vts-sidebar a):hover{
+  text-decoration:underline;
+}
+
+/* =====================================================================
+   AUTH HEADER — stacked and centred, on BOTH pages.
+
+   vts-theme.css declares .auth-header as display:flex with a 16px gap — a
+   horizontal row. The login page happened to override that with
+   display:block, the register page did not, so the same markup produced a
+   centred stack on one screen and a squashed side-by-side row on the other
+   (seal | school name | title | hint, wrapping mid-word).
+
+   Stated here once, for both, so they cannot drift apart again.
+   ===================================================================== */
+.auth-page .auth-header,
+.register-page .auth-header{
+  display: block !important;
+  text-align: center;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto 20px;
+  padding: 0 12px;
+  animation: none;              /* the fade made the header arrive late */
+}
+
+/* The seal: circular, always. It was inheriting a square from
+   `.auth-header img` further up the cascade.
+
+   logo.jpg is a round emblem printed on a white square, and its own gold
+   rim runs right to the edge of that square. Clipped flush against a gold
+   border the two golds merged into one fat smear, which is most of why it
+   stopped reading as a circle. The 5px of white padding puts a gap between
+   the emblem's rim and the ring's, so both edges stay legible; the img is
+   sized to the content box, so the padding is what you see through it. */
+.auth-header .auth-logo-ring,
+.auth-logo-ring{
+  box-sizing: border-box;
+  width: 88px; height: 88px;
+  margin: 0 auto 14px !important;
+  padding: 5px;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center; justify-content: center;
+  background: #fff;
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 0 5px rgba(255,255,255,.14), 0 10px 24px rgba(8,16,32,.42);
+  flex: 0 0 auto;
+}
+.auth-header .auth-logo-ring img,
+.auth-logo-ring img,
+.auth-logo-ring .auth-logo{
+  width: 100% !important; height: 100% !important;
+  margin: 0 !important;
+  border-radius: 50% !important;
+  /* contain, not cover: the source is already 1:1, and contain guarantees
+     nothing is shaved off if a future logo file is not. */
+  object-fit: contain;
+  display: block;
+}
+
+/* ── The words over the photo ──
+   Bigger, fully opaque, and with a real shadow behind them. They were set
+   at 78–92% white over a picture, which is the one place partial opacity
+   costs you legibility for nothing. */
+.auth-page .auth-header .auth-wordmark,
+.register-page .auth-header .auth-wordmark{
+  color: #fff !important;
+  font-size: .78rem !important;
+  letter-spacing: .2em;
+  text-shadow: 0 2px 10px rgba(5,12,28,.85);
+  margin-bottom: 8px;
+}
+.auth-page .auth-header .auth-heading,
+.register-page .auth-header .auth-heading{
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3.4vw, 2.05rem) !important;
+  font-weight: 800; letter-spacing: -.02em;
+  color: #fff !important;
+  text-shadow: 0 3px 16px rgba(5,12,28,.9);
+  margin: 0 0 6px !important;
+  line-height: 1.15;
+}
+.auth-page .auth-header .auth-sub,
+.register-page .auth-header .auth-sub{
+  font-size: .9rem !important;
+  line-height: 1.5;
+  color: rgba(255,255,255,.95) !important;
+  text-shadow: 0 2px 10px rgba(5,12,28,.8);
+  margin: 0 auto !important;
+  max-width: 40ch;
+}
+
+@media (max-width: 560px){
+  .auth-header .auth-logo-ring,
+  .auth-logo-ring{ width: 70px; height: 70px; }
+}
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   CHROME + LAYOUT — ported from SAD_Offline
+
+   The header, the sidebar and the page spacing are the offline build's,
+   which is what vts-clean.css defines there (it is the last chrome sheet
+   in that project's load order). Two deliberate departures from it:
+
+     - Offline paints the bar and the rail with navy-to-gold gradients.
+       This is one solid medium-dark navy, #1B3A5F, on both.
+     - Gold is kept for one job only: the item you are on. #E2B83A colours
+       the active icon and a 3px inset rule down its left edge — the exact
+       treatment offline uses, and the reason the gradient is not missed.
+
+   CONTRAST, measured on #1B3A5F: white 11.56:1, the .82 link tint 8.36:1,
+   the .70 idle icon tint 6.55:1, the gold 6.14:1.
+
+   WHY THE ACTIVE ROW IS DARKER, NOT LIGHTER. Offline lifts it with
+   rgba(255,255,255,.16). That works on a near-black bar, but on a navy this
+   light it drags the gold icon down to 3.78:1 — under the 4.5 floor, and the
+   one thing on the rail that must stay legible. Pressing the row IN instead,
+   with rgba(0,0,0,.22), moves in the opposite direction: the gold reads
+   7.40:1 and the white label 13.94:1, both AAA, and the gold hex stays
+   exactly the one the offline build uses.
+
+   The bar is 60px here, not the 56px this sheet used before, because the
+   sidebar and the notification panel both hang off --navbar-h; changing
+   the token moves all three together.
+   ═════════════════════════════════════════════════════════════════════ */
+:root{
+  --c-600:#1B3A5F;     /* medium-dark navy, solid on both bar and rail */
+  --c-gold:#E2B83A;    /* the active item, and nothing else */
+  --navbar-h:60px;
+  --sidebar-w:248px;
+}
+
+/* ── HEADER ───────────────────────────────────────────────────────── */
+.vts-navbar{
+  background:var(--c-600) !important;
+  border-bottom:none !important;
+  box-shadow:0 2px 10px rgba(12,26,56,.18) !important;
+  height:var(--navbar-h) !important;
+  padding:0 18px !important;
+  gap:14px;
+}
+.vts-navbar .nav-start{ display:flex; align-items:center; gap:10px; flex:0 0 auto; }
+.vts-navbar .brand{ display:flex; align-items:center; gap:12px; }
+.vts-navbar .brand-name{ color:#fff !important; font-weight:700 !important; font-size:.95rem !important; }
+.vts-navbar .brand-sub{ color:rgba(255,255,255,.78) !important; font-weight:500; }
+
+/* The seal stays round — it reads as a square the moment it takes a
+   corner radius, which is what it was doing before. 42px inside a 60px bar
+   leaves 9px of air above and below, which is the most it can take without
+   the bar feeling crowded. */
+.vts-navbar .brand img{
+  box-sizing:border-box;
+  width:42px; height:42px;
+  border-radius:50% !important;
+  /* No padding, no white plate, no white border. Those three were what put a
+     white ring around the seal — not the artwork, which measures out to 97.7%
+     of the radius. The remaining 2.3% IS baked into logo.jpg, so the clip is
+     pulled in to 48.5% (= 97% of the box radius) to cut it off; below that it
+     would start shaving the seal itself. */
+  padding:0 !important;
+  background:transparent !important;
+  border:0 !important;
+  object-fit:cover;
+  clip-path:circle(48.5% at 50% 50%);
+  flex:0 0 auto;
+}
+
+/* The wordmark grows with it, or the bigger seal makes the type look shrunken.
+   The tagline needs the longer selector and !important: vts-theme.css sets it
+   at .60rem through `.vts-navbar .brand-name .brand-sub`, which outranks a
+   plain `.vts-navbar .brand-sub` here no matter how late this sheet loads. */
+.vts-navbar .brand-name{ font-size:1.06rem !important; line-height:1.2; }
+.vts-navbar .brand-name .brand-sub,
+.vts-navbar .brand-sub{ font-size:.68rem !important; line-height:1.25; }
+
+/* The menu button lives inside the bar, so it can never cover the page. */
+.menu-tab,
+.vts-navbar .menu-tab,
+.vts-sidebar .menu-tab{
+  position:static !important; transform:none !important; margin:0 !important;
+  width:38px !important; height:38px !important; min-width:0 !important; padding:0 !important;
+  display:inline-flex !important; align-items:center; justify-content:center;
+  background:rgba(255,255,255,.16) !important; color:#fff !important;
+  border:1px solid rgba(255,255,255,.26) !important; border-radius:9px !important;
+  box-shadow:none !important; font-size:.95rem !important; flex:0 0 auto; cursor:pointer;
+}
+.menu-tab:hover,
+.vts-sidebar .menu-tab:hover{ background:rgba(255,255,255,.24) !important; }
+.vts-sidebar .menu-tab i{ color:#fff !important; margin:0 !important; }
+
+/* WHICH of the two Menu buttons is on screen.
+
+   The sidebar's own button is position:static inside .vts-sidebar. Above
+   900px that panel is always visible, so the button is too and it toggles
+   the icons-only rail. Below 900px the panel becomes a drawer parked at
+   translateX(-100%) — and a transform on an ancestor is a containing block,
+   so even a fixed child rides along. The button left the screen with it
+   (measured at x=-284 on a 390px phone) and a phone had no way to open the
+   navigation at all.
+
+   So the navbar carries its own copy for phones. .vts-navbar is fixed and
+   never transformed; it cannot be dragged off anywhere. */
+.vts-navbar .menu-tab{ display:none !important; }
+@media (max-width: 900px){
+  .vts-navbar .menu-tab{ display:inline-flex !important; }
+  /* One tap target ahead of a shrunken wordmark — it must not be squeezed
+     by the brand block the way .nav-start lets the brand shrink. */
+  .vts-navbar .nav-menu-tab{ flex:0 0 auto !important; }
+}
+
+.vts-navbar .nav-search{
+  background:rgba(255,255,255,.16) !important;
+  border:1px solid rgba(255,255,255,.28) !important;
+  border-radius:9px !important; height:38px !important;
+}
+.vts-navbar .nav-search:focus-within{
+  background:rgba(255,255,255,.26) !important;
+  border-color:rgba(255,255,255,.6) !important;
+  box-shadow:0 0 0 3px rgba(255,255,255,.16) !important;
+}
+.vts-navbar .nav-search i,
+.vts-navbar .nav-search:focus-within i{ color:rgba(255,255,255,.9) !important; }
+.vts-navbar .nav-search input,
+.vts-navbar .nav-search:focus-within input{
+  color:#fff !important; background:transparent !important; border:none !important;
+}
+.vts-navbar .nav-search input::placeholder,
+.vts-navbar .nav-search:focus-within input::placeholder{ color:rgba(255,255,255,.78) !important; }
+
+.nav-bell,.nav-search-go{ color:rgba(255,255,255,.88) !important; }
+.nav-bell:hover,.nav-search-go:hover{ background:rgba(255,255,255,.16) !important; color:#fff !important; }
+.nav-bell-badge{ border-color:var(--c-600) !important; }
+.nav-profile-btn:hover{ background:rgba(255,255,255,.14) !important; }
+.nav-profile-btn .user-role{ color:#fff !important; }
+.nav-profile-btn .user-desc{ color:rgba(255,255,255,.78) !important; }
+
+/* ── SIDEBAR ──────────────────────────────────────────────────────── */
+.vts-sidebar{
+  background:var(--c-600) !important;
+  backdrop-filter:none !important;
+  border-right:none !important;
+  box-shadow:2px 0 14px rgba(12,26,56,.14) !important;
+  top:var(--navbar-h) !important;
+  height:calc(100vh - var(--navbar-h)) !important;
+  padding-top:12px !important;
+  transition:width .22s ease !important;
+}
+.vts-sidebar .sidebar-brand{ justify-content:flex-start; padding:12px 16px !important; gap:10px; }
+.vts-sidebar .sidebar-menu-label{ color:#fff; font-size:.92rem; font-weight:700; }
+
+.sidebar-nav a,
+.vts-sidebar a{
+  margin:2px 10px !important; padding:10px 13px !important; gap:12px !important;
+  border-radius:9px !important; font-size:.88rem !important; font-weight:500 !important;
+  color:rgba(255,255,255,.82) !important;
+  box-shadow:none !important; white-space:nowrap; border-left:0 !important;
+  transition:background .12s ease, color .12s ease !important;
+}
+.sidebar-nav a i,
+.vts-sidebar a i{
+  width:20px !important; font-size:.95rem !important; text-align:center !important;
+  color:rgba(255,255,255,.7) !important; flex:0 0 auto;
+}
+.sidebar-nav a:hover,
+.vts-sidebar a:hover{ background:rgba(255,255,255,.12) !important; color:#fff !important; }
+.sidebar-nav a:hover i,
+.vts-sidebar a:hover i{ color:#fff !important; }
+
+/* THE GOLD — the item you are on, and only that. */
+.sidebar-nav a.active,
+.vts-sidebar a.active{
+  background:rgba(0,0,0,.22) !important;
+  color:#fff !important; font-weight:650 !important;
+  box-shadow:inset 3px 0 0 var(--c-gold) !important;
+}
+.sidebar-nav a.active i,
+.vts-sidebar a.active i{ color:var(--c-gold) !important; }
+
+.sidebar-nav a.sidebar-sub{
+  padding-left:34px !important; font-size:.86rem !important;
+  color:rgba(255,255,255,.82) !important;
+}
+.sidebar-nav a.sidebar-sub i{ font-size:.8rem !important; }
+.vts-sidebar .sidebar-head,
+.vts-sidebar .sidebar-subhead{ color:rgba(255,255,255,.6) !important; }
+
+/* Collapsed rail: icons only. */
+.vts-sidebar.mini{ width:66px !important; }
+.vts-sidebar.mini .sidebar-brand{ justify-content:center; padding:12px 0 !important; }
+.vts-sidebar.mini .sidebar-brand img{ width:34px; height:34px; }
+.vts-sidebar.mini .sidebar-brand span,
+.vts-sidebar.mini .sidebar-menu-label{ display:none; }
+.vts-sidebar.mini .menu-tab{ width:38px !important; padding:0 !important; }
+.vts-sidebar.mini .sidebar-nav a{
+  font-size:0 !important; justify-content:center !important;
+  padding:11px 0 !important; margin:2px 8px !important; gap:0 !important;
+}
+.vts-sidebar.mini .sidebar-nav a i{ font-size:1.05rem !important; width:auto !important; }
+.vts-sidebar.mini .notif-badge{ display:none !important; }
+
+/* ── SPACING — the offline build's stretched canvas ────────────────
+   No centred reading column: the content uses the full width of the page
+   with a single 20px gutter, which is what the offline build does and what
+   makes its tables and card rows breathe across a wide monitor. */
+.vts-main-inner{
+  width:100% !important;
+  max-width:none !important;
+  margin:0 !important;
+  padding:20px !important;
+}
+@media (max-width:900px){
+  .vts-main-inner{ padding:16px !important; }
+}
+/* NOTHING here clips .vts-main or the table wrappers, and that is deliberate.
+   An earlier version of this block carried `.vts-main{ overflow-x:hidden }`
+   and `.table-responsive{ overflow-x:auto }` as a guard against sideways
+   scroll. Both broke every row dropdown on the site: when one axis is hidden
+   or auto, CSS computes the other to `auto` too, which makes the element a
+   scroll container and clips absolutely-positioned descendants. The row Print
+   menu (.vts-menu-list) hangs below its button, so it was being cut off at the
+   table edge — the ID Confiscation and Student Violation slips opened but
+   could not be seen. The offline build sets no overflow on either, and with
+   the stretched column above there is no sideways overflow to guard against. */
+
+/* An open row menu is drawn against the VIEWPORT, not inside the table. That
+   is what stops it being clipped at the table edge and what stops it sliding
+   away when the columns are scrolled — only the table data scrolls now, the
+   menu stays put. vtsPlaceMenu() in assets/js/vts-ui.js sets top/left and
+   explains why it opens upward.
+
+   This replaced an earlier attempt that switched the scroller to
+   overflow:visible while a menu was open. That un-clipped the menu but left
+   it anchored inside the table, so it still travelled with a horizontal
+   scroll. The scroller now keeps its overflow untouched, so the phone swipe
+   behaves exactly as before. */
+.vts-menu.open .vts-menu-list{
+  position: fixed !important;
+  margin: 0 !important;
+}
+
+/* THE PANEL THAT HOLDS THE TABLE IS NOT ITSELF A TABLE SCROLLER.
+
+   On the violations pages one wrapper encloses the filter bar, the view tabs,
+   the how-to panel and the table. It was marked .table-responsive and
+   .recent-table-wrap, both of which carry overflow-x:auto — so the whole card
+   became a scroll container, vertically as well (CSS computes the other axis
+   to auto). Two things fell out of that: the tabs scrolled away out of the
+   top of the card whenever anything below them needed revealing, and the
+   filter bar and column headings moved with the data instead of staying put.
+
+   Only the inner .table-scroll should scroll, and only sideways. */
+.recent-table-wrap.is-panel{ overflow: visible !important; }
+
+/* ── Audit log toolbar (admin/audit_log.php) ────────────────────────────
+   Search, the date filter and Delete all on one line. They are two separate
+   forms — the filters are a GET, the purge a POST — so the row is a wrapper
+   around both rather than one nested in the other, which is not valid HTML
+   and would submit the wrong thing.
+
+   Delete all is pushed to the far end: it belongs with these controls, but
+   not next to Reset, which is the button someone reaches for often. */
+.audit-toolbar{
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.audit-filters{
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  flex: 1 1 auto; min-width: 0;
+}
+.audit-search{ max-width: 280px; flex: 1 1 200px; min-width: 0; }
+.audit-when{ max-width: 160px; flex: 0 0 auto; }
+.audit-purge{ flex: 0 0 auto; margin-left: auto; }
+
+@media (max-width: 720px){
+  /* Once the row wraps, the destructive button takes its own full-width
+     line rather than sitting flush against Reset. */
+  .audit-purge{ margin-left: 0; width: 100%; }
+  .audit-purge .btn-danger{ width: 100%; justify-content: center; }
+}
+
+/* =====================================================================
+   ONE WAY HOME  (.auth-home)
+   ---------------------------------------------------------------------
+   Register, Forgot password, Verify and the sign-in code were dead ends:
+   reached from a link or an email, ending at their own form. Somebody who
+   opened Register to see what it asked for had the browser's back button
+   or nothing.
+
+   Fixed to the top-left rather than placed in the flow. These three pages
+   each centre a single card in a flex container, so a sibling above the
+   card gets laid out BESIDE it -- which is exactly what happened on the
+   first attempt. Taking it out of the flow means one rule works on all of
+   them without touching three different layouts.
+   ===================================================================== */
+.auth-home{
+  position:fixed; top:18px; left:18px; z-index:40;
+  display:inline-flex; align-items:center; gap:8px;
+  padding:0 16px; min-height:44px;
+  border-radius:999px; border:1px solid rgba(255,255,255,.35);
+  background:rgba(10,24,48,.55); color:#fff;
+  font-size:.84rem; font-weight:700; text-decoration:none !important;
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  transition:background .15s ease, border-color .15s ease;
+}
+.auth-home:hover{ background:rgba(10,24,48,.75); border-color:rgba(255,255,255,.6); }
+.auth-home:focus-visible{ outline:3px solid #ffd75e; outline-offset:3px; }
+
+/* On a narrow screen it would sit on top of the card, so it becomes a
+   plain chip in the corner with less weight. */
+@media (max-width:560px){
+  .auth-home{ top:10px; left:10px; padding:0 12px; font-size:.78rem; }
+}
+@media print{ .auth-home{ display:none; } }
+
+/* The seal on the register page is a link now; it must not pick up the
+   underline every other in-content link gets. */
+a.auth-logo-ring{ display:inline-block; text-decoration:none !important; }

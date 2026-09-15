@@ -1,0 +1,1352 @@
+/* =====================================================================
+   VTS DASHBOARD REFINEMENT  ·  loads LAST (wins the cascade)
+   Goal: lift the admin/staff dashboards a full grade — cleaner palette,
+   consistent type scale, equal-height cards with real depth, a search +
+   profile dropdown top bar, readable charts, and smooth motion. Blue &
+   white base, gold as the single brand accent (kept in the header).
+   ===================================================================== */
+:root{
+  --d-navy:#1a3a6b; --d-navy-2:#22508f; --d-navy-d:#132c54;
+  --d-gold:#c9a227; --d-gold-2:#e2b83a;
+  --d-ink:#152238; --d-ink-2:#33415c; --d-muted:#6b7896;
+  --d-bg:#f3f5fa; --d-surface:#ffffff; --d-line:#e8ecf4; --d-line-2:#eef1f7;
+  --d-blue:#2f6fd0; --d-blue-soft:#eaf1fd;
+  --d-shadow-sm:0 1px 2px rgba(20,40,80,.05), 0 6px 16px rgba(20,40,80,.05);
+  --d-shadow-md:0 2px 6px rgba(20,40,80,.06), 0 14px 34px rgba(20,40,80,.09);
+  --d-radius:14px; --d-radius-sm:10px;
+}
+
+body.has-bg-image{ background:var(--d-bg) !important; }
+.vts-main{ background:var(--d-bg); }
+
+/* ---------- Type scale: consistent sizes / weights ---------- */
+.admin-welcome-row h1, .page-head h1, .page-head h2, .page-title{
+  font-size:1.55rem !important; font-weight:800 !important; letter-spacing:-.02em !important;
+  color:var(--d-ink) !important; line-height:1.2 !important;
+}
+.admin-welcome-row p, .page-head p{ font-size:.9rem !important; color:var(--d-muted) !important; font-weight:500 !important; }
+.panel-head h3{ font-size:.75rem !important; font-weight:800 !important; letter-spacing:.07em !important;
+  text-transform:uppercase; color:var(--d-ink-2) !important; }
+.panel-head a{ font-size:.75rem !important; font-weight:700 !important; color:var(--d-blue) !important; }
+
+/* =====================================================================
+   TOP BAR — search box + profile dropdown
+   ===================================================================== */
+.vts-navbar{ gap:16px; }
+.nav-search{
+  flex:1 1 420px; max-width:520px; display:flex; align-items:center; align-self:center; gap:9px;
+  background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.28);
+  border-radius:11px; padding:0 13px; height:36px; transition:background .15s ease, border-color .15s ease;
+}
+.nav-search:focus-within{ background:rgba(255,255,255,.96); border-color:#fff; }
+.nav-search i{ color:rgba(255,255,255,.85); font-size:.9rem; transition:color .15s ease; }
+.nav-search:focus-within i{ color:var(--d-navy); }
+.nav-search input{
+  flex:1; background:transparent; border:none; outline:none; color:#fff;
+  font-size:.88rem; font-weight:500; min-width:0;
+}
+.nav-search input::placeholder{ color:rgba(255,255,255,.8); }
+.nav-search:focus-within input{ color:var(--d-ink); }
+.nav-search:focus-within input::placeholder{ color:var(--d-muted); }
+/* Submit button sits where the magnifier icon used to; it inherits the icon
+   colour rules above because the <i> is still a descendant of .nav-search. */
+.nav-search-go{
+  flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center;
+  background:none; border:0; padding:0 2px; margin:0; cursor:pointer; color:inherit;
+  border-radius:6px;
+}
+.nav-search-go:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
+@media (max-width:860px){ .nav-search{ display:none; } }
+
+/* Profile dropdown */
+.nav-profile{ position:relative; }
+.nav-profile-btn{
+  display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.22); border-radius:11px; padding:5px 11px 5px 6px;
+  cursor:pointer; transition:background .15s ease, border-color .15s ease;
+}
+.nav-profile-btn:hover, .nav-profile.open .nav-profile-btn{ background:rgba(255,255,255,.2); border-color:rgba(255,255,255,.4); }
+.nav-profile-btn .user-avatar{
+  width:34px; height:34px; border-radius:50%; overflow:hidden; flex:0 0 34px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,.22); color:#fff; border:1.5px solid rgba(255,255,255,.6);
+}
+.nav-profile-btn .user-avatar img{ width:100%; height:100%; object-fit:cover; }
+.nav-profile-btn .user-info{ display:flex; flex-direction:column; line-height:1.15; text-align:left; }
+.nav-profile-btn .user-role{ font-size:.82rem; font-weight:700; color:#fff; text-shadow:0 1px 3px rgba(10,25,55,.35); }
+.nav-profile-btn .user-desc{ font-size:.68rem; color:rgba(255,255,255,.82); text-shadow:0 1px 3px rgba(10,25,55,.3); }
+.nav-profile-btn .np-caret{ color:rgba(255,255,255,.85); font-size:.7rem; transition:transform .18s ease; }
+.nav-profile.open .np-caret{ transform:rotate(180deg); }
+@media (max-width:560px){ .nav-profile-btn .user-info{ display:none; } }
+
+.nav-profile-menu{
+  position:absolute; right:0; top:calc(100% + 9px); width:248px; z-index:1200;
+  background:#fff; border:1px solid var(--d-line); border-radius:13px;
+  box-shadow:0 16px 40px rgba(16,34,63,.2); padding:7px; opacity:0; transform:translateY(-6px);
+  pointer-events:none; transition:opacity .16s ease, transform .16s ease;
+}
+.nav-profile.open .nav-profile-menu{ opacity:1; transform:none; pointer-events:auto; }
+.nav-profile-menu .npm-head{ padding:9px 11px 11px; border-bottom:1px solid var(--d-line-2); margin-bottom:6px; }
+.nav-profile-menu .npm-name{ font-size:.9rem; font-weight:800; color:var(--d-ink); }
+.nav-profile-menu .npm-sub{ font-size:.74rem; color:var(--d-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nav-profile-menu a{
+  display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:9px;
+  font-size:.86rem; font-weight:600; color:var(--d-ink-2); text-decoration:none; transition:background .12s ease, color .12s ease;
+}
+.nav-profile-menu a i{ width:18px; text-align:center; color:var(--d-muted); font-size:.9rem; }
+.nav-profile-menu a:hover{ background:var(--d-blue-soft); color:var(--d-navy); }
+.nav-profile-menu a:hover i{ color:var(--d-navy); }
+.nav-profile-menu .npm-badge{ margin-left:auto; background:#e04545; color:#fff; font-size:.66rem; font-weight:800; padding:1px 8px; border-radius:10px; }
+.nav-profile-menu .npm-divider{ height:1px; background:var(--d-line-2); margin:6px 4px; }
+.nav-profile-menu .npm-logout{ color:#c8351f; } .nav-profile-menu .npm-logout i{ color:#c8351f; }
+.nav-profile-menu .npm-logout:hover{ background:#fdeceb; color:#a62915; }
+
+/* =====================================================================
+   CARDS — equal size, real depth, smooth hover
+   ===================================================================== */
+.vts-card, .panel, .recent-table-wrap, .kpi-card, .stat-card{
+  border:1px solid var(--d-line) !important; box-shadow:var(--d-shadow-sm) !important;
+  border-radius:var(--d-radius) !important;
+  transition:box-shadow .18s ease, transform .18s ease, border-color .18s ease !important;
+}
+.kpi-card, .panel, .stat-card{ will-change:transform; }
+.kpi-card:hover, .panel:hover, .stat-card:hover{
+  box-shadow:var(--d-shadow-md) !important; transform:translateY(-3px); border-color:#dbe3f0 !important;
+}
+
+/* KPI: equal height, generous padding, consistent internals */
+.kpi-grid{ gap:22px !important; margin-bottom:26px !important; align-items:stretch !important; }
+.kpi-card{ padding:20px 22px !important; display:flex !important; flex-direction:column !important; }
+.kpi-icon{ width:42px !important; height:42px !important; border-radius:12px !important; font-size:1.05rem !important; }
+.kpi-label{ font-size:.78rem !important; font-weight:600 !important; color:var(--d-muted) !important; }
+.kpi-value{ font-size:2.35rem !important; font-weight:800 !important; color:var(--d-ink) !important; margin:8px 0 2px !important; letter-spacing:-.02em; }
+.kpi-meta{ font-size:.74rem !important; color:var(--d-muted) !important; margin-top:auto !important; }
+.kpi-bar{ margin-top:10px !important; }
+/* Attention flag on a KPI card (e.g. At Risk Students) */
+.kpi-top{ flex-wrap:wrap; row-gap:6px; }
+.kpi-flag{ margin-left:auto; white-space:nowrap; display:inline-flex; align-items:center; gap:5px;
+  background:#fdeaee; color:#b0122b; font-size:.64rem; font-weight:800;
+  padding:3px 9px; border-radius:999px; letter-spacing:.03em; text-transform:uppercase;
+  animation:kpiFlagPulse 2.2s ease-in-out infinite; }
+@keyframes kpiFlagPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(176,18,43,.28); } 50%{ box-shadow:0 0 0 5px rgba(176,18,43,0); } }
+
+/* Panel rows: equal height regardless of content */
+.panel-grid-3, .panel-grid-3b{ gap:22px !important; margin-bottom:26px !important; align-items:stretch !important; }
+.panel-grid-3 > .panel, .panel-grid-3b > .panel{ height:100% !important; display:flex; flex-direction:column; }
+.panel{ padding:20px 22px !important; }
+.panel > .panel-head{ flex:0 0 auto; }
+
+/* Chart boxes: consistent, breathable */
+.panel canvas{ max-width:100% !important; }
+.chart-box{ min-height:230px; }
+.donut-canvas-box{ width:160px !important; height:160px !important; }
+.legend-list li{ font-size:.82rem !important; }
+.legend-list .sw{ width:12px !important; height:12px !important; border-radius:4px !important; }
+
+/* =====================================================================
+   QUICK ACTIONS + ACTIVITY LOG (fill empty space)
+   ===================================================================== */
+.qa-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px; }
+.qa-card{
+  display:flex; flex-direction:column; align-items:flex-start; gap:9px; padding:16px;
+  background:#fff; border:1px solid var(--d-line); border-radius:12px; text-decoration:none;
+  cursor:pointer;
+  transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+.qa-card:hover{ transform:translateY(-3px); box-shadow:var(--d-shadow-md); border-color:#d3ddf0; }
+.qa-ic{ width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:1.05rem;
+  transition:transform .16s ease; }
+.qa-card:hover .qa-ic{ transform:scale(1.1); }
+.qa-title{ font-size:.9rem; font-weight:800; color:var(--d-ink); }
+.qa-sub{ font-size:.75rem; color:var(--d-muted); line-height:1.4; }
+
+.activity-list{ display:flex; flex-direction:column; gap:2px; }
+.activity-item{ display:flex; align-items:flex-start; gap:12px; padding:11px 6px; border-bottom:1px solid var(--d-line-2); }
+.activity-item:last-child{ border-bottom:none; }
+.activity-dot{ flex:0 0 auto; width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:.82rem; background:var(--d-blue-soft); color:var(--d-navy); margin-top:1px; }
+.activity-body{ min-width:0; flex:1; }
+.activity-body .a-act{ font-size:.84rem; font-weight:700; color:var(--d-ink); }
+.activity-body .a-meta{ font-size:.74rem; color:var(--d-muted); }
+.activity-body .a-meta b{ color:var(--d-ink-2); font-weight:700; }
+.activity-time{ font-size:.72rem; color:var(--d-muted); white-space:nowrap; flex:0 0 auto; }
+
+/* =====================================================================
+   SIDEBAR — consistent icons + clearer active highlight
+   ===================================================================== */
+.sidebar-nav a{ padding:12px 14px !important; margin:2px 12px !important; gap:13px !important; font-size:.9rem !important; }
+.sidebar-nav a i{ width:22px !important; text-align:center !important; font-size:.98rem !important; color:rgba(255,255,255,.55) !important; }
+.sidebar-nav a:hover{ background:rgba(255,255,255,.09) !important; }
+.sidebar-nav a:hover i{ color:#fff !important; }
+.sidebar-nav a.active{
+  background:#ffffff !important;                       /* white pill: unmistakable current page */
+  color:#16315b !important; font-weight:800 !important;
+  box-shadow:0 4px 14px rgba(6,16,36,.25) !important;
+}
+.sidebar-nav a.active i{ color:#1a3a6b !important; }
+
+/* =====================================================================
+   RESPONSIVE — panel rows stack, cards reflow on tablet/phone
+   ===================================================================== */
+@media (max-width:1050px){
+  .panel-grid-3, .panel-grid-3b{ grid-template-columns:1fr !important; }
+}
+@media (max-width:680px){
+  .admin-welcome-row h1, .page-head h1, .page-head h2, .page-title{ font-size:1.3rem !important; }
+  .kpi-value{ font-size:1.85rem !important; }
+  .qa-grid{ grid-template-columns:1fr 1fr; }
+  .admin-welcome-row{ flex-wrap:wrap; gap:10px; }
+  .donut-wrap{ flex-wrap:wrap; }
+}
+@media (max-width:430px){
+  .qa-grid{ grid-template-columns:1fr; }
+}
+@media (prefers-reduced-motion: reduce){
+  .kpi-card:hover, .panel:hover, .stat-card:hover, .qa-card:hover{ transform:none; }
+  .kpi-flag{ animation:none; }
+}
+
+/* =====================================================================
+   SEARCH BAR FIXES (bugs 35 & 42)
+   · 42 — vts-minimal forces `.vts-input{padding:10px 13px !important}`, which
+     wiped the left padding that made room for the search icon, so the icon
+     overlapped the typed text. Restore it (and only when an icon is present).
+   · 35 — keep search inputs inside their container: no horizontal overflow,
+     consistent height/box-sizing across every violations/students page.
+   ===================================================================== */
+.search-wrap{ position:relative; min-width:0; max-width:100%; box-sizing:border-box; }
+.search-wrap i{ position:absolute; left:13px; top:50%; transform:translateY(-50%);
+  color:#9aa6bd; font-size:.85rem; pointer-events:none; z-index:1; }
+/* Any input that sits inside an icon search-wrap gets room for the icon. */
+.search-wrap .vts-input{ padding-left:38px !important; width:100%; box-sizing:border-box; max-width:100%; }
+/* Search + filter controls never overflow their row on any screen. */
+.filter-bar{ max-width:100%; }
+.filter-bar .vts-input, .filter-bar .vts-select{ max-width:100%; box-sizing:border-box; }
+.filter-field.grow{ min-width:0; }   /* allow the search field to shrink instead of overflowing */
+
+/* Violation-type filter chip spacing */
+.filter-field select.vts-input, .filter-field select.vts-select{ min-width:0; }
+
+/* =====================================================================
+   CLEAN & CONCISE — consistent headers, subtitles, alerts, hints across
+   every page so the whole app reads as one tidy system.
+   ===================================================================== */
+/* Page header: title + one brief muted line, consistent gap */
+.admin-welcome-row, .page-head{ align-items:flex-start; gap:14px; }
+.admin-welcome-row > div:first-child p, .page-head > div:first-child p{
+  margin-top:3px; font-size:.86rem; color:var(--d-muted) !important; line-height:1.4;
+}
+/* Alerts: tighter, cleaner, single-line-friendly */
+.alert{ padding:11px 14px !important; font-size:.86rem !important; border-radius:10px !important;
+  display:flex; align-items:center; gap:9px; }
+/* Field hints: small, muted, one calm line */
+.field-hint, small.hint, .hint{ font-size:.76rem !important; color:var(--d-muted) !important; line-height:1.45; }
+/* Quick-action / backup card subtitles: brief, 2 lines max */
+.qa-sub{ line-height:1.4; }
+/* Section panels never crowd each other */
+.recent-table-wrap + .recent-table-wrap{ margin-top:0; }
+/* Buttons in a header row wrap cleanly instead of overflowing.
+   `:not(:first-child)` matters: on pages whose header holds ONLY the title
+   block (statistics), that block is both first and last child, and without
+   the guard it turned into a flex row — putting the subtitle beside the
+   heading instead of under it. */
+.admin-welcome-row > div:last-child:not(:first-child){ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+/* =====================================================================
+   BUTTONS & MENU — clean, consistent, tactile (the 10/10 pass)
+   ===================================================================== */
+/* One height, one radius, aligned icon + label across every button */
+.btn-primary, .btn-outline, .btn-danger, .btn-ghost{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  min-height:40px; padding:9px 18px !important; border-radius:10px !important;
+  font-weight:700 !important; font-size:.88rem !important; letter-spacing:.01em !important;
+  line-height:1; white-space:nowrap; cursor:pointer;
+  transition:background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .12s ease !important;
+}
+.btn-sm{ min-height:34px; padding:7px 13px !important; font-size:.82rem !important; border-radius:9px !important; }
+.btn-primary{ background:var(--d-navy) !important; color:#fff !important; border:1px solid var(--d-navy) !important;
+  box-shadow:0 1px 2px rgba(20,40,80,.12) !important; }
+.btn-primary:hover{ background:var(--d-navy-d) !important; border-color:var(--d-navy-d) !important;
+  box-shadow:0 4px 12px rgba(20,48,90,.22) !important; transform:translateY(-1px); }
+.btn-outline{ background:#fff !important; color:var(--d-ink-2) !important; border:1px solid #d9e1ee !important; box-shadow:none !important; }
+.btn-outline:hover{ background:#f5f8ff !important; border-color:#c2d2ea !important; color:var(--d-navy) !important; transform:translateY(-1px); }
+.btn-danger{ background:#e0402f !important; color:#fff !important; border:1px solid #e0402f !important; }
+.btn-danger:hover{ background:#c8351f !important; border-color:#c8351f !important; transform:translateY(-1px); }
+.btn-ghost{ background:transparent !important; color:var(--d-ink-2) !important; border:1px solid transparent !important; }
+.btn-ghost:hover{ background:#eef2f8 !important; color:var(--d-navy) !important; }
+/* Icon-only row action squares stay perfectly square */
+.data-table td .btn-sm{ min-width:34px; }
+.btn-primary:active, .btn-outline:active, .btn-danger:active{ transform:translateY(0); }
+@media (prefers-reduced-motion: reduce){ .btn-primary:hover,.btn-outline:hover,.btn-danger:hover{ transform:none; } }
+
+/* Sidebar menu: crisp, evenly-spaced, clear active state */
+.sidebar-nav a{ border-radius:10px !important; font-size:.9rem !important; }
+.notif-badge{ font-size:.65rem; padding:1px 7px; }
+/* Logout pill in the top bar reads as a clean, quiet action */
+.btn-logout{ min-height:34px; border-radius:9px !important; font-weight:700 !important; padding:7px 15px !important; }
+
+/* =====================================================================
+   ENTERPRISE V2  ·  the 9.5/10 polish (Notion / Linear / Stripe feel)
+   Loaded last — semantic colour system, calmer canvas, softer depth,
+   consistent grid, tactile motion. Nothing here overlaps content.
+   ===================================================================== */
+:root{
+  --sidebar-w:264px;                       /* slightly wider — main margin uses the same var */
+  --e-bg:#f8fafc; --e-surface:#ffffff; --e-line:#eef1f6;
+  --e-ink:#0f172a; --e-ink-2:#334155; --e-muted:#64748b;
+  --e-primary:#2563eb; --e-success:#16a34a; --e-warning:#ea9a0c; --e-danger:#e11d48; --e-purple:#7c3aed;
+  --e-radius:16px; --e-radius-sm:11px;
+  --e-shadow:0 1px 2px rgba(15,23,42,.04), 0 4px 14px rgba(15,23,42,.06);
+  --e-shadow-lg:0 2px 6px rgba(15,23,42,.05), 0 18px 40px rgba(15,23,42,.10);
+}
+body.has-bg-image, .vts-main{ background:var(--e-bg) !important; }
+
+/* ---------- Typography: one family, consistent scale, calmer weight ---------- */
+body, .vts-navbar, .vts-sidebar, .vts-input, .vts-select, textarea, button, input,
+.btn-primary, .btn-outline, .btn-danger, .btn-ghost, .btn-logout, .menu-tab, .kpi-value, .kpi-label{
+  font-family: var(--font-ui) !important;
+}
+.admin-welcome-row h1, .page-head h1, .page-head h2, .page-title{
+  font-size:1.5rem !important; font-weight:700 !important; letter-spacing:-.02em !important; color:var(--e-ink) !important;
+}
+.admin-welcome-row p, .page-head p{ color:var(--e-ink-2) !important; }   /* higher contrast body text */
+.panel-head h3{ color:var(--e-ink) !important; }
+.data-table td, .vts-table tbody td{ color:var(--e-ink-2) !important; }
+
+/* ---------- Sidebar: wider, roomier, unmistakable active state ---------- */
+.sidebar-nav{ padding:10px 0 !important; display:flex; flex-direction:column; }
+.sidebar-nav a{ margin:4px 12px !important; padding:12px 15px !important; gap:14px !important; font-size:.92rem !important; }
+.sidebar-nav a i{ width:22px !important; font-size:1.02rem !important; text-align:center !important; color:rgba(255,255,255,.62) !important; }
+.sidebar-nav a:hover{ background:rgba(255,255,255,.10) !important; }
+.sidebar-nav a:hover i{ color:#fff !important; }
+.sidebar-nav a.active{
+  background:#ffffff !important; color:#16315b !important; font-weight:800 !important;
+  box-shadow:0 4px 14px rgba(6,16,36,.25) !important;                   /* white pill, navy text */
+}
+.sidebar-nav a.active i{ color:#1a3a6b !important; }                    /* navy active icon */
+/* Kill the large empty gap at the bottom — a subtle brand footer fills it */
+.vts-sidebar::after{
+  content:none !important; display:none !important;
+}
+/* Menu button (mobile): cleaner + smaller, never over the heading */
+.menu-tab{ padding:8px 14px !important; font-size:.82rem !important; border-radius:10px !important; box-shadow:0 2px 6px rgba(15,23,42,.14) !important; }
+
+/* ---------- Top bar: bigger bell, avatar, tidy profile ---------- */
+.nav-bell{ width:38px; height:38px; display:inline-flex; align-items:center; justify-content:center;
+  border-radius:10px; background:rgba(255,255,255,.14); color:#fff; font-size:1rem; position:relative; transition:background .15s; }
+.nav-bell:hover{ background:rgba(255,255,255,.24); }
+.nav-bell-badge{ position:absolute; top:-4px; right:-4px; background:var(--e-danger); color:#fff;
+  font-size:.6rem; font-weight:800; min-width:16px; height:16px; border-radius:9px; display:flex; align-items:center; justify-content:center; padding:0 4px; }
+
+/* ---------- KPI cards: bigger, rounder, tactile, equal height ---------- */
+.kpi-grid{ gap:20px !important; align-items:stretch !important; }
+.kpi-card{
+  background:var(--e-surface) !important; border:1px solid var(--e-line) !important;
+  border-radius:var(--e-radius) !important; padding:22px 24px !important; box-shadow:var(--e-shadow) !important;
+  display:flex !important; flex-direction:column !important; min-height:150px;
+}
+.kpi-card:hover{ box-shadow:var(--e-shadow-lg) !important; transform:translateY(-4px); border-color:#e2e8f0 !important; }
+.kpi-icon{ width:46px !important; height:46px !important; border-radius:13px !important; font-size:1.2rem !important; }
+.kpi-icon.blue{ background:#e7f0ff !important; color:var(--e-primary) !important; }
+.kpi-icon.red,.kpi-icon.rose{ background:#ffe4ea !important; color:var(--e-danger) !important; }
+.kpi-icon.amber{ background:#fdf0d5 !important; color:var(--e-warning) !important; }
+.kpi-icon.purple{ background:#f0e8ff !important; color:var(--e-purple) !important; }
+.kpi-icon.green,.kpi-icon.teal{ background:#dcfce7 !important; color:var(--e-success) !important; }
+.kpi-value{ font-size:2.25rem !important; font-weight:800 !important; color:var(--e-ink) !important; margin:12px 0 4px !important; letter-spacing:-.03em; }
+.kpi-label{ font-size:.8rem !important; font-weight:600 !important; color:var(--e-muted) !important; }
+.kpi-meta{ font-size:.75rem !important; color:var(--e-muted) !important; margin-top:auto !important; }
+.kpi-bar{ height:6px !important; border-radius:999px !important; margin-top:14px !important; background:#eef2f7 !important; }
+.kpi-bar span{ border-radius:999px !important; }
+
+/* ---------- Panels / cards: 16px radius, soft depth, equal height ---------- */
+.panel, .recent-table-wrap, .vts-card, .stat-card{
+  border-radius:var(--e-radius) !important; border:1px solid var(--e-line) !important; box-shadow:var(--e-shadow) !important;
+}
+.panel:hover, .stat-card:hover{ box-shadow:var(--e-shadow-lg) !important; }
+.panel-grid-3, .panel-grid-3b{ gap:20px !important; }
+.chart-box{ min-height:260px !important; }
+.panel canvas{ border:none !important; }
+
+/* ---------- Buttons: keep tidy, add a soft focus ring ---------- */
+.btn-primary{ background:var(--e-primary) !important; border-color:var(--e-primary) !important; }
+.btn-primary:hover{ background:#1e50d6 !important; border-color:#1e50d6 !important; }
+
+/* ---------- Responsive: 2×2 on tablet, 1 column on phone, sticky header ---------- */
+.vts-navbar{ position:fixed !important; top:0; left:0; right:0; z-index:1000; }
+@media (max-width:1024px){ .panel-grid-3, .panel-grid-3b{ grid-template-columns:1fr !important; } }
+
+@media (prefers-reduced-motion: reduce){ .kpi-card:hover{ transform:none; } }
+
+/* =====================================================================
+   FIX · SEARCH BAR + TRANSLUCENT SIDEBAR
+   · The search box used to flip to a solid WHITE pill on focus. Because the
+     navbar gradient fades to gold on the right, that white pill exposed the
+     gold behind it (plus a stray focus ring) — a jarring flash while typing.
+     It now keeps the SAME translucent glass look focused or not.
+   · The sidebar is now frosted/translucent like the profile button.
+   ===================================================================== */
+/* --- Search bar: one consistent glass look, focused or not --- */
+.vts-navbar .nav-search{
+  background:rgba(255,255,255,.14) !important;
+  border:1px solid rgba(255,255,255,.28) !important;
+  box-shadow:none !important;
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  transition:background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.vts-navbar .nav-search:focus-within{
+  background:rgba(255,255,255,.24) !important;          /* subtle brighten only */
+  border-color:rgba(255,255,255,.58) !important;
+  box-shadow:0 0 0 3px rgba(255,255,255,.16) !important; /* soft white ring, no gold */
+}
+/* Icon + text stay white in BOTH states (no dark-on-white flash) */
+.vts-navbar .nav-search i,
+.vts-navbar .nav-search:focus-within i{ color:rgba(255,255,255,.92) !important; }
+.vts-navbar .nav-search input,
+.vts-navbar .nav-search:focus-within input{
+  color:#fff !important; background:transparent !important; border:none !important;
+}
+.vts-navbar .nav-search input::placeholder,
+.vts-navbar .nav-search:focus-within input::placeholder{ color:rgba(255,255,255,.78) !important; }
+/* Kill every inherited focus ring/border on the search input itself */
+.vts-navbar .nav-search input:focus,
+.vts-navbar .nav-search input:focus-visible{
+  outline:none !important; box-shadow:none !important; border:none !important;
+}
+
+/* --- Sidebar: frosted translucent glass (matches the profile button) --- */
+.vts-sidebar{
+  background:linear-gradient(180deg, rgba(26,58,107,.82) 0%, rgba(17,38,74,.88) 100%) !important;
+  backdrop-filter:blur(18px) saturate(150%);
+  -webkit-backdrop-filter:blur(18px) saturate(150%);
+  border-right:1px solid rgba(255,255,255,.12) !important;
+  box-shadow:2px 0 18px rgba(15,23,42,.10) !important;
+}
+/* Slightly translucent menu items so the glass reads through */
+.sidebar-nav a.active{
+  background:rgba(255,255,255,.18) !important;
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+}
+.sidebar-nav a:hover{ background:rgba(255,255,255,.12) !important; }
+
+/* =====================================================================
+   KPI ROW — FINAL WORD ON LAYOUT (loads last, so this is what ships)
+   The old `repeat(auto-fit, minmax(215px,1fr))` needed ~1155px for five
+   cards but `.vts-main-inner` caps at 1180px minus padding, so the fifth
+   card kept dropping to a ragged second row. Auto-flow columns instead:
+   every card lands on ONE line at equal width, whatever the count
+   (2 on students, 3 on head marshal, 4 on OSA/dean, 5 on admin).
+   ===================================================================== */
+.kpi-grid{
+  display:grid !important;
+  grid-auto-flow:column !important;
+  grid-auto-columns:minmax(0,1fr) !important;
+  grid-template-columns:none !important;
+  gap:14px !important;
+  align-items:stretch !important;
+  margin-bottom:22px !important;
+}
+.kpi-card{
+  min-width:0 !important; min-height:0 !important;
+  padding:16px 18px !important;
+  display:flex !important; flex-direction:column !important; align-items:stretch !important;
+  gap:0 !important;
+}
+/* Fixed-height header block keeps every card's number on the same baseline
+   even when a label wraps to two lines ("At Risk Students"). */
+.kpi-top{
+  display:flex !important; align-items:center !important; gap:10px !important;
+  flex-wrap:nowrap !important; min-height:38px;
+}
+.kpi-icon{ width:36px !important; height:36px !important; flex:0 0 36px !important; border-radius:10px !important; font-size:.95rem !important; }
+.kpi-label{ font-size:.75rem !important; line-height:1.25 !important; min-width:0; }
+/* Value + attention flag share one row, so the flag never adds a line of
+   its own and knocks that card out of alignment with its neighbours. */
+.kpi-value-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:10px 0 2px; }
+.kpi-value{ font-size:1.95rem !important; line-height:1.1 !important; margin:0 !important; }
+.kpi-flag{ margin-left:0 !important; }
+.kpi-meta{ font-size:.72rem !important; line-height:1.4 !important; margin-top:auto !important; padding-top:6px; }
+.kpi-bar{ height:5px !important; margin-top:9px !important; }
+
+/* Below ~1200px five cards get too narrow to read — reflow in tidy rows
+   instead (3 → 2 → 1) so there is never a stretched, orphaned card. */
+@media (max-width:1200px){
+  .kpi-grid{ grid-auto-flow:row !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+}
+@media (max-width:900px){
+  .kpi-grid{ grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+}
+@media (max-width:540px){
+  .kpi-grid{ grid-template-columns:1fr !important; gap:11px !important; }
+  .kpi-value{ font-size:1.75rem !important; }
+}
+
+/* =====================================================================
+   DENSITY — one tighter spacing scale for EVERY page
+   Padding and gaps had been bumped up in four separate stylesheets over
+   time and stacked into a lot of dead white space. This is the single
+   place that sets them now; keep edits here rather than adding another
+   layer above it.
+   ===================================================================== */
+/* NB: `.vts-main` keeps its 52px top padding — that is the fixed navbar's
+   height, not slack. Only the inner padding comes down. */
+.vts-main-inner{ padding:14px 20px 22px !important; }
+.admin-welcome-row, .page-head{ margin-bottom:12px !important; gap:10px !important; }
+.admin-welcome-row h1, .page-head h1, .page-head h2, .page-title{ font-size:1.35rem !important; margin-bottom:1px !important; }
+.admin-welcome-row > div:first-child p, .page-head > div:first-child p,
+.admin-welcome-row p, .page-head p{ margin-top:1px !important; font-size:.82rem !important; }
+
+/* Cards: same padding everywhere, smaller gap between stacked cards */
+.panel, .recent-table-wrap{ padding:12px 14px !important; }
+.vts-card{ padding:14px !important; }
+.panel, .recent-table-wrap, .vts-card{ margin-bottom:12px !important; }
+.panel-head{ margin-bottom:8px !important; }
+.recent-table-wrap .panel-head{ margin-bottom:8px !important; }
+
+/* Multi-column rows */
+.panel-grid-3, .panel-grid-3b{ gap:12px !important; margin-bottom:12px !important; }
+.kpi-grid{ gap:12px !important; margin-bottom:12px !important; }
+.kpi-card{ padding:13px 15px !important; }
+.kpi-top{ min-height:34px; }
+.kpi-icon{ width:32px !important; height:32px !important; flex:0 0 32px !important; font-size:.88rem !important; }
+.kpi-value-row{ margin:7px 0 1px !important; }
+.kpi-value{ font-size:1.75rem !important; }
+.kpi-bar{ margin-top:7px !important; }
+
+/* Charts: honour the per-chart height instead of padding it out to 260px */
+.chart-box{ min-height:0 !important; }
+
+/* Quick actions + activity feed */
+.qa-grid{ gap:10px !important; }
+.qa-card{ padding:10px 12px !important; gap:5px !important; }
+.qa-ic{ width:32px !important; height:32px !important; font-size:.88rem !important; }
+.qa-title{ font-size:.85rem !important; }
+.qa-sub{ font-size:.72rem !important; }
+.activity-item{ padding:7px 4px !important; }
+
+/* Sidebar: the nav was taller than it needed to be, leaving a long empty
+   column below the last link on every page. */
+.sidebar-nav a{ padding:9px 13px !important; margin:1px 10px !important; font-size:.87rem !important; }
+.sidebar-nav a i{ font-size:.92rem !important; }
+
+/* Tables: tighter rows, still comfortable to tap.
+   Selectors carry `thead`/`tbody` on purpose — vts-minimal's
+   `.data-table tbody td{padding:15px !important}` outranks a bare
+   `.data-table td`, so matching its specificity is what makes this stick. */
+.data-table thead th, .vts-table thead th{ padding:9px 11px !important; }
+.data-table tbody td, .vts-table tbody td{ padding:9px 11px !important; }
+.mini-table th, .mini-table td{ padding:7px 8px !important; }
+.filter-bar{ margin-bottom:12px !important; }
+
+@media (max-width:900px){
+  /* 60px top stays — that's the floating Menu button's clearance. Only the
+     side and bottom padding come down. */
+  .vts-main-inner{ padding:60px 14px 28px !important; }
+  .panel, .recent-table-wrap{ padding:12px 13px !important; }
+  .data-table thead th, .data-table tbody td,
+  .vts-table thead th, .vts-table tbody td{ padding:8px 9px !important; }
+}
+@media (max-width:720px){
+  /* Same single-child guard as above — vts-minimal repeats the bare
+     `> div:last-child{display:flex}` rule inside its own phone breakpoint. */
+  .admin-welcome-row > div:first-child:last-child{ display:block !important; }
+  /* `.admin-welcome-row` flips to a column here, which turns the shared
+     `flex:1 1 140px` on header buttons into a 140px *height* — pages whose
+     action link is a direct child (users, students) grew a huge blue block.
+     Natural height, full width. */
+  .admin-welcome-row > .btn-primary, .admin-welcome-row > .btn-outline,
+  .admin-welcome-row > a[class*="btn-"], .admin-welcome-row > label[class*="btn-"],
+  .admin-welcome-row > button[class*="btn-"]{
+    flex:0 0 auto !important; align-self:stretch; justify-content:center;
+  }
+}
+
+/* =====================================================================
+   SCREEN FIT — the app used to sit in a 1180px column no matter how big
+   the monitor was, so on a 1080p/1440p desktop everything looked small
+   and marooned in the middle. The content column now grows with the
+   screen and the type scale steps up with it (everything is in rem, so
+   moving the root size scales the whole UI, not just headings).
+   Phones get the opposite treatment: nothing shrinks below a
+   comfortable reading/tapping size.
+   ===================================================================== */
+
+/* ---- Desktop 1500px+ : use the width, one size up ---- */
+@media (min-width:1500px){
+  html{ font-size:17px; }
+  .vts-main-inner{ max-width:1520px !important; padding:20px 30px 34px !important; }
+  .panel, .recent-table-wrap{ padding:16px 18px !important; }
+  .vts-card{ padding:18px !important; }
+  .panel, .recent-table-wrap, .vts-card{ margin-bottom:16px !important; }
+  .panel-grid-3, .panel-grid-3b, .kpi-grid{ gap:16px !important; margin-bottom:16px !important; }
+  .kpi-card{ padding:17px 19px !important; }
+  .kpi-icon{ width:38px !important; height:38px !important; flex:0 0 38px !important; }
+  .data-table thead th, .vts-table thead th,
+  .data-table tbody td, .vts-table tbody td{ padding:12px 14px !important; }
+}
+
+/* ---- Desktop 1850px+ : ultrawide / 4K ---- */
+@media (min-width:1850px){
+  html{ font-size:18px; }
+  :root{ --sidebar-w:280px; }
+  .vts-main-inner{ max-width:1720px !important; padding:24px 36px 40px !important; }
+}
+
+/* ---- Phones: keep text readable and controls tappable ---- */
+@media (max-width:560px){
+  html{ font-size:16px; }
+  /* 16px inputs stop iOS Safari zooming in when a field is focused */
+  .vts-input, .vts-select, textarea, .filter-bar .vts-input, .filter-bar .vts-select{
+    font-size:16px !important; min-height:44px;
+  }
+  .btn-primary, .btn-outline, .btn-danger, .btn-secondary{ min-height:44px; }
+  .btn-sm, .btn-outline.btn-sm, .btn-danger.btn-sm{ min-height:38px; }
+  .data-table thead th, .vts-table thead th,
+  .data-table tbody td, .vts-table tbody td{ padding:11px 10px !important; font-size:.85rem !important; }
+  .admin-welcome-row h1, .page-head h1, .page-head h2, .page-title{ font-size:1.25rem !important; }
+  .admin-welcome-row p, .page-head p{ font-size:.85rem !important; }
+  .kpi-label{ font-size:.82rem !important; }
+  .kpi-meta{ font-size:.78rem !important; }
+  .qa-sub, .activity-item, .cell-sub{ font-size:.78rem !important; }
+}
+
+/* ---- KPI row: reflow BEFORE the labels start snapping mid-word ----
+   Five cards on one line need ~1450px; on a 1366 laptop the fourth card was
+   squeezing "At Risk Students" down to "At Ris/k Stu/den/ts". Rows of three
+   below that, and labels break between words only. */
+@media (max-width:1450px){
+  .kpi-grid{ grid-auto-flow:row !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+}
+.kpi-label{ word-break:normal !important; overflow-wrap:normal !important; hyphens:none !important; }
+
+/* =====================================================================
+   OFFICIAL VIOLATION SHEET — the OSA's paper layout rendered on screen
+   (Reports page + the Violations page's "Official sheet" view). Two-row
+   grouped header, one row per student, scrolls sideways inside its card.
+   ===================================================================== */
+.official-sheet{ min-width:1180px; border-collapse:collapse; }
+.official-sheet thead th{
+  text-align:center !important; vertical-align:middle; white-space:nowrap;
+  font-size:.7rem !important; letter-spacing:.03em; line-height:1.25;
+  border:1px solid var(--d-line,#e3e9f3) !important; padding:7px 9px !important;
+  background:#f4f7fc;
+}
+.official-sheet thead th.grp{ background:#eaf0fa; }
+.official-sheet thead th.sub{ font-weight:600; color:#5a6a8a; width:74px; }
+.official-sheet tbody td{
+  border:1px solid var(--d-line,#e3e9f3) !important; padding:8px 9px !important;
+  font-size:.8rem !important; vertical-align:top;
+}
+/* The write-in columns (warning / slip / remarks) read as blank boxes */
+.official-sheet tbody td:empty{ background:#fcfdff; }
+
+/* SLIP column: a small on-screen icon that opens/prints that violation's
+   slip — for when a student asks for it in person, right from this view.
+   It's a .no-print element so the physical printout of the sheet is
+   unchanged: that cell still prints blank, for hand-fill as before. */
+.official-sheet td.slipcell{ text-align:center; }
+.official-sheet .slip-link{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:26px; height:26px; border-radius:7px; color:#2f6fbf;
+  background:#eaf1fb; text-decoration:none; font-size:.8rem;
+}
+.official-sheet .slip-link:hover{ background:#dce8f9; }
+
+/* Utility: hide on-screen-only controls when the page is printed. Used by
+   the Official Sheet's slip links so a printed sheet stays exactly the
+   blank hand-fill layout it always was. */
+@media print{
+  .no-print{ display:none !important; }
+}
+
+/* ---- Simple view tabs (Violations: Official Sheet / Records & Actions) ---- */
+.tab-row{ display:flex; gap:6px; border-bottom:1px solid var(--d-line,#e3e9f3); }
+.tab-row .tab-link{
+  display:inline-flex; align-items:center; gap:7px; padding:9px 14px;
+  font-size:.82rem; font-weight:700; color:#9aa6bd; text-decoration:none;
+  border-bottom:2px solid transparent; margin-bottom:-1px;
+}
+.tab-row .tab-link:hover{ color:#5a6a8a; }
+.tab-row .tab-link.active{ color:var(--d-navy,#1a3a6b); border-bottom-color:var(--d-navy,#1a3a6b); }
+
+/* =====================================================================
+   COLD → HOT SCALE — anything that gets worse as the number climbs
+   (offence number, violation count, repeat offenders) reads green at 1
+   and deep red by the 5th. One scale everywhere so a colour always means
+   the same thing.
+   ===================================================================== */
+.heat{
+  display:inline-block; padding:2px 9px; border-radius:999px;
+  font-size:.72rem; font-weight:800; line-height:1.5; white-space:nowrap;
+}
+.heat-1{ background:#fdf3cf !important; color:#8a6100 !important; }   /* 1st — YELLOW */
+.heat-2{ background:#fde3cc !important; color:#a4530a !important; }   /* 2nd — ORANGE */
+.heat-3{ background:#f9cfcd !important; color:#a4110d !important; }   /* 3rd — RED    */
+.heat-4{ background:#f5b7b4 !important; color:#8f1712 !important; }   /* 4th — deeper */
+.heat-5{ background:#8c0d16 !important; color:#ffffff !important; }   /* 5th+ — peak  */
+
+/* Same scale as a table-cell tint (official sheet's OFFENSE columns) */
+.official-sheet tbody td.heat-1{ background:#fdf6d8 !important; color:#8a6100 !important; font-weight:700; }
+.official-sheet tbody td.heat-2{ background:#fde7d3 !important; color:#a4530a !important; font-weight:700; }
+.official-sheet tbody td.heat-3{ background:#f9d2d0 !important; color:#a4110d !important; font-weight:700; }
+.official-sheet tbody td.heat-4{ background:#f6bcb9 !important; color:#8f1712 !important; font-weight:700; }
+.official-sheet tbody td.heat-5{ background:#8c0d16 !important; color:#fff !important; font-weight:700; }
+
+/* The sheet fits the page width wherever it is shown (Reports + Violations) */
+.official-sheet{ min-width:0 !important; width:100% !important; table-layout:fixed; }
+.official-sheet thead th{ font-size:.62rem !important; padding:5px 4px !important; white-space:normal !important; }
+.official-sheet tbody td{ font-size:.7rem !important; padding:5px 5px !important; white-space:normal; overflow-wrap:anywhere; }
+
+/* =====================================================================
+   READABILITY PASS — some staff have poor eyesight, so nothing in the
+   app should rely on small or low-contrast text. Bigger controls, darker
+   greys, stronger focus rings, and filter bars that stay on ONE line
+   until the screen genuinely can't hold them.
+   ===================================================================== */
+
+/* ---- Filters: the search row stays on ONE line; the extra filters open in
+       their own block UNDER it (never squeezed in beside Apply/Reset) ---- */
+.filter-bar{ flex-wrap:wrap; gap:12px; align-items:flex-end; }
+.filter-bar > .filter-field{ flex:1 1 0; min-width:0; }
+.filter-bar > .filter-field .vts-input,
+.filter-bar > .filter-field .vts-select{ min-width:0 !important; width:100% !important; }
+.filter-bar > .filter-actions{ flex:0 0 auto; }
+/* order:99 + full width = always the last thing, on its own row */
+.filter-bar .filter-panel{
+  order:99; flex:0 0 100%; width:100%; margin-top:14px; padding-top:14px;
+  border-top:1px solid var(--d-line,#e3e9f3);
+}
+.filter-bar .filter-panel .filter-field{ flex:1 1 190px; min-width:170px; }
+
+/* ---- Type: larger and darker across the board ---- */
+.filter-field label{ font-size:.78rem !important; color:#33415c !important; letter-spacing:.03em !important; }
+.vts-input, .vts-select, textarea{ font-size:.95rem !important; color:#1a2340 !important; }
+.vts-input::placeholder{ color:#7c8aa5 !important; }
+.data-table thead th, .vts-table thead th{ font-size:.8rem !important; color:#33415c !important; }
+.data-table tbody td, .vts-table tbody td{ font-size:.9rem !important; color:#1f2a44 !important; }
+.cell-sub, .kpi-meta, .qa-sub, .activity-item, .field-hint{ color:#4c5a75 !important; }
+.kpi-label, .stat-label{ color:#33415c !important; }
+.panel-head h3{ font-size:.95rem !important; color:#1a2340 !important; }
+.admin-welcome-row p, .page-head p{ color:#4c5a75 !important; }
+/* Pale greys used inline on empty-states/meta — lifted to a readable tone */
+[style*="9aa6bd"]{ color:#5a6a8a !important; }
+[style*="#55617a"]{ color:#44506b !important; }
+
+/* ---- Controls: comfortable targets everywhere, not just on phones ---- */
+.btn-primary, .btn-outline, .btn-danger, .btn-secondary, .btn-ghost{
+  font-size:.9rem !important; min-height:42px; display:inline-flex; align-items:center; gap:8px;
+}
+.btn-sm{ font-size:.84rem !important; min-height:38px; }
+.filter-field .vts-input, .filter-field .vts-select, .filter-actions .btn-sm{ height:44px !important; }
+.tab-row .tab-link{ font-size:.88rem; color:#5a6a8a; }
+.tab-row .tab-link.active{ color:#12305e; }
+
+/* ---- Focus: always obvious which control has the keyboard ---- */
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible, [contenteditable]:focus-visible{
+  outline:3px solid #2563c9 !important; outline-offset:2px !important;
+}
+
+/* The official sheet stays compact by design, but not tiny */
+.official-sheet thead th{ font-size:.68rem !important; color:#2b3a55 !important; }
+.official-sheet tbody td{ font-size:.76rem !important; }
+
+/* Cards that are white-on-colour must keep their light text — the readability
+   pass above darkens labels globally, which would bury them on a filled card. */
+.stat-card .stat-label{ color:rgba(255,255,255,.94) !important; font-weight:700 !important; }
+.stat-card .stat-value{ color:#fff !important; }
+.stat-card .stat-link{ color:#fff !important; }
+.stat-card .stat-icon{ color:#fff !important; }
+
+/* =====================================================================
+   THEME PASS — gold + blue, translucent sidebar, and offence severity
+   you can spot without reading. Gold stays an ACCENT (header, active
+   nav, focus rings); everything structural stays blue/white.
+   ===================================================================== */
+
+/* ---- Sidebar: liquid glass, same material as the navbar profile chip ----
+   A white translucent film over the navy, blurred and lightly outlined, so the
+   whole rail reads like one big frosted panel rather than a flat block. */
+.vts-sidebar{
+    background: linear-gradient(
+        180deg,
+        #14345d 0%,    /* Navy Blue */
+        #1b4b82 30%,   /* Dark Blue */
+        #2967ad 65%,   /* Blue */
+        #3b7fc7 100%   /* Light Blue */
+    ) !important;
+}
+/* Nav items are little glass chips, exactly like the profile button up top */
+.sidebar-nav a{ border:1px solid transparent; }
+.sidebar-nav a:hover{
+  background: rgba(255,255,255,.18) !important;
+  border-color: rgba(255,255,255,.26) !important;
+}
+/* Fallback for browsers without backdrop-filter — stay opaque, not muddy */
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))){
+  .vts-sidebar{ background: linear-gradient(180deg,#132c54 0%,#1a3a6b 100%) !important; }
+}
+.sidebar-nav a{ color: rgba(255,255,255,.9) !important; }
+.sidebar-nav a:hover{ background: rgba(255,255,255,.12) !important; }
+/* Active item: white card with a GOLD edge — the one gold cue in the rail */
+.sidebar-nav a.active{
+    background: rgba(255,255,255,.18) !important; /* translucent */
+    color: #fff !important;
+
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+
+    border: 1px solid rgba(255,255,255,.25);
+
+    box-shadow:
+        inset 3px 0 0 var(--d-gold, #c9a227),
+        0 6px 16px rgba(8,20,45,.22),
+        inset 0 1px 0 rgba(255,255,255,.2);
+
+    border-radius: 14px;
+}
+.sidebar-nav a.active i{ color:#12305e !important; }
+.sidebar-brand, .vts-sidebar .sidebar-foot{ border-color: rgba(255,255,255,.14) !important; }
+
+/* ---- Severity at a glance: MINOR cool · MAJOR warm · GRAVE hot ---- */
+.sev{
+  display:inline-block; padding:2px 10px; border-radius:999px;
+  font-size:.7rem; font-weight:800; letter-spacing:.04em; white-space:nowrap;
+  border:1px solid transparent;
+}
+.sev-minor{ background:#e2f6ea; color:#0f6b3c; border-color:#bfe6cf; }
+.sev-major{ background:#fdeedd; color:#a4530a; border-color:#f6d3ac; }
+.sev-grave{ background:#fbdad9; color:#a4110d; border-color:#f2b3b0; }
+/* Cleared offences read as "done", never as a live severity */
+.sev-cleared{ background:#eef1f6; color:#4c5a75; border-color:#dde4f0; }
+
+/* ---- Gold accents where they help you find things ---- */
+.btn-primary:focus-visible{ outline-color: var(--d-gold,#c9a227) !important; }
+.tab-row .tab-link.active{ border-bottom-color: var(--d-gold,#c9a227) !important; }
+.panel-head h3 i{ color: var(--d-gold,#c9a227); }
+
+/* ---- Top search: same glass material as the sidebar and profile chip ---- */
+.nav-search{
+  background: rgba(255,255,255,.14) !important;
+  border: 1px solid rgba(255,255,255,.26) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  backdrop-filter: blur(12px) saturate(150%);
+  height: 40px !important; border-radius: 12px !important;
+}
+.nav-search:focus-within{
+  background: rgba(255,255,255,.97) !important;
+  border-color: var(--d-gold,#c9a227) !important;
+  box-shadow: 0 0 0 3px rgba(201,162,39,.28);
+}
+.nav-search input{ font-size:.92rem !important; }
+.nav-search input::placeholder{ color: rgba(255,255,255,.86) !important; }
+
+/* The floating Menu button on small screens is glass too, not a flat white pill */
+@media (max-width:900px){
+  .menu-toggle, .sidebar-toggle, #menuToggle{
+    background: rgba(255,255,255,.92) !important;
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.5) !important;
+    box-shadow: 0 8px 22px rgba(8,20,45,.22) !important;
+  }
+  /* Off-canvas rail keeps the frosted look, with a deeper scrim behind it */
+  .vts-sidebar{ box-shadow: 0 0 0 100vmax rgba(8,20,45,.0), 10px 0 40px rgba(8,20,45,.35) !important; }
+}
+
+/* Tablet: the search bar gets its own row instead of squeezing the brand */
+@media (min-width:861px) and (max-width:1180px){
+  .nav-search{ flex-basis: 260px !important; }
+}
+
+/* ---- KPI reflow, FINAL word (must sit after the 1450px rule above, or it
+       would keep 3 squeezed columns all the way down to a phone) ---- */
+@media (max-width:900px){
+  .kpi-grid{ grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+}
+@media (max-width:560px){
+  .kpi-grid{ grid-template-columns:1fr !important; gap:12px !important; }
+  .kpi-card{ padding:16px 18px !important; }
+  .kpi-top{ flex-wrap:wrap; }
+  .kpi-label{ white-space:normal; }
+}
+
+/* =====================================================================
+   DEPARTMENT / COURSE IDENTITY
+   Every department carries its own icon + colour (see vts_dept_identity()
+   in includes/functions.php), so an OSA looking at a sheet can tell which
+   department it covers without reading the heading word by word.
+   ===================================================================== */
+.dept-chip{
+  display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+  padding:3px 10px; border-radius:999px; line-height:1.6;
+  font-size:.74rem; font-weight:700; letter-spacing:.01em;
+  color:var(--chip-color,#1a3a6b);
+  background:var(--chip-tint,rgba(26,58,107,.10));
+  border:1px solid color-mix(in srgb, var(--chip-color,#1a3a6b) 26%, transparent);
+}
+.dept-chip i{ font-size:.86em; opacity:.95; }
+.dept-chip.strong{
+  font-size:.82rem; padding:5px 13px; font-weight:800;
+  background:var(--chip-tint,rgba(26,58,107,.10));
+  border-color:color-mix(in srgb, var(--chip-color,#1a3a6b) 40%, transparent);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.5);
+}
+/* Older browsers that don't do color-mix() still get a readable border. */
+@supports not (color: color-mix(in srgb, red 50%, blue)){
+  .dept-chip{ border-color:rgba(0,0,0,.12); }
+}
+
+/* Heading line: icon badge + department name + the course being looked at */
+.dept-head{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.dept-head .dept-badge{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:42px; height:42px; border-radius:12px; flex:0 0 auto;
+  font-size:1.05rem; color:#fff;
+  background:var(--chip-color,#1a3a6b);
+  box-shadow:0 4px 12px color-mix(in srgb, var(--chip-color,#1a3a6b) 32%, transparent);
+}
+.dept-head h1{ margin:0; }
+.dept-head .dept-sub{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:4px; }
+
+/* Quick department switcher — one tappable chip per department */
+.dept-switch{ display:flex; gap:8px; flex-wrap:wrap; margin:0 0 14px; }
+.dept-switch a{ text-decoration:none; opacity:.72; transition:opacity .12s, transform .12s; }
+.dept-switch a:hover{ opacity:1; transform:translateY(-1px); }
+.dept-switch a.on{ opacity:1; }
+.dept-switch a.on .dept-chip{
+  color:#fff; background:var(--chip-color,#1a3a6b);
+  border-color:var(--chip-color,#1a3a6b);
+}
+
+/* =====================================================================
+   "HOW THIS WORKS" TUTORIAL PANELS
+   Short, numbered, collapsed by default — the Export / Drive buttons stop
+   being guesswork without turning the page into a manual.
+   ===================================================================== */
+.vts-howto{ margin:0 0 14px; border:1px solid #e3e9f3; border-radius:12px; background:#fff; overflow:hidden; }
+/* Opened from the "?" in the filter row rather than sitting in the page
+   flow: help should be available, not unavoidable. */
+.vts-howto[hidden]{ display:none !important; }
+.vts-howto .howto-cols{ display:grid; gap:20px; grid-template-columns:1fr; }
+@media (min-width:760px){ .vts-howto .howto-cols{ grid-template-columns:1fr 1fr; } }
+.vts-howto .howto-col > h4{
+  font-size:.78rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase;
+  color:#1a3a6b; margin:0 0 4px; display:flex; align-items:center; gap:7px;
+}
+.vts-howto > summary{
+  cursor:pointer; list-style:none; padding:11px 14px;
+  font-size:.82rem; font-weight:700; color:#1a3a6b;
+  display:flex; align-items:center; gap:9px;
+}
+.vts-howto > summary::-webkit-details-marker{ display:none; }
+.vts-howto > summary::after{
+  content:'\f078'; font-family:'Font Awesome 6 Free'; font-weight:900;
+  margin-left:auto; font-size:.7rem; color:#9aa6bd; transition:transform .15s;
+}
+.vts-howto[open] > summary::after{ transform:rotate(180deg); }
+.vts-howto > summary:hover{ background:#f6f9fe; }
+.vts-howto .howto-body{ padding:4px 16px 16px; border-top:1px solid #eef2f8; }
+.vts-howto ol{ margin:12px 0 0; padding-left:0; list-style:none; counter-reset:howto; }
+.vts-howto ol li{
+  counter-increment:howto; position:relative; padding:0 0 0 34px; margin-bottom:12px;
+  font-size:.84rem; line-height:1.6; color:#44506a;
+}
+.vts-howto ol li:last-child{ margin-bottom:0; }
+.vts-howto ol li::before{
+  content:counter(howto); position:absolute; left:0; top:1px;
+  display:flex; align-items:center; justify-content:center;
+  width:23px; height:23px; border-radius:50%;
+  background:#eaf1fc; color:#1a3a6b; font-size:.72rem; font-weight:800;
+}
+.vts-howto ol li b{ color:#1a3a6b; }
+.vts-howto .howto-note{
+  margin-top:14px; padding:10px 12px; border-radius:9px;
+  background:#fff8e6; border:1px solid #f0dfae; color:#6b5412;
+  font-size:.79rem; line-height:1.55;
+}
+.vts-howto .howto-note i{ color:#c9a227; margin-right:5px; }
+.vts-howto code{
+  background:#eef2f8; border-radius:5px; padding:1px 6px;
+  font-size:.92em; color:#1a3a6b;
+}
+
+/* =====================================================================
+   IMPORT HISTORY — where a batch of scans came from, and who scanned it.
+   ===================================================================== */
+.src-pill{
+  display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+  padding:3px 10px; border-radius:999px; font-size:.72rem; font-weight:700;
+}
+.src-pill i{ font-size:.85em; }
+.src-offline{ background:#eef2f8; color:#44546f; border:1px solid #d8e1ee; }
+.src-online{  background:#e6f6ee; color:#0f7346; border:1px solid #bfe6d2; }
+
+/* The masked "Scanned By" name + its reveal button */
+.masked-name-wrap{ display:inline-flex; align-items:center; gap:8px; }
+.masked-name{ font-variant-numeric:tabular-nums; letter-spacing:.02em; }
+.masked-name[data-hidden="1"]{ letter-spacing:.12em; color:#8a95ab; }
+.mask-toggle{ padding:4px 8px !important; line-height:1 !important; min-width:0 !important; }
+
+/* =====================================================================
+   VTS-MENU — one button that opens a short list of NAMED choices.
+
+   For the places where several buttons were doing variations of one job:
+   three icon-only print buttons per row, or Export-to-Excel sitting next
+   to Upload-to-Drive. Both force a new user to decode an icon or guess a
+   difference. One labelled button plus a menu of words removes the
+   guessing and takes a fraction of the width.
+
+   Visual language matches the navbar's profile dropdown on purpose, so
+   it reads as part of the app rather than a new widget.
+   ===================================================================== */
+.vts-menu{ position:relative; display:inline-flex; }
+.vts-menu .vm-caret{ font-size:.62rem; opacity:.7; margin-left:1px; transition:transform .18s ease; }
+.vts-menu.open .vm-caret{ transform:rotate(180deg); }
+.vts-menu.open > .btn-outline{ background:#f5f8ff !important; border-color:#c2d2ea !important; color:var(--d-navy,#1a3a6b) !important; }
+
+.vts-menu-list{
+  position:absolute; top:calc(100% + 7px); left:0; z-index:1100;
+  min-width:252px; max-width:min(310px, calc(100vw - 32px));
+  background:#fff; border:1px solid var(--d-line,#e3e9f3); border-radius:13px;
+  box-shadow:0 16px 40px rgba(16,34,63,.2); padding:7px;
+  opacity:0; transform:translateY(-6px); pointer-events:none;
+  transition:opacity .16s ease, transform .16s ease;
+}
+.vts-menu.open .vts-menu-list{ opacity:1; transform:none; pointer-events:auto; }
+/* Near the right edge (row actions) the menu opens leftward so it can
+   never push the page sideways. */
+.vts-menu.to-left .vts-menu-list{ left:auto; right:0; }
+
+.vts-menu-list a, .vts-menu-list button{
+  display:flex; align-items:flex-start; gap:11px; width:100%;
+  padding:9px 11px; border-radius:9px; border:0; background:none;
+  font-family:inherit; font-size:.86rem; font-weight:600; text-align:left;
+  color:var(--d-ink-2,#44506a); text-decoration:none; cursor:pointer;
+  transition:background .12s ease, color .12s ease;
+}
+.vts-menu-list a i, .vts-menu-list button i{
+  width:18px; flex:0 0 18px; text-align:center; margin-top:1px;
+  color:var(--d-muted,#8a95ab); font-size:.9rem;
+}
+.vts-menu-list a:hover, .vts-menu-list button:hover,
+.vts-menu-list a:focus-visible, .vts-menu-list button:focus-visible{
+  background:var(--d-blue-soft,#eef4ff); color:var(--d-navy,#1a3a6b); outline:none;
+}
+.vts-menu-list a:hover i, .vts-menu-list button:hover i,
+.vts-menu-list a:focus-visible i, .vts-menu-list button:focus-visible i{ color:var(--d-navy,#1a3a6b); }
+/* One short line under a label — only where the name alone genuinely
+   isn't enough. Not a place to re-explain the app. */
+.vts-menu-list .vm-sub{ display:block; font-size:.74rem; font-weight:500; color:var(--d-muted,#8a95ab); margin-top:2px; line-height:1.4; }
+.vts-menu-list a:hover .vm-sub, .vts-menu-list button:hover .vm-sub{ color:#5c6b87; }
+.vts-menu-list .vm-label{ min-width:0; }
+.vts-menu-list .vm-divider{ height:1px; background:var(--d-line-2,#eef2f8); margin:6px 4px; }
+.vts-menu-list .vm-head{
+  padding:7px 11px 8px; font-size:.7rem; font-weight:800; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--d-muted,#8a95ab);
+}
+.vts-menu-list .vm-danger{ color:#c8351f; } .vts-menu-list .vm-danger i{ color:#c8351f; }
+.vts-menu-list .vm-danger:hover{ background:#fdeceb; color:#a62915; }
+.vts-menu-list .vm-danger:hover i{ color:#a62915; }
+.vts-menu-list form{ margin:0; display:block; }
+
+/* =====================================================================
+   ROW ACTIONS — a fixed, predictable set, in the same order every row,
+   so the button under the cursor is always the same button.
+   ===================================================================== */
+.row-actions{ display:flex; align-items:center; gap:5px; flex-wrap:nowrap; }
+.row-actions form{ margin:0; display:inline-flex; }
+.row-actions .btn-sm{ padding:7px 9px !important; min-width:34px; }
+/* Delete sits apart: it is the one action that cannot be undone, so it
+   should never be a near-miss on the button beside it. */
+.row-actions .ra-sep{ width:1px; align-self:stretch; background:#e6ecf5; margin:3px 3px; }
+
+/* =====================================================================
+   ACTIVE FILTER CHIPS — what you are looking at, stated once, in the
+   filter bar where you would look for it, and each one removable.
+   This replaces a separate paragraph that said the same thing in prose
+   and could not be acted on.
+   ===================================================================== */
+.filter-chips{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:10px 0 0; }
+/* `display:flex` above outranks the browser's own `[hidden]{display:none}`,
+   so #scopeDirty — the "Not applied yet — press Apply" warning, which ships
+   with the `hidden` attribute and is un-hidden by script only when a filter
+   really has changed — was drawn permanently on admin/violations.php. A
+   warning that is always on says nothing, and worse, it said the export was
+   out of date on a page nobody had touched.
+
+   Same fix already applied to .vts-howto[hidden] and .nav-bell-badge[hidden];
+   this is the third element in the app to need it. */
+.filter-chips[hidden]{ display:none !important; }
+.filter-chips .fc-label{ font-size:.76rem; font-weight:700; color:var(--d-muted,#8a95ab); margin-right:1px; }
+.filter-chips .fc{
+  display:inline-flex; align-items:center; gap:6px; max-width:100%;
+  background:#eef4ff; border:1px solid #d6e4f8; border-radius:999px;
+  padding:3px 4px 3px 10px; font-size:.76rem; font-weight:700; color:var(--d-navy,#1a3a6b);
+}
+.filter-chips .fc > span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+.filter-chips .fc i{ font-size:.8em; opacity:.75; flex:0 0 auto; }
+.filter-chips .fc a{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:17px; height:17px; border-radius:50%; flex:0 0 17px;
+  color:#7d8ca8; text-decoration:none; font-size:.66rem;
+  transition:background .12s, color .12s;
+}
+.filter-chips .fc a:hover{ background:#d7e3f7; color:#a62915; }
+.filter-chips .fc-count{ background:#fff; border-color:#e3e9f3; color:#44506a; padding-right:10px; }
+.filter-chips .fc-clear{ font-size:.76rem; font-weight:700; color:#7d8ca8; text-decoration:none; padding:3px 6px; border-radius:7px; }
+.filter-chips .fc-clear:hover{ background:#f2f5fa; color:#c8351f; }
+/* Shown by script the moment a filter is changed but not yet applied. */
+.filter-chips .fc-dirty{ background:#fff8e6; border-color:#f0dfae; color:#7a5c0b; }
+
+/* A quiet help affordance — one, not a stack of open panels. */
+.help-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  min-height:34px; padding:7px 11px; border-radius:9px;
+  background:transparent; border:1px solid transparent;
+  color:var(--d-muted,#8a95ab); font-size:.82rem; font-weight:700;
+  cursor:pointer; text-decoration:none; transition:background .12s, color .12s;
+}
+.help-btn:hover, .help-btn[aria-expanded="true"]{ background:#eef2f8; color:var(--d-navy,#1a3a6b); }
+
+/* =====================================================================
+   OVERFLOW — the long-text cases that were spilling out of their boxes.
+   ===================================================================== */
+/* A flex child will not shrink below its content unless told to. Without
+   this a long department name in the heading pushed the action buttons
+   off the right edge instead of letting the row wrap. */
+.dept-head{ min-width:0; flex:1 1 auto; }
+.dept-head > div{ min-width:0; }
+.dept-head h1{ overflow-wrap:anywhere; }
+.admin-welcome-row > div:first-child{ min-width:0; }
+
+/* The department row scrolls sideways on a narrow screen instead of
+   stacking into five full-width rows that push the table off-screen. */
+.dept-switch{
+  flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden;
+  scrollbar-width:thin; -webkit-overflow-scrolling:touch;
+  padding-bottom:4px; scroll-snap-type:x proximity;
+}
+.dept-switch > a{ flex:0 0 auto; scroll-snap-align:start; }
+.dept-switch::-webkit-scrollbar{ height:6px; }
+.dept-switch::-webkit-scrollbar-thumb{ background:#d6dfec; border-radius:3px; }
+@media (min-width:900px){ .dept-switch{ flex-wrap:wrap; overflow:visible; } }
+
+/* Chips never let a long name blow out the row. */
+.dept-chip{ max-width:100%; }
+.dept-chip .chip-text{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+.dept-chip i{ flex:0 0 auto; }
+
+/* Table cells: long violation names and student names wrap instead of
+   forcing the table wider than its scroll container. */
+.data-table td{ overflow-wrap:anywhere; }
+.data-table td.nowrap, .data-table th.nowrap{ white-space:nowrap; overflow-wrap:normal; }
+.data-table td.cell-violation{ min-width:190px; }
+.data-table td.cell-name{ min-width:150px; }
+
+/* An icon must never be the thing that wraps onto its own line. */
+.btn-primary i, .btn-outline i, .btn-danger i, .btn-ghost i{ flex:0 0 auto; }
+
+@media (max-width:560px){
+  .row-actions{ gap:4px; }
+  .vts-menu-list{ min-width:214px; }
+  .filter-chips .fc{ max-width:100%; }
+}
+
+/* =====================================================================
+   PHONE: a dropdown panel must never widen the page.
+   ---------------------------------------------------------------------
+   A CLOSED .vts-menu-list is only `opacity:0` — it is still display:block
+   and still takes up layout. Hanging rightward (`left:0`) from a button
+   that already sits near the right edge, a 214px panel reached x=436 on a
+   360px screen, so EVERY page carrying one scrolled sideways and the
+   position:fixed navbar stretched to 436px with it. Nothing looked wrong
+   on screen, which is why it survived: the panel is invisible while it
+   does this.
+
+   `.vts-menu.to-left` already existed for this, but it had to be added by
+   hand to each menu and the Export menu never got it. Below this width
+   every menu opens leftward instead, so no menu can do it again, and the
+   panel is clamped to the viewport so an open one stays fully on screen.
+   ===================================================================== */
+@media (max-width:720px){
+  .vts-menu-list{
+    left:auto; right:0;
+    max-width:calc(100vw - 24px);
+  }
+  /* Same story in the navbar: the profile panel is wider than the button
+     it hangs from, so it needs the same clamp to stay on screen. */
+  .nav-profile-menu{ max-width:calc(100vw - 16px); }
+}
+
+/* =====================================================================
+   PHONE: the navbar must fit the screen it is on.
+   ---------------------------------------------------------------------
+   `.nav-start` was `flex:0 0 auto`, so the brand block held a hard 194px
+   no matter how narrow the screen got. With the right-hand cluster
+   (status pill + bell + profile) needing ~187px more, the bar's contents
+   wanted ~445px on a 360px phone: the profile button sat at x=418, i.e.
+   fully past the right edge, unreachable, and its menu opened off-screen.
+   The bar itself is position:fixed so this never showed up as a page
+   scrollbar -- the controls were simply gone.
+
+   The brand is the part that can give: it already carries
+   text-overflow:ellipsis (vts-minimal.css), it just needed permission to
+   shrink. The right-hand controls are what a marshal actually taps, so
+   they keep their size and stay put.
+   ===================================================================== */
+@media (max-width:720px){
+  .vts-navbar .nav-start{ flex:0 1 auto !important; min-width:0 !important; overflow:hidden; }
+  .vts-navbar .nav-start .brand{ min-width:0 !important; }
+  .vts-navbar .nav-start .brand-name{
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;
+  }
+  /* Never shrink the things that get tapped. */
+  .vts-navbar .nav-right{ flex:0 0 auto !important; min-width:0 !important; }
+}
+
+/* =====================================================================
+   PHONE: the Official Sheet scrolls sideways again.
+   ---------------------------------------------------------------------
+   The sheet is the OSA's paper form: ~20 narrow columns. It was built to
+   "scroll sideways inside its card" (min-width:1180px), but a later rule
+   forced `width:100% ; table-layout:fixed` at EVERY size so it would fit
+   the page. On a desktop that is fine. On a 360px phone it crushed the
+   whole form into 322px: 21 of the header cells had less room than their
+   own text, so LAST NAME / FIRST NAME / MIDDLE NAME printed on top of
+   each other and the sheet could not be read at all.
+
+   Below this width it goes back to its designed behaviour -- laid out at
+   a readable width inside a card that scrolls horizontally. 680px is the
+   narrowest width at which no header cell is still clipped (measured),
+   so it asks for the least sideways scrolling that is still legible.
+   The PAGE itself does not scroll: only the card does.
+   ===================================================================== */
+
+/* THE SAME GUARANTEE AT EVERY WIDTH, not only on a phone.
+
+   The rule below only started scrolling the card at 720px, but the sheet is
+   1180px wide by design. Between those two numbers -- a tablet held upright,
+   a 1024px laptop, a half-screen browser window -- the table was wider than
+   its card and nothing was a scroll container, so the whole PAGE scrolled
+   sideways and the navbar and sidebar slid off the left edge with it.
+
+   Above 1180px the card is wider than the table, so `auto` shows no
+   scrollbar and nothing changes. Safe to apply unconditionally here because
+   this card holds a static table: the row menus that must not be clipped by
+   a scroll container (see the long note in vts-design.css) live on the
+   Records & Actions tab, not on the sheet, and are position:fixed when open
+   in any case. */
+.official-sheet-wrap{
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+@media (max-width:720px){
+  .official-sheet-wrap{
+    overflow-x:auto !important;
+    -webkit-overflow-scrolling:touch;
+  }
+  .official-sheet{
+    min-width:680px !important;
+    width:680px !important;
+    table-layout:auto !important;
+  }
+}
+
+/* =====================================================================
+   PHONE: centre the department heading.
+   ---------------------------------------------------------------------
+   The department you are looking at is the single most important thing on
+   this screen -- it decides what every record below it means. Left-aligned
+   next to its badge it read as a caption tucked into the corner, and on a
+   narrow screen the name wrapped awkwardly against the icon. Centred, with
+   the badge above it, it reads as the title of the page it actually is.
+   ===================================================================== */
+@media (max-width:720px){
+  .dept-head{
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap:10px;
+    width:100%;
+  }
+  .dept-head > div{ width:100%; text-align:center; }
+  .dept-head h1{ text-align:center; }
+  /* The course chip + record count sit under the name, centred with it. */
+  .dept-head .dept-sub{ justify-content:center; }
+  /* NOT .dept-switch: on a phone that strip is a horizontally SCROLLING row
+     of tabs (flex-wrap:nowrap; overflow-x:auto). Centring a scroll container
+     pushes the overflow off BOTH ends, and the browser cannot scroll back
+     past the start -- "All departments" would become unreachable. It stays
+     left-aligned so the first tab is always the one you land on. */
+}
+
+/* The filter buttons (Filters · Apply · Reset · Help) were one flex row
+   with no wrap, and .filter-bar > .filter-actions pinned it at flex:0 0
+   auto so it could not shrink either. On a 320px phone the row ran 41px
+   past the right edge and took the whole PAGE into a sideways scroll —
+   the table beside it was innocent.
+
+   Wrapping costs nothing at any width: on a wide screen the row still
+   fits on one line, so this only ever takes effect where it has to. */
+.filter-actions{ flex-wrap: wrap; }
+@media (max-width: 560px){
+  .filter-bar > .filter-actions{ flex: 1 1 100% !important; min-width: 0; }
+  .filter-actions > *{ flex: 1 1 auto; }
+  .filter-actions .help-btn{ flex: 0 0 auto; }
+}
+
+/* =====================================================================
+   READ-ONLY STUDENT RECORD (admin/view_student.php)
+   ---------------------------------------------------------------------
+   A definition list, not a form. Nothing here is an input, because the
+   surest way to make a page read-only is to have nothing on it that can
+   be typed into.
+   ===================================================================== */
+.vs-card{
+  background:var(--c-surface,#fff); border:1px solid var(--c-line,#e4eaf3);
+  border-radius:14px; overflow:hidden;
+}
+.vs-head{
+  display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  padding:18px 20px; border-bottom:1px solid var(--c-line,#e8edf5);
+  background:linear-gradient(180deg,rgba(26,58,107,.045),transparent);
+}
+.vs-avatar{
+  width:64px; height:64px; border-radius:50%; object-fit:cover; flex:0 0 auto;
+  border:2px solid var(--c-line,#dbe3ee); background:#eef2f8;
+}
+.vs-avatar-none{
+  display:inline-flex; align-items:center; justify-content:center;
+  color:var(--d-navy,#1a3a6b); font-size:1.5rem;
+}
+.vs-head-t{ flex:1 1 220px; min-width:0; }
+.vs-head-t h2{ margin:0; font-size:1.2rem; line-height:1.25; color:var(--c-ink,#0f172a); }
+.vs-head-t p{ margin:2px 0 0; color:var(--text-muted,#64748b); font-size:.85rem; }
+
+.vs-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:0; margin:0; padding:0;
+}
+.vs-grid > div{
+  padding:14px 20px; border-bottom:1px solid var(--c-line,#eef2f8);
+  border-right:1px solid var(--c-line,#eef2f8); min-width:0;
+}
+.vs-grid dt{
+  font-size:.68rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--text-muted,#94a3b8); margin-bottom:3px;
+}
+.vs-grid dd{ margin:0; font-size:.92rem; color:var(--c-ink,#1e293b); overflow-wrap:break-word; }
+.vs-sub{ display:block; font-size:.76rem; color:var(--text-muted,#64748b); margin-top:2px; }
+.vs-flag{
+  display:inline-block; margin-left:6px; padding:1px 7px; border-radius:999px;
+  font-size:.66rem; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
+}
+.vs-flag.ok  { background:rgba(70,200,120,.14); color:#2e9b5e; }
+.vs-flag.warn{ background:rgba(255,170,0,.14);  color:#9a6b00; }
+.vs-foot{ padding:14px 20px; }
+
+@media (max-width:560px){
+  .vs-grid{ grid-template-columns:1fr; }
+  .vs-grid > div{ border-right:0; }
+}
